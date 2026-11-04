@@ -15,6 +15,7 @@ import { PackageStyles } from '@/components/package-styles';
 import * as actions from '@/server/actions';
 import { fromDisplay, toDisplay, unitLabel } from '@/components/inputs/format';
 import { ExplainPanel } from './explain-panel';
+import { ReviewerNotes } from './reviewer-notes';
 import { SensitivitiesPanel } from './sensitivities-panel';
 
 type Scenario = ScenarioKey;
@@ -195,6 +196,7 @@ export function ResultsScreen(props: { dealId: string; dealName: string; rev: nu
                 ))}
               </ul>
             ) : null}
+            <ReviewerNotes dealId={props.dealId} scenario={scenario} rev={rev} />
             <div className="mt-6">
               <SensitivitiesPanel saved={state.sensitivities} presets={presets} scenario={scenario} running={running} onRun={runGrid} onDelete={deleteGrid} />
             </div>
@@ -211,7 +213,7 @@ export function ResultsScreen(props: { dealId: string; dealName: string; rev: nu
           </div>
         </Card>
       </div>
-      {explainRef && outputs ? <ExplainPanel outputs={outputs[scenario]} cellRef={explainRef} onClose={() => setExplainRef(null)} /> : null}
+      {explainRef && outputs ? <ExplainPanel outputs={outputs[scenario]} cellRef={explainRef} onClose={() => setExplainRef(null)} dealId={props.dealId} scenario={scenario} /> : null}
     </div>
   );
 }

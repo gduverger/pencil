@@ -14,6 +14,7 @@ import { PAGE_KEYS, PAGE_TITLES, PackageDocument, type PackageProps, type Packag
 import { Badge, Button, Card, Select, Textarea, cn } from '@/components/ui';
 import { PackageStyles } from '@/components/package-styles';
 import * as actions from '@/server/actions';
+import { draftNarrative } from '@/server/assistant-actions';
 import type { DiffRow } from '@/server/package-props';
 import { formatByUnit } from '@pencil/package-pages';
 
@@ -37,7 +38,7 @@ export interface ShareRow {
   createdAt: string;
 }
 
-export function PackageScreen(props: { dealId: string; dealName: string; rev: number; state: DealState; previewProps: Omit<PackageProps, 'outputs'>; versions: VersionRow[]; shares: ShareRow[]; baseUrl: string; canExport: boolean; isReviewer: boolean; userId: string }) {
+export function PackageScreen(props: { dealId: string; dealName: string; rev: number; state: DealState; previewProps: Omit<PackageProps, 'outputs'>; versions: VersionRow[]; shares: ShareRow[]; baseUrl: string; canExport: boolean; isReviewer: boolean; userId: string; assistantAvailable: boolean }) {
   const router = useRouter();
   const [state, setState] = useState(props.state);
   const [rev, setRev] = useState(props.rev);
@@ -151,10 +152,34 @@ export function PackageScreen(props: { dealId: string; dealName: string; rev: nu
             Cover note
           </label>
           <Textarea id="cover" rows={3} defaultValue={settings.coverNote ?? ''} onBlur={(e) => e.target.value !== (settings.coverNote ?? '') && save({ coverNote: e.target.value })} placeholder="Prepared for …" data-testid="cover-note" />
-          <label className="mt-3 block text-xs font-medium text-neutral-600" htmlFor="narrative">
-            Narrative (summary page)
-          </label>
-          <Textarea id="narrative" rows={6} defaultValue={settings.narrative ?? ''} onBlur={(e) => e.target.value !== (settings.narrative ?? '') && save({ narrative: e.target.value })} placeholder="About 120 words: what is being built, where, the key assumptions and their sources, and the range of returns. A drafted narrative arrives with the assistant (M9)." data-testid="narrative" />
+          <div className="mt-3 flex items-center justify-between">
+            <label className="block text-xs font-medium text-neutral-600" htmlFor="narrative">
+              Narrative (summary page){settings.narrativeDrafted ? <Badge tone="info" className="ml-2">drafted by the assistant</Badge> : null}
+            </label>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={busy !== null || !props.assistantAvailable}
+              data-testid="draft-narrative"
+              onClick={async () => {
+                setBusy('narrative');
+                try {
+                  const r = await draftNarrative(props.dealId, rev);
+                  if (!r.ok) setMessage({ tone: 'warn', text: r.message });
+                  else {
+                    setRev(r.rev);
+                    setState((s) => ({ ...s, packageSettings: { ...s.packageSettings, narrative: r.text, narrativeDrafted: true } }));
+                    setMessage(r.warning ? { tone: 'warn', text: r.warning } : { tone: 'good', text: 'Narrative drafted by the assistant from the register and the headline metrics; edit it to make it yours.' });
+                  }
+                } finally {
+                  setBusy(null);
+                }
+              }}
+            >
+              {busy === 'narrative' ? 'Drafting…' : 'Draft narrative'}
+            </Button>
+          </div>
+          <Textarea key={settings.narrativeDrafted ? `d-${settings.narrative?.length ?? 0}` : 'u'} id="narrative" rows={6} defaultValue={settings.narrative ?? ''} onBlur={(e) => e.target.value !== (settings.narrative ?? '') && save({ narrative: e.target.value, narrativeDrafted: false })} placeholder="About 120 words: what is being built, where, the key assumptions and their sources, and the range of returns." data-testid="narrative" />
           <p className="mt-2 text-xs text-neutral-500">Letterhead comes from the organization settings.</p>
         </Card>
         <Card title="Export and share">

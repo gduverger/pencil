@@ -14,7 +14,7 @@ verified, how it was verified, and what is left.
 | M6 Web app: results, scenarios, sensitivities | done (2026-11-04) |
 | M7 Web app: package, versions, sharing | done (2026-11-04) |
 | M8 Benchmarks and parcels | done (2026-11-04), seed values pending Mark |
-| M9 Assistant | not started |
+| M9 Assistant | done (2026-11-04) |
 | M10 Billing and launch | not started |
 
 ## M0 Scaffold — done 2026-11-04
@@ -233,6 +233,38 @@ endpoint rejects a missing secret. All seven e2e tests pass.
 **Left.** The seed table has no values until Mark provides them (every default is a schema default
 with source `unknown`; flags are disabled for metrics with no seed); the statewide parcel dataset is
 not loaded, so lot area, zoning, assessed value and current tax come from the user.
+
+## M9 Assistant — done 2026-11-04
+
+**Built.** `@pencil/assistant`: a provider interface with the Anthropic adapter (official SDK,
+`claude-opus-5-5` by default, cached system prompt, refusal and API errors mapped to typed
+`ProviderError`s) and a replaying `FakeProvider` for tests; the number post-check of 10.5 (every
+currency, percentage or multiple token must appear in the data handed to the model, allowing for
+display rounding; one regeneration, then a visible warning); the single `setInput` tool with
+validation against the catalog (unknown paths and `calculated` sources rejected, percentages given
+as whole numbers coerced); the four features — guided intake proposing inputs the user confirms
+one by one, *Explain in words* from the engine's trace, one sentence per reviewer flag with a
+deterministic fallback, and a ~120-word narrative draft labeled *drafted by the assistant* until
+edited; per-organization monthly request and token budgets recorded in `assistant_usage`. Web:
+the assistant panel on Setup and Inputs with Apply / Dismiss / Apply all and the transcript stored
+with the deal, the explain-in-words button in the results explain panel, *Reviewer notes* on
+Results, *Draft narrative* on Package; `PENCIL_ASSISTANT_FAKE=1` swaps in a scripted provider so
+demos and end-to-end tests run without a key.
+
+**Verified.** Unit: assistant 15 tests (a recorded intake fills a deal end to end through tool
+calls; a fabricated "$4,250,000" is rejected by the post-check and the regenerated answer accepted;
+a second bad answer surfaces the warning; `calculated` is never accepted as a source; the Anthropic
+request shape carries the system block, the tool definition and the budget check), db 19 (usage
+rows). End-to-end (`e2e/assistant.spec.ts`): an intake message proposes 72 units, $2,500,000 land
+and $335/SF hard cost; nothing is written until *Apply all*; after a reload the inputs carry the
+values, source `quote` and the "confirmed from the assistant" note; *Explain in words* produces
+labeled sentences for yield on cost; a 500 hard cost yields the reviewer sentence with the
+$280–$360 range; *Draft narrative* fills the narrative with the IRR range and the label, and an
+edit removes the label and reaches the package preview. All eight e2e tests pass; `pnpm lint`,
+`pnpm typecheck` and `pnpm test` pass across the ten workspace tasks.
+
+**Left.** Live model output has not been exercised in this environment (no API key); the
+scripted provider stands in. Prompt wording may need tuning against real transcripts.
 
 ## Blockers and gaps
 

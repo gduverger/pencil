@@ -83,6 +83,8 @@ export interface PackageSettings {
   scenario: ScenarioKey;
   includeMonthlyAppendix: boolean;
   narrative?: string;
+  /** True while the narrative is the assistant's draft and the user has not edited it (10.5). */
+  narrativeDrafted?: boolean;
   coverNote?: string;
 }
 

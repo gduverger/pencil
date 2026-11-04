@@ -4,6 +4,8 @@ import { Badge, Button, Card, Input, Label } from '@/components/ui';
 import { getDb } from '@/lib/db';
 import { requireUser } from '@/lib/session';
 import { deleteDeal, markTemplate, renameDeal } from '@/server/actions';
+import { AssistantPanel } from '@/components/assistant/assistant-panel';
+import { assistantAvailable } from '@/server/assistant-actions';
 
 export default async function SetupPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -88,6 +90,7 @@ export default async function SetupPage({ params }: { params: Promise<{ id: stri
             {deal.clonedFrom ? ' · cloned' : ''}
           </p>
         </Card>
+        <AssistantPanel dealId={deal.id} rev={deal.rev} transcript={state.assistantTranscript} available={await assistantAvailable()} />
       </div>
     </div>
   );

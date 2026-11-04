@@ -6,6 +6,7 @@ import { hasEntitlement } from '@/lib/entitlements';
 import { requireUser } from '@/lib/session';
 import { buildPackageProps, loadBenchmarks } from '@/server/package-props';
 import { headers } from 'next/headers';
+import { assistantAvailable } from '@/server/assistant-actions';
 
 export default async function PackagePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -32,6 +33,7 @@ export default async function PackagePage({ params }: { params: Promise<{ id: st
       canExport={hasEntitlement(user.tier, entitlements, deal.id)}
       isReviewer={user.role === 'reviewer'}
       userId={user.id}
+      assistantAvailable={await assistantAvailable()}
     />
   );
 }

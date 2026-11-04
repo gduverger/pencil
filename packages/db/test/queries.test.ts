@@ -126,3 +126,15 @@ describe('deals, state, history and concurrency', () => {
     expect(rows[0]!.low).toBe(290);
   });
 });
+
+describe('assistant usage budget rows', () => {
+  it('accumulates requests and tokens per organization and month', async () => {
+    const { org } = await userAndOrg(handle.db, 'usage@example.com');
+    const { assistantUsage, recordAssistantUsage } = await import('../src/queries');
+    expect(await assistantUsage(handle.db, org.orgId, '2026-11')).toEqual({ requests: 0, tokens: 0 });
+    await recordAssistantUsage(handle.db, org.orgId, '2026-11', 1200);
+    await recordAssistantUsage(handle.db, org.orgId, '2026-11', 800);
+    expect(await assistantUsage(handle.db, org.orgId, '2026-11')).toEqual({ requests: 2, tokens: 2000 });
+    expect(await assistantUsage(handle.db, org.orgId, '2026-12')).toEqual({ requests: 0, tokens: 0 });
+  });
+});

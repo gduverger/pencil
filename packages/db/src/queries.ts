@@ -404,3 +404,23 @@ export async function addEntitlement(db: Db, row: typeof t.entitlements.$inferIn
   const [r] = await db.insert(t.entitlements).values(row).returning();
   return r!;
 }
+
+// ---------- assistant budgets (10.5) ----------
+
+/** Monthly request and token totals for an organization. */
+export async function assistantUsage(db: Db, orgId: string, month: string): Promise<{ requests: number; tokens: number }> {
+  const row = await db.query.assistantUsage.findFirst({ where: and(eq(t.assistantUsage.orgId, orgId), eq(t.assistantUsage.month, month)) });
+  return { requests: row?.requests ?? 0, tokens: row?.tokens ?? 0 };
+}
+
+export async function recordAssistantUsage(db: Db, orgId: string, month: string, tokens: number): Promise<void> {
+  const existing = await db.query.assistantUsage.findFirst({ where: and(eq(t.assistantUsage.orgId, orgId), eq(t.assistantUsage.month, month)) });
+  if (existing) {
+    await db
+      .update(t.assistantUsage)
+      .set({ requests: existing.requests + 1, tokens: existing.tokens + tokens })
+      .where(eq(t.assistantUsage.id, existing.id));
+  } else {
+    await db.insert(t.assistantUsage).values({ orgId, month, requests: 1, tokens });
+  }
+}

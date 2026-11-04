@@ -55,6 +55,16 @@ export function InputsScreen(props: InputsScreenProps) {
   const stars = useMemo(() => new Set(tonightPaths()), []);
   const queue = useRef(Promise.resolve());
 
+  // Another writer on this page (the assistant panel) can advance the deal; adopt the server's
+  // newer state when nothing of ours is in flight so the next edit does not hit a rev conflict.
+  useEffect(() => {
+    if (props.rev > rev && saving === 0) {
+      setState(props.state);
+      setRev(props.rev);
+      setConflict(null);
+    }
+  }, [props.rev, props.state, rev, saving]);
+
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(`pencil:mode:${props.dealId}`);

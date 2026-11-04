@@ -112,7 +112,7 @@ export function SummaryPage({ props }: { props: PackageProps }) {
         </div>
       </div>
       <div className="narrative">
-        <div className="label">{settings.narrative ? 'Narrative' : 'Narrative (not yet drafted)'}</div>
+        <div className="label">{settings.narrative ? (settings.narrativeDrafted ? 'Narrative (drafted by the assistant)' : 'Narrative') : 'Narrative (not yet drafted)'}</div>
         <p>
           {settings.narrative ??
             `${version.dealName}: ${formatInteger(p.totalUnits)} rental units over ${formatInteger(p.gsfTotal)} gross SF. Across the three scenarios the project IRR ranges ${range((o) => o.metrics.projectIrr, formatIrr)} and the yield on cost ${range((o) => o.metrics.yieldOnCost, formatPct)}, on a total project cost of ${formatUsd(outputs.worst.totals.tpc)} to ${formatUsd(outputs.best.totals.tpc)}. Every assumption, its source and its benchmark are listed in the assumptions register.`}
