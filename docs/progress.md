@@ -6,7 +6,7 @@ verified, how it was verified, and what is left.
 | Milestone | Status |
 | --- | --- |
 | M0 Scaffold | done (2026-11-04) |
-| M1 Engine core | not started |
+| M1 Engine core | done (2026-11-04) |
 | M2 Engine operations and capital | not started |
 | M3 Engine analysis and CLI | not started |
 | M4 Package pages and exports | not started |
@@ -31,6 +31,27 @@ tasks each); `pnpm --filter @pencil/web build` produces a static Next.js build. 
 `docs/demos/m0.md`.
 
 **Left.** The five reference workbooks are not in `reference/` (not supplied); see below.
+
+## M1 Engine core — done 2026-11-04
+
+**Built.** `@pencil/engine`: zod schema with every default, unit, label, star and `elaborable`
+flag (`schema.ts`, with `inputCatalog()` and JSON Schema generation); timeline phases; program
+and revenue basis (7.3); cost lines with S-curve, straight-line and custom distributions, the
+soft-cost split, carry windows, developer fee, commercial TI and elaborated hard/soft lines (7.4);
+cost and inflow events with surplus carry-forward (7.5); the funding order (equity → mezzanine →
+construction loan), land loan roll-in, in-kind land, capitalized interest and the TPC fixed point
+with `EngineError('non-convergent')` (7.6); `validate`; sources & uses; capital budget;
+`checkInvariants`; dotted-path get/set for scenarios.
+
+**Verified.** `pnpm --filter @pencil/engine test`: 77 tests pass, line coverage 96% (threshold
+95%). Hand-computed cases are written as comments in the tests (unit rounding, S-curve
+symmetry, soft split 60/40 and P = 0, inflow carry-forward, mezz fee at first draw, land loan
+roll). Invariants 1, 2 and 5 pass on eight deal variants; invariant 8 (byte-identical reruns)
+passes. The fixture deal with 30 elaborated hard-cost lines runs in well under 50 ms (20-run
+average asserted in `test/perf.test.ts`). `pnpm lint` and `pnpm typecheck` pass.
+
+**Left.** Operations, permanent loan, sale, waterfall and metrics are M2; `run()` currently
+returns zero operating series and no distributions.
 
 ## Blockers and gaps
 
