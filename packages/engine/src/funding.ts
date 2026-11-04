@@ -80,7 +80,7 @@ function emptyCosts(): Record<CostCategory, number> {
  * One pass of the monthly schedule with given commitments. Pure; returns every monthly row and
  * the totals that feed the next fixed-point iteration.
  */
-function runPass(inputs: DealInputs, tl: Timeline, cost: CostSchedule, noi: readonly number[], p: PassParams) {
+function runPass(inputs: DealInputs, tl: Timeline, cost: CostSchedule, noi: readonly number[], p: PassParams, mezzFeeAtP = false) {
   const n = cost.monthCount;
   const fin = inputs.financing;
   const rc = fin.constructionLoan.ratePct / 12;
@@ -154,6 +154,12 @@ function runPass(inputs: DealInputs, tl: Timeline, cost: CostSchedule, noi: read
       // Financing fees that are known a priori.
       if (t === 0 && landLoanOn) costs.financingFees += landFee;
       if (t === tl.P) costs.financingFees += constructionFee;
+      // A mezzanine tranche that is never drawn still owes its commitment fee at closing (month P);
+      // see docs/decisions.md. The fee is charged at first draw whenever a draw happens.
+      if (mezzFeeAtP && mezzOn && t === tl.P && mezzFirstDrawMonth === null) {
+        mezzFee = p.mezzCommitment * fin.mezz.feePct;
+        costs.financingFees += mezzFee;
+      }
 
       // Operating deficits before R (7.7): capitalized as a project cost, or an equity contribution pro rata.
       const noiT = noi[t] ?? 0;
@@ -217,10 +223,12 @@ function runPass(inputs: DealInputs, tl: Timeline, cost: CostSchedule, noi: read
       if (need > 0 && mezzOn && mezzRemaining > 0) {
         if (mezzFirstDrawMonth === null) {
           mezzFirstDrawMonth = t;
-          mezzFee = p.mezzCommitment * fin.mezz.feePct;
-          costs.financingFees += mezzFee;
-          costTotal += mezzFee;
-          need += mezzFee;
+          if (mezzFee === 0) {
+            mezzFee = p.mezzCommitment * fin.mezz.feePct;
+            costs.financingFees += mezzFee;
+            costTotal += mezzFee;
+            need += mezzFee;
+          }
         }
         const md = Math.min(need, mezzRemaining);
         row.mezzDraw = md;
@@ -308,7 +316,11 @@ export function solveFunding(inputs: DealInputs, tl: Timeline, cost: CostSchedul
     const lc = ltc * tpcIn;
     const mezzCommitment = mezzPct * tpcIn;
     const equityCommitment = tpcIn - lc - mezzCommitment;
-    const pass = runPass(inputs, tl, cost, noi, { tpcIn, lc, mezzCommitment, equityCommitment });
+    let pass = runPass(inputs, tl, cost, noi, { tpcIn, lc, mezzCommitment, equityCommitment });
+    if (fin.mezz.enabled && mezzCommitment > 0 && pass.mezzFirstDrawMonth === null) {
+      // Never drawn: charge the commitment fee at P so the fee does not flip between iterations.
+      pass = runPass(inputs, tl, cost, noi, { tpcIn, lc, mezzCommitment, equityCommitment }, true);
+    }
     trace.push({ tpcIn, tpcOut: pass.tpcOut });
     if (Math.abs(pass.tpcOut - tpcIn) < 1) {
       return {

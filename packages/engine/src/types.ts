@@ -74,6 +74,8 @@ export interface MonthRow {
   equityIn: { gp: number; lp: number; inKind: number };
   /** Every contribution this month (equity calls, non-capitalized deficits, refinance shortfall, post-refinance deficits). */
   contributions: { gp: number; lp: number };
+  /** Lease-up deficit funded by equity pro rata when `capitalizeOperatingDeficits` is off. */
+  deficitContribution: number;
   mezzDraw: number;
   loanDraw: number;
   landLoanDraw: number;
@@ -210,6 +212,8 @@ export interface TierResult {
   gp: number;
   /** Distribution through this tier at the sale month only. */
   atSale: { total: number; lp: number; gp: number };
+  /** HB[LP][k] after this tier's payment in the first month a later tier was paid; null if never completed. */
+  lpBalanceAtCompletion: number | null;
 }
 
 export interface PartnerResult {

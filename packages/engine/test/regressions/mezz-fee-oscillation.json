@@ -1,0 +1,25 @@
+{
+  "meta": { "name": "regression: mezz fee oscillation (no construction loan, 5% mezz, inflow at month 0)", "analysisMonth": "2026-01", "holdMonths": 60 },
+  "site": { "lotSF": 50000, "landCost": 0, "landOwned": false, "closingCostPct": 0.02 },
+  "program": {
+    "totalUnits": 146,
+    "unitTypes": [
+      { "key": "studio", "mixPct": 0.15, "avgSF": 450, "rentPerMonth": 1540 },
+      { "key": "1BR", "mixPct": 0.35, "avgSF": 650, "rentPerMonth": 1890 },
+      { "key": "2BR", "mixPct": 0.35, "avgSF": 950, "rentPerMonth": 2310 },
+      { "key": "3BR", "mixPct": 0.15, "avgSF": 1200, "rentPerMonth": 2730 }
+    ]
+  },
+  "timeline": { "predevMonths": 0, "constructionMonths": 6, "leaseUpMonths": 0 },
+  "costs": { "hard": { "perGrossSF": 150, "distribution": { "kind": "straight" } }, "soft": { "pctOfHard": 0.1 }, "carry": { "taxesDuringConstructionAnnual": 50000, "insuranceDuringConstructionAnnual": 30000 }, "developerFeePct": 0.03 },
+  "events": [{ "id": "e0", "label": "Grant", "month": 0, "amount": 1226025, "kind": "inflow", "category": "inflow" }],
+  "financing": {
+    "constructionLoan": { "ltc": 0, "ratePct": 0.03, "feePct": 0.01 },
+    "mezz": { "enabled": true, "pctOfCost": 0.05, "ratePct": 0.08, "feePct": 0.01, "repaidAt": "sale" },
+    "permanent": { "enabled": false },
+    "capitalizeOperatingDeficits": false
+  },
+  "operations": { "stabilizedVacancyPct": 0.03, "rentGrowthPct": 0, "expenseGrowthPct": 0, "otherIncomeGrowthPct": 0, "absorption": { "kind": "unitsPerMonth", "units": 2 }, "opex": { "taxesStabilizedAnnual": 50000 } },
+  "exit": { "exitCapRatePct": 0.045 },
+  "equity": { "gpPct": 0.1, "lpPct": 0.9 }
+}

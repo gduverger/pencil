@@ -4,7 +4,7 @@ import { parseInputs, type DealInputs, type DealInputsInput } from '../src/schem
 export function fixtureDeal(): DealInputsInput {
   return {
     meta: { name: 'Fixture — 60 units, Needham', analysisMonth: '2026-01', holdMonths: 120 },
-    site: { lotSF: 60000, landCost: 4_000_000, landOwned: false, closingCostPct: 0.02 },
+    site: { lotSF: 60000, landCost: 3_000_000, landOwned: false, closingCostPct: 0.02 },
     program: {
       totalUnits: 60,
       unitTypes: [
@@ -18,7 +18,7 @@ export function fixtureDeal(): DealInputsInput {
     },
     timeline: { predevMonths: 12, constructionMonths: 18, leaseUpMonths: 12 },
     costs: {
-      hard: { perGrossSF: 350, contingencyPct: 0.05 },
+      hard: { perGrossSF: 300, contingencyPct: 0.05 },
       soft: { pctOfHard: 0.25, contingencyPct: 0.05, predevShare: 0.6 },
       carry: { taxesDuringConstructionAnnual: 60000, insuranceDuringConstructionAnnual: 40000 },
       developerFeePct: 0.03,

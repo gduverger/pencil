@@ -105,3 +105,41 @@ memo line). Rejected: treating it as a capitalized financing fee, which would do
 Interest accrues into each loan's balance (7.6: `B_t = B_{t−1} + D_t + I_t`) and counts in TPC,
 so the monthly requirement funded in order excludes it. Sources & uses carries it as a use funded
 by the loan balance. Rejected: drawing the loan to pay its own interest, which doubled the balance.
+
+## 2026-11-04 — Mezzanine fee: at first draw, or at P if the tranche is never drawn
+
+Spec 7.6 charges the mezzanine fee "at first draw". A tranche that is never drawn (equity plus
+inflows cover the requirement) would then pay no fee, and because the fee is part of TPC the
+fixed point could flip between "draws" and "does not draw" every iteration. The property tests
+found exactly that (`test/regressions/mezz-fee-oscillation.json`). The fee is now charged at the
+first draw whenever a draw happens, and at month P as a commitment fee when the tranche is never
+drawn, which makes the TPC map continuous. Rejected: dampening the iteration, which would still
+not define a TPC the funding order can reproduce.
+
+## 2026-11-04 — Mezzanine repaid at sale is serviced interest-only after R
+
+Mezzanine interest is capitalized through R (it is a project cost). When `repaidAt = 'sale'`, or
+when there is no permanent loan, the balance stays outstanding and its interest is paid from
+operating cash flow with the senior debt service until the sale payoff. Rejected: capitalizing
+mezzanine interest after R, which would put a capitalized cost after R (invariant 5).
+
+## 2026-11-04 — NOI at the refinance month belongs to the operating regime
+
+Deficits are capitalized for months in [O, R) as 7.4 states; NOI(R) nets against the refinance
+proceeds (or shortfall) in the month-R cash flow, and the first permanent-loan payment falls at
+R + 1. Rejected: capitalizing a month-R deficit, which would contradict the `[O, R)` window.
+
+## 2026-11-04 — Unlevered IRR includes inflow events as positive flows
+
+7.11 defines the unlevered series as costs excluding loan fees and interest, NOI from O and the
+net sale value. Operating deficits are excluded from the cost side because they are already the
+negative NOI months, and inflow events are included as positive flows because they are real
+project cash. Rejected: leaving inflows out, which would understate the unlevered return of a deal
+whose one-off sale (a relocated house) is a genuine inflow.
+
+## 2026-11-04 — Annual tables are twelve-month periods from month 0, with a final stub
+
+Per 14.3, year 1 is months 0–11. A 120-month hold therefore has ten full years and an eleventh
+one-month period holding the sale; it is marked `partial` and labeled as the sale period on the
+cash-flow page. Rejected: calendar years, and shifting year 1 to months 1–12 so the sale lands at
+the end of year 10 (which would leave month 0 as its own stub instead).

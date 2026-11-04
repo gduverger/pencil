@@ -31,11 +31,10 @@ function group(key: string, label: string, lines: Line[], d: Denominators): Grou
   return { key, label, lines, subtotal, perUnit: d.units > 0 ? subtotal / d.units : 0, perGSF: d.gsf > 0 ? subtotal / d.gsf : 0 };
 }
 
-export function buildTotals(funding: FundingResult, refinanceShortfallAndPostDeficits: number, permanentLoan: number, totalContributions: number, totalDistributions: number): Totals {
+export function buildTotals(funding: FundingResult, permanentLoan: number, totalContributions: number, totalDistributions: number): Totals {
   const byCategory = {} as Record<CostCategory, number>;
   for (const c of COST_CATEGORIES) byCategory[c] = 0;
   for (const m of funding.months) for (const c of COST_CATEGORIES) byCategory[c] += m.costs[c];
-  void refinanceShortfallAndPostDeficits;
   return {
     tpc: funding.tpc,
     byCategory,

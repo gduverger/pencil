@@ -36,6 +36,15 @@ export type {
 } from './schema';
 export * from './types';
 export { run } from './run';
+export { explain, explainableCells } from './explain';
+export type { ExplainTrace, Operand } from './explain';
+export { amortize, sizePermanentLoan } from './permanent';
+export { computeOperations, occupancyAt, commercialOccupancyAt } from './operations';
+export type { OperationsSeries } from './operations';
+export { runWaterfall } from './waterfall';
+export type { WaterfallInput, WaterfallResult } from './waterfall';
+export { buildAnnual } from './annual';
+export { computeMetrics, metricSeries } from './metrics';
 export { validate, validateParsed, hasErrors } from './validate';
 export { checkInvariants, assertInvariants } from './invariants';
 export type { InvariantViolation } from './invariants';

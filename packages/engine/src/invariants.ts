@@ -69,25 +69,37 @@ export function checkInvariants(outputs: DealOutputs): InvariantViolation[] {
     }
   }
 
-  // 3. Total equity contributions equal TPC − Lc − M plus any refinance shortfall and post-refinance deficits.
-  // Holds whenever the construction loan absorbed the balance of the requirement (the normal case).
-  const loanDrawn = totals.constructionLoan;
-  if (loanDrawn > 0) {
-    const devEquity = totals.equity;
-    const expected = totals.tpc - totals.constructionLoanCommitment - totals.mezzCommitment;
+  // 3. Total equity contributions equal TPC − Lc − M plus any refinance shortfall and post-refinance
+  // deficits. The development equity equals the commitment E = TPC − Lc − M (within the $1 fixed-point
+  // tolerance) whenever the construction loan drew for costs, i.e. once equity was exhausted; a loan
+  // draw that only rolls the land loan does not exhaust equity, so then equity ≤ E.
+  const cashDraws = draws - rolledLandLoan(outputs);
+  const devEquity = totals.equity;
+  const commitment = totals.equityCommitment;
+  if (cashDraws > MONEY_TOL) {
+    // In-kind land can exceed the commitment; the GP then over-contributes and no cash equity is called.
+    const expected = Math.max(commitment, totals.equityInKind);
     if (Math.abs(devEquity - expected) > 1.0) {
-      v.push({ invariant: 3, message: `development equity ${devEquity.toFixed(2)} ≠ TPC − Lc − M ${expected.toFixed(2)}` });
+      v.push({ invariant: 3, message: `development equity ${devEquity.toFixed(2)} ≠ TPC − Lc − M ${commitment.toFixed(2)}` });
     }
+  } else if (devEquity > Math.max(commitment, totals.equityInKind) + 1.0) {
+    v.push({ invariant: 3, message: `development equity ${devEquity.toFixed(2)} exceeds the commitment ${commitment.toFixed(2)}` });
   }
-  let postContrib = 0;
+  const expectedCommitment = totals.tpc - totals.constructionLoanCommitment - totals.mezzCommitment;
+  if (Math.abs(commitment - expectedCommitment) > 1.0) {
+    v.push({ invariant: 3, message: `equity commitment ${commitment.toFixed(2)} ≠ TPC − Lc − M ${expectedCommitment.toFixed(2)}` });
+  }
+  let monthlyContrib = 0;
+  let extra = 0;
   for (const m of months) {
-    if (m.t > tl.R || (m.t === tl.R && m.refinance < 0)) {
-      // contributions after R and refinance shortfalls are the extra contributions
-    }
-    postContrib += m.contributions.gp + m.contributions.lp;
+    monthlyContrib += m.contributions.gp + m.contributions.lp;
+    extra += m.deficitContribution + Math.max(0, -m.cashFlowAfterDebt);
   }
-  if (Math.abs(postContrib - totals.totalContributions) > MONEY_TOL) {
-    v.push({ invariant: 3, message: `monthly contributions ${postContrib.toFixed(2)} ≠ totals.totalContributions ${totals.totalContributions.toFixed(2)}` });
+  if (Math.abs(monthlyContrib - totals.totalContributions) > MONEY_TOL) {
+    v.push({ invariant: 3, message: `monthly contributions ${monthlyContrib.toFixed(2)} ≠ totals.totalContributions ${totals.totalContributions.toFixed(2)}` });
+  }
+  if (Math.abs(totals.totalContributions - (devEquity + extra)) > MONEY_TOL) {
+    v.push({ invariant: 3, message: `total contributions ${totals.totalContributions.toFixed(2)} ≠ development equity ${devEquity.toFixed(2)} + shortfalls and deficits ${extra.toFixed(2)}` });
   }
 
   // 4. Cumulative distributions by partner sum to total distributions; every tier payout non-negative.

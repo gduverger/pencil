@@ -49,8 +49,8 @@ describe('7.4 capitalized costs and distributions', () => {
     const tl = buildTimeline(inputs);
     const program = computeProgram(inputs);
     const cs = buildCostSchedule(inputs, program, tl);
-    // H = 350 × 56,823.53 = 19,888,235.29
-    const H = 350 * program.gsfTotal;
+    // H = 300 × 56,823.53 = 17,047,058.82
+    const H = 300 * program.gsfTotal;
     expect(cs.hardTotal).toBeCloseTo(H, 3);
     const w = scurveWeights(18);
     for (let k = 0; k < 18; k++) {
@@ -67,10 +67,10 @@ describe('7.4 capitalized costs and distributions', () => {
     const tl = buildTimeline(inputs);
     const program = computeProgram(inputs);
     const cs = buildCostSchedule(inputs, program, tl);
-    expect(cs.byCategory.land[0]).toBe(4_000_000);
-    expect(sum(cs.byCategory.land)).toBe(4_000_000);
-    // closing 2% = 80,000 at month 0
-    expect(cs.byCategory.closing[0]).toBeCloseTo(80000, 6);
+    expect(cs.byCategory.land[0]).toBe(3_000_000);
+    expect(sum(cs.byCategory.land)).toBe(3_000_000);
+    // closing 2% = 60,000 at month 0
+    expect(cs.byCategory.closing[0]).toBeCloseTo(60000, 6);
     // taxes 60,000 / 12 = 5,000 each month in [0, 30); insurance 40,000 / 12 = 3,333.33 in [12, 30)
     expect(cs.byCategory.carryTaxes[0]).toBeCloseTo(5000, 6);
     expect(cs.byCategory.carryTaxes[29]).toBeCloseTo(5000, 6);

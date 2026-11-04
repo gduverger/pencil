@@ -98,13 +98,13 @@ describe('7.6 funding order, construction interest and the fixed point', () => {
 
   it('a land loan is drawn at month 0, accrues interest, and rolls into the construction loan at P', () => {
     const { funding, tl } = fundingFor({ ...fixtureDeal(), financing: { ...fixtureDeal().financing, landLoan: { enabled: true, ltv: 0.5, ratePct: 0.09, feePct: 0.01 } } });
-    // 50% × 4,000,000 = 2,000,000 at month 0; fee 1% = 20,000 at month 0
-    expect(funding.months[0]!.landLoanDraw).toBe(2_000_000);
-    expect(funding.months[0]!.landLoanBalance).toBe(2_000_000);
-    expect(funding.fees.land).toBe(20000);
-    expect(funding.months[0]!.costs.financingFees).toBe(20000);
-    // month 1 interest: 2,000,000 × 0.09 / 12 = 15,000
-    expect(funding.months[1]!.interestLand).toBeCloseTo(15000, 6);
+    // 50% × 3,000,000 = 1,500,000 at month 0; fee 1% = 15,000 at month 0
+    expect(funding.months[0]!.landLoanDraw).toBe(1_500_000);
+    expect(funding.months[0]!.landLoanBalance).toBe(1_500_000);
+    expect(funding.fees.land).toBe(15000);
+    expect(funding.months[0]!.costs.financingFees).toBe(15000);
+    // month 1 interest: 1,500,000 × 0.09 / 12 = 11,250
+    expect(funding.months[1]!.interestLand).toBeCloseTo(11250, 6);
     // Balance at P−1 then rolled at P: the construction loan draw at P includes the land balance
     const balanceBeforeRoll = funding.months[tl.P - 1]!.landLoanBalance;
     const interestAtP = funding.months[tl.P]!.interestLand;
@@ -115,8 +115,8 @@ describe('7.6 funding order, construction interest and the fixed point', () => {
 
   it('owned land is an in-kind GP contribution at month 0 that counts toward E', () => {
     const { funding } = fundingFor({ ...fixtureDeal(), site: { ...fixtureDeal().site, landOwned: true } });
-    expect(funding.months[0]!.equityInKind).toBe(4_000_000);
-    expect(funding.equityInKind).toBe(4_000_000);
+    expect(funding.months[0]!.equityInKind).toBe(3_000_000);
+    expect(funding.equityInKind).toBe(3_000_000);
     // cash equity + in-kind = E
     expect(Math.abs(funding.equityCash + funding.equityInKind - funding.equityCommitment)).toBeLessThan(1);
   });

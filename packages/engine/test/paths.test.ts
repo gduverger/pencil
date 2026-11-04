@@ -14,7 +14,7 @@ describe('FR-1.3 dotted paths', () => {
 
   it('reads and writes nested values, selecting array elements by key or id', () => {
     const inputs = fixtureInputs();
-    expect(getPath(inputs, 'costs.hard.perGrossSF')).toBe(350);
+    expect(getPath(inputs, 'costs.hard.perGrossSF')).toBe(300);
     expect(getPath(inputs, 'program.unitTypes[2BR].rentPerMonth')).toBe(3300);
     expect(getPath(inputs, 'program.unitTypes[1].rentPerMonth')).toBe(2700);
     const next = setPath(inputs, 'program.unitTypes[2BR].rentPerMonth', 3500);

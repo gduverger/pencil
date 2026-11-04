@@ -7,7 +7,7 @@ verified, how it was verified, and what is left.
 | --- | --- |
 | M0 Scaffold | done (2026-11-04) |
 | M1 Engine core | done (2026-11-04) |
-| M2 Engine operations and capital | not started |
+| M2 Engine operations and capital | done (2026-11-04) |
 | M3 Engine analysis and CLI | not started |
 | M4 Package pages and exports | not started |
 | M5 Web app: deals and inputs | not started |
@@ -52,6 +52,28 @@ average asserted in `test/perf.test.ts`). `pnpm lint` and `pnpm typecheck` pass.
 
 **Left.** Operations, permanent loan, sale, waterfall and metrics are M2; `run()` currently
 returns zero operating series and no distributions.
+
+## M2 Engine operations and capital — done 2026-11-04
+
+**Built.** Lease-up and operations with linear and units-per-month absorption, commercial income
+and opex, affordable rents, annual growth steps, management as % of EGI (7.7); permanent loan
+sizing by LTV and DSCR, `amortize` with interest-only months, refinance proceeds or shortfall,
+interest-only construction debt when the permanent switch is off (7.8); sale valuation, selling
+costs and payoff with mezzanine repaid at refinance or sale (7.9); the IRR-hurdle waterfall with
+per-partner, per-tier balances and sequential capacity (7.10); every 7.11 metric, DSCR and
+cash-on-cash by year; `explain(outputs, cellRef)` traces for metrics, sale, refinance, totals,
+program, monthly and annual cells (10.2); all five single-run invariants plus monotonicity and
+determinism tests; fast-check property tests over random deals (12.4) with a regression fixture
+directory.
+
+**Verified.** `pnpm --filter @pencil/engine test`: 138 tests, 500 property cases, line coverage
+98.6%. Hand-computed checks: $1M at 6%/30y pays $5,995.51; 24 IO rows; DSCR-sized loan gives a
+first-year DSCR of exactly 1.25; the three-tier waterfall allocation on a 100/120 example (108 /
+9 / 3); EGI, opex and NOI for the simple deal at month 18. The property tests found one real
+defect (a fixed-point oscillation on the mezzanine fee), fixed and recorded in
+`docs/decisions.md` and `test/regressions/`.
+
+**Left.** Scenarios, sensitivities, residual land value and the CLI are M3.
 
 ## Blockers and gaps
 
