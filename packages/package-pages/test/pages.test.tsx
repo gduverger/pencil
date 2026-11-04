@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { ENGINE_VERSION, runScenarios, scenarioOverridesFromDeltas, sensitivity, sensitivityPresets } from '@pencil/engine';
-import { DEFAULT_PACKAGE_SETTINGS, PAGE_KEYS, packageFileName, planPages, registerFromInputs, renderPackageHtml, roundUsd, type PackageProps } from '../src/index';
+import { DEFAULT_PACKAGE_SETTINGS, PAGE_KEYS, packageFileName, planPages, registerFromInputs, roundUsd, type PackageProps } from '../src/index';
+import { renderPackageHtml } from '../src/render';
 
 const example = join(__dirname, '..', '..', '..', 'apps', 'cli', 'examples', 'needham-60.json');
 

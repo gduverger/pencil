@@ -111,6 +111,9 @@ export function run(raw: unknown): DealOutputs {
   const annual = buildAnnual(months);
   const { metrics, byPartner } = computeMetrics(months, totals, capital.sale, tl, program, inputs.exit.exitCapRatePct);
 
+  if (funding.oscillation) {
+    flags.push({ code: 'fixed-point-oscillation', message: `total project cost settled to within ${Math.round(funding.residual).toLocaleString('en-US')} dollars between two funding schedules that differ by the month of the first mezzanine draw; the closer schedule is shown` });
+  }
   // Post-run flags (7.9: a negative net to equity is a flag, not an error).
   if (capital.sale.netToEquity < 0) {
     flags.push({ code: 'negative-net-to-equity', message: `sale proceeds do not cover the debt payoff and selling costs (net ${Math.round(capital.sale.netToEquity).toLocaleString('en-US')})` });
@@ -146,6 +149,6 @@ export function run(raw: unknown): DealOutputs {
     },
     metrics,
     flags,
-    diagnostics: { iterations: funding.iterations, engineVersion: ENGINE_VERSION },
+    diagnostics: { iterations: funding.iterations, engineVersion: ENGINE_VERSION, residual: funding.residual, convergence: funding.oscillation ? 'oscillation' : 'exact' },
   };
 }

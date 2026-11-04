@@ -186,3 +186,64 @@ The Playwright test runner rewrites JSX in its own process for component testing
 `react-dom/server`. The snapshot spec therefore renders the fixture package with `tsx` in a child
 process and loads the resulting HTML. Rejected: moving the snapshot tests to Vitest with a manual
 pixel comparison, which loses Playwright's threshold-based image diffing.
+
+## 2026-11-04 — Schema defaults carry source `unknown`, not `benchmark`
+
+Spec 5 step 2 pre-fills the twelve inputs "from the benchmark … with source benchmark". The seed
+template ships empty (9.2: Mark provides the values), so a new deal is defaulted from the schema
+(14.2). Those values are not benchmarks, so they carry source `unknown` with the note "Schema
+default; no benchmark seeded for this segment"; once a seed row exists the default is its `mid`
+with source `benchmark` and the benchmark id. Rejected: labeling schema defaults `benchmark`,
+which would make the register claim a provenance the number does not have.
+
+## 2026-11-04 — Town table with approximate FY2025 rates, marked for verification
+
+`@pencil/parcels` bundles 46 Massachusetts towns with a proposed cluster (commuter-rail zone and
+rent level, for Mark to correct per 14.2) and residential tax rates recalled as approximate
+FY2025 figures. Every row's `notes` says "rate approximate; verify with the assessor" and the
+assessor URL is listed; the rate only seeds the stabilized-tax default, whose note repeats the
+caveat. Rejected: shipping no rates, which would leave the twelve-input flow without a tax
+default for every town.
+
+## 2026-11-04 — The operating deficit reserve switch maps to `capitalizeOperatingDeficits`
+
+6.3 lists an "Operating deficit reserve" switch with "months of reserve or explicit amount"
+inputs; the engine (7.4, 7.7) has no upfront reserve line, only the choice between capitalizing
+lease-up deficits into the budget (funded in order) or funding them from equity as they occur. The
+switch controls that flag. A sized reserve is noted in `docs/later.md`. Rejected: adding a reserve
+line to the engine now, which changes the money math beyond section 7.
+
+## 2026-11-04 — Development sign-in provider outside production
+
+Auth.js is configured for email magic links (Nodemailer) and Google when their environment
+variables are present. Outside production, or with `PENCIL_DEV_AUTH=1`, a credentials provider
+signs in any email without a password so local development and the end-to-end tests need no mail
+server. Sessions are JWTs so the three providers share one strategy. Rejected: a mail-catcher
+service in the test harness.
+
+## 2026-11-04 — Browser-safe entry points for shared packages
+
+`@pencil/db/state` exposes the pure deal-state functions (used optimistically in the browser)
+without the database client, and `@pencil/package-pages/render` isolates `react-dom/server`,
+which Next.js pages may not import. Rejected: duplicating the state logic in the web app.
+
+## 2026-11-04 — Organization membership model in V1
+
+Every user gets a personal organization on first sign-in and is its owner; the first membership
+is the current organization. Inviting members is an owner action on the settings screen in a
+later milestone. Rejected: an organization picker in V1, which the spec's single-owner model does
+not need.
+
+## 2026-11-04 — A two-cycle in the TPC fixed point is resolved, not thrown
+
+Spec 7.6 iterates TPC → (Lc, M, E) → schedule → TPC until |ΔTPC| < $1 and throws after 50
+iterations. The month of the first mezzanine draw is a discrete function of the equity
+commitment: when E lands within a few hundred dollars of a month boundary, the fee and one month
+of interest move, the map jumps by that amount, and the iteration alternates between two schedules
+forever (the property tests found a deal that cycled between TPCs $668 apart on $39.9M). The
+solver now detects a two-cycle (a pass reproduces the TPC fed into the previous pass), accepts
+the pass with the smaller residual, reports `diagnostics.residual` and `convergence:
+'oscillation'`, and raises the flag `fixed-point-oscillation`; invariant 3 tolerates that residual.
+Genuine divergence still throws `non-convergent`. Rejected: throwing, which would fail legitimate
+deals over an immaterial amount; and charging the mezzanine fee at a fixed month, which would
+contradict 7.6's "fee at first draw" in the common case.

@@ -76,17 +76,20 @@ export function checkInvariants(outputs: DealOutputs): InvariantViolation[] {
   const cashDraws = draws - rolledLandLoan(outputs);
   const devEquity = totals.equity;
   const commitment = totals.equityCommitment;
+  // The commitment comes from the TPC fed into the accepted funding pass; its residual against the
+  // pass's own TPC is below $1 when converged and reported otherwise (diagnostics.residual).
+  const fixedPointTol = 1.0 + outputs.diagnostics.residual;
   if (cashDraws > MONEY_TOL) {
     // In-kind land can exceed the commitment; the GP then over-contributes and no cash equity is called.
     const expected = Math.max(commitment, totals.equityInKind);
-    if (Math.abs(devEquity - expected) > 1.0) {
+    if (Math.abs(devEquity - expected) > fixedPointTol) {
       v.push({ invariant: 3, message: `development equity ${devEquity.toFixed(2)} ≠ TPC − Lc − M ${commitment.toFixed(2)}` });
     }
-  } else if (devEquity > Math.max(commitment, totals.equityInKind) + 1.0) {
+  } else if (devEquity > Math.max(commitment, totals.equityInKind) + fixedPointTol) {
     v.push({ invariant: 3, message: `development equity ${devEquity.toFixed(2)} exceeds the commitment ${commitment.toFixed(2)}` });
   }
   const expectedCommitment = totals.tpc - totals.constructionLoanCommitment - totals.mezzCommitment;
-  if (Math.abs(commitment - expectedCommitment) > 1.0) {
+  if (Math.abs(commitment - expectedCommitment) > fixedPointTol) {
     v.push({ invariant: 3, message: `equity commitment ${commitment.toFixed(2)} ≠ TPC − Lc − M ${expectedCommitment.toFixed(2)}` });
   }
   let monthlyContrib = 0;

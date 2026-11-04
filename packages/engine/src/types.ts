@@ -285,7 +285,14 @@ export interface DealOutputs {
   waterfall: { tiers: TierResult[]; byPartner: Record<'gp' | 'lp', PartnerResult> };
   metrics: Record<MetricKey, number | null>;
   flags: Flag[];
-  diagnostics: { iterations: number; engineVersion: string };
+  diagnostics: {
+    iterations: number;
+    engineVersion: string;
+    /** |TPC out − TPC in| of the accepted funding pass; below $1 when the fixed point converged exactly. */
+    residual: number;
+    /** 'exact' when |ΔTPC| < $1; 'oscillation' when a two-cycle was resolved by taking the closer pass. */
+    convergence: 'exact' | 'oscillation';
+  };
 }
 
 export interface ValidationIssue {

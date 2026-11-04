@@ -1,0 +1,47 @@
+town,cluster,residential_tax_rate,tax_rate_fiscal_year,assessor_url,mbta_status,notes
+Boston,boston-core,11.58,FY2025,https://www.boston.gov/assessing,n/a (Boston is exempt from the MBTA Communities Act),rate approximate; verify with the assessor
+Cambridge,boston-core,6.35,FY2025,https://www.cambridgema.gov/assessing,rapid transit community,rate approximate; verify with the assessor
+Somerville,boston-core,10.52,FY2025,https://www.somervillema.gov/departments/assessing,rapid transit community,rate approximate; verify with the assessor
+Brookline,boston-core,9.97,FY2025,https://www.brooklinema.gov/assessors,rapid transit community,rate approximate; verify with the assessor
+Chelsea,boston-core,12.27,FY2025,https://www.chelseama.gov/assessor,rapid transit community,rate approximate; verify with the assessor
+Everett,boston-core,10.09,FY2025,https://www.cityofeverett.com/assessor,rapid transit community,rate approximate; verify with the assessor
+Revere,boston-core,10.68,FY2025,https://www.revere.org/departments/assessors,rapid transit community,rate approximate; verify with the assessor
+Newton,inner-suburbs,10.12,FY2025,https://www.newtonma.gov/government/assessing,rapid transit community,rate approximate; verify with the assessor
+Needham,inner-suburbs,11.90,FY2025,https://www.needhamma.gov/assessing,commuter rail community,rate approximate; verify with the assessor
+Wellesley,inner-suburbs,10.89,FY2025,https://www.wellesleyma.gov/assessor,commuter rail community,rate approximate; verify with the assessor
+Arlington,inner-suburbs,10.44,FY2025,https://www.arlingtonma.gov/assessor,adjacent community,rate approximate; verify with the assessor
+Medford,inner-suburbs,8.71,FY2025,https://www.medfordma.org/assessor,rapid transit community,rate approximate; verify with the assessor
+Malden,inner-suburbs,11.20,FY2025,https://www.cityofmalden.org/assessors,rapid transit community,rate approximate; verify with the assessor
+Quincy,inner-suburbs,11.19,FY2025,https://www.quincyma.gov/assessors,rapid transit community,rate approximate; verify with the assessor
+Waltham,inner-suburbs,11.46,FY2025,https://www.city.waltham.ma.us/assessors,commuter rail community,rate approximate; verify with the assessor
+Watertown,inner-suburbs,11.70,FY2025,https://www.watertown-ma.gov/assessor,adjacent community,rate approximate; verify with the assessor
+Belmont,inner-suburbs,11.14,FY2025,https://www.belmont-ma.gov/assessors,commuter rail community,rate approximate; verify with the assessor
+Winchester,inner-suburbs,11.09,FY2025,https://www.winchester.us/assessors,commuter rail community,rate approximate; verify with the assessor
+Lexington,inner-suburbs,12.54,FY2025,https://www.lexingtonma.gov/assessor,adjacent community,rate approximate; verify with the assessor
+Milton,inner-suburbs,11.08,FY2025,https://www.townofmilton.org/assessors,rapid transit community,rate approximate; verify with the assessor
+Dedham,inner-suburbs,12.86,FY2025,https://www.dedham-ma.gov/assessors,commuter rail community,rate approximate; verify with the assessor
+Braintree,inner-suburbs,9.33,FY2025,https://www.braintreema.gov/assessors,rapid transit community,rate approximate; verify with the assessor
+Woburn,inner-suburbs,7.96,FY2025,https://www.woburnma.gov/assessors,commuter rail community,rate approximate; verify with the assessor
+Melrose,inner-suburbs,9.76,FY2025,https://www.cityofmelrose.org/assessors,rapid transit community,rate approximate; verify with the assessor
+Natick,outer-suburbs,12.33,FY2025,https://www.natickma.gov/assessors,commuter rail community,rate approximate; verify with the assessor
+Framingham,outer-suburbs,12.71,FY2025,https://www.framinghamma.gov/assessors,commuter rail community,rate approximate; verify with the assessor
+Burlington,outer-suburbs,9.25,FY2025,https://www.burlington.org/assessors,adjacent community,rate approximate; verify with the assessor
+Canton,outer-suburbs,10.17,FY2025,https://www.town.canton.ma.us/assessors,commuter rail community,rate approximate; verify with the assessor
+Weymouth,outer-suburbs,10.39,FY2025,https://www.weymouth.ma.us/assessors,commuter rail community,rate approximate; verify with the assessor
+Hingham,outer-suburbs,10.75,FY2025,https://www.hingham-ma.gov/assessors,commuter rail community,rate approximate; verify with the assessor
+Beverly,outer-suburbs,10.98,FY2025,https://www.beverlyma.gov/assessors,commuter rail community,rate approximate; verify with the assessor
+Salem,outer-suburbs,11.47,FY2025,https://www.salemma.gov/assessors,commuter rail community,rate approximate; verify with the assessor
+Peabody,outer-suburbs,9.57,FY2025,https://www.peabody-ma.gov/assessors,adjacent community,rate approximate; verify with the assessor
+Lynn,gateway-cities,10.09,FY2025,https://www.lynnma.gov/assessors,commuter rail community,rate approximate; verify with the assessor
+Lowell,gateway-cities,12.10,FY2025,https://www.lowellma.gov/assessors,commuter rail community,rate approximate; verify with the assessor
+Lawrence,gateway-cities,13.00,FY2025,https://www.cityoflawrence.com/assessors,commuter rail community,rate approximate; verify with the assessor
+Haverhill,gateway-cities,11.09,FY2025,https://www.cityofhaverhill.com/assessors,commuter rail community,rate approximate; verify with the assessor
+Brockton,gateway-cities,11.57,FY2025,https://www.brockton.ma.us/assessors,commuter rail community,rate approximate; verify with the assessor
+Worcester,gateway-cities,13.75,FY2025,https://www.worcesterma.gov/assessing,commuter rail community,rate approximate; verify with the assessor
+Fitchburg,gateway-cities,14.57,FY2025,https://www.fitchburgma.gov/assessors,commuter rail community,rate approximate; verify with the assessor
+New Bedford,gateway-cities,13.03,FY2025,https://www.newbedford-ma.gov/assessors,commuter rail community,rate approximate; verify with the assessor
+Fall River,gateway-cities,11.82,FY2025,https://www.fallriverma.org/assessors,commuter rail community,rate approximate; verify with the assessor
+Springfield,other-ma,15.84,FY2025,https://www.springfield-ma.gov/finance/assessors,not an MBTA community,rate approximate; verify with the assessor
+Pittsfield,other-ma,17.94,FY2025,https://www.cityofpittsfield.org/assessors,not an MBTA community,rate approximate; verify with the assessor
+Northampton,other-ma,14.58,FY2025,https://www.northamptonma.gov/assessor,not an MBTA community,rate approximate; verify with the assessor
+Amherst,other-ma,18.85,FY2025,https://www.amherstma.gov/assessor,not an MBTA community,rate approximate; verify with the assessor

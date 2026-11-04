@@ -6,24 +6,30 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./schema": "./src/schema.ts"
+    "./schema": "./src/schema.ts",
+    "./state": "./src/state.ts"
   },
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate && tsx scripts/embed-migrations.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.5.15",
     "@pencil/engine": "workspace:*",
     "drizzle-orm": "0.45.4",
-    "postgres": "3.4.9"
+    "postgres": "3.4.9",
+    "@pencil/package-pages": "workspace:*",
+    "@pencil/benchmarks": "workspace:*",
+    "@pencil/parcels": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "22.20.5",
     "drizzle-kit": "0.31.11",
     "typescript": "5.9.3",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "tsx": "4.23.15",
+    "@types/react": "19.3.0"
   }
 }

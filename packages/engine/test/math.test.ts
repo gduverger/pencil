@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { growth, largestRemainder, scurveWeights, straightWeights, customWeights, levelPayment } from '../src/math';
+import { growth, largestRemainder, scurveWeights, straightWeights, customWeights, levelPayment, sumChildren } from '../src/math';
 import { EngineError } from '../src/errors';
 
 describe('7.1 growth', () => {
@@ -72,5 +72,12 @@ describe('level payment', () => {
   it('$1,000,000 at 6% over 30 years pays $5,995.51 per month', () => {
     // 1,000,000 × 0.005 / (1 − 1.005^−360) = 5,995.505...
     expect(levelPayment(1_000_000, 0.06 / 12, 360)).toBeCloseTo(5995.51, 2);
+  });
+});
+
+describe('FR-2.1 sumChildren', () => {
+  it('adds child amounts', () => {
+    expect(sumChildren([{ amount: 1.5 }, { amount: 2.5 }])).toBe(4);
+    expect(sumChildren([])).toBe(0);
   });
 });

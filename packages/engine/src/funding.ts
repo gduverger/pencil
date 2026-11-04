@@ -61,6 +61,10 @@ export interface FundingResult {
   mezzFirstDrawMonth: number | null;
   /** Diagnostics: TPC in/out per iteration. */
   trace: Array<{ tpcIn: number; tpcOut: number }>;
+  /** |TPC out − TPC in| of the accepted pass: below $1 when converged exactly. */
+  residual: number;
+  /** True when the iteration settled into a two-cycle (a discrete timing rule such as the month of the first mezzanine draw moved) and the closer pass was accepted. */
+  oscillation: boolean;
 }
 
 interface PassParams {
@@ -311,6 +315,31 @@ export function solveFunding(inputs: DealInputs, tl: Timeline, cost: CostSchedul
   const feeFactor = 1 - ltc * fin.constructionLoan.feePct - mezzPct * fin.mezz.feePct;
   let tpcIn = (fixed + landFee) / feeFactor;
   const trace: Array<{ tpcIn: number; tpcOut: number }> = [];
+  type Pass = ReturnType<typeof runPass>;
+  let previous: { pass: Pass; tpcIn: number; lc: number; mezzCommitment: number; equityCommitment: number } | null = null;
+
+  const result = (chosen: { pass: Pass; tpcIn: number; lc: number; mezzCommitment: number; equityCommitment: number }, iterations: number, oscillation: boolean): FundingResult => ({
+    months: chosen.pass.months,
+    tpc: chosen.pass.tpcOut,
+    lc: chosen.lc,
+    mezzCommitment: chosen.mezzCommitment,
+    equityCommitment: chosen.equityCommitment,
+    iterations,
+    fees: chosen.pass.fees,
+    interest: chosen.pass.interest,
+    equityCash: chosen.pass.equityCash,
+    equityInKind: chosen.pass.equityInKind,
+    operatingDeficitCapitalized: chosen.pass.deficitCapitalized,
+    leaseUpNoiApplied: chosen.pass.leaseUpNoiApplied,
+    inflowsApplied: chosen.pass.inflowsApplied,
+    surplusAtR: chosen.pass.surplusAtR,
+    loanBalanceAtR: chosen.pass.loanBalanceAtR,
+    mezzBalanceAtR: chosen.pass.mezzBalanceAtR,
+    mezzFirstDrawMonth: chosen.pass.mezzFirstDrawMonth,
+    trace,
+    residual: Math.abs(chosen.pass.tpcOut - chosen.tpcIn),
+    oscillation,
+  });
 
   for (let k = 1; k <= 50; k++) {
     const lc = ltc * tpcIn;
@@ -322,28 +351,20 @@ export function solveFunding(inputs: DealInputs, tl: Timeline, cost: CostSchedul
       pass = runPass(inputs, tl, cost, noi, { tpcIn, lc, mezzCommitment, equityCommitment }, true);
     }
     trace.push({ tpcIn, tpcOut: pass.tpcOut });
-    if (Math.abs(pass.tpcOut - tpcIn) < 1) {
-      return {
-        months: pass.months,
-        tpc: pass.tpcOut,
-        lc,
-        mezzCommitment,
-        equityCommitment,
-        iterations: k,
-        fees: pass.fees,
-        interest: pass.interest,
-        equityCash: pass.equityCash,
-        equityInKind: pass.equityInKind,
-        operatingDeficitCapitalized: pass.deficitCapitalized,
-        leaseUpNoiApplied: pass.leaseUpNoiApplied,
-        inflowsApplied: pass.inflowsApplied,
-        surplusAtR: pass.surplusAtR,
-        loanBalanceAtR: pass.loanBalanceAtR,
-        mezzBalanceAtR: pass.mezzBalanceAtR,
-        mezzFirstDrawMonth: pass.mezzFirstDrawMonth,
-        trace,
-      };
+    const current = { pass, tpcIn, lc, mezzCommitment, equityCommitment };
+    if (Math.abs(pass.tpcOut - tpcIn) < 1) return result(current, k, false);
+    // A two-cycle: this pass reproduces the TPC fed into the previous one. A discrete timing rule
+    // (the month of the first mezzanine draw, which moves the fee and a month of interest) has put a
+    // small jump in the map, so no exact fixed point exists. Accept the pass with the smaller
+    // residual and report it (see docs/decisions.md).
+    if (previous && Math.abs(pass.tpcOut - previous.tpcIn) < 1) {
+      const chosen = Math.abs(previous.pass.tpcOut - previous.tpcIn) <= Math.abs(pass.tpcOut - tpcIn) ? previous : current;
+      const residual = Math.abs(chosen.pass.tpcOut - chosen.tpcIn);
+      // Only an immaterial jump is accepted (0.1% of TPC); a wide cycle is divergence and throws below.
+      if (residual <= 1e-3 * Math.abs(chosen.tpcIn)) return result(chosen, k, true);
+      throw new EngineError('non-convergent', 'total project cost alternates between two schedules that differ materially', { lastIterations: trace.slice(-2) });
     }
+    previous = current;
     tpcIn = pass.tpcOut;
   }
   throw new EngineError('non-convergent', 'total project cost did not converge in 50 iterations', {

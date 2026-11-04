@@ -10,7 +10,7 @@ verified, how it was verified, and what is left.
 | M2 Engine operations and capital | done (2026-11-04) |
 | M3 Engine analysis and CLI | done (2026-11-04), golden tests pending workbooks |
 | M4 Package pages and exports | done (2026-11-04) |
-| M5 Web app: deals and inputs | not started |
+| M5 Web app: deals and inputs | done (2026-11-04) |
 | M6 Web app: results, scenarios, sensitivities | not started |
 | M7 Web app: package, versions, sharing | not started |
 | M8 Benchmarks and parcels | not started |
@@ -126,6 +126,40 @@ annual NOI to full precision. Sources & uses totals equal TPC after independent 
 
 **Left.** The web app's package routes (M7) will render the same components; the render service
 needs Inter installed in its production image (a Dockerfile arrives with M10's deploy work).
+
+## M5 Web app: deals and inputs — done 2026-11-04
+
+**Built.** `@pencil/db`: Drizzle schema for every table of 11.3 (plus Auth.js tables), embedded
+migrations, PGlite/Postgres client, the deal-state document with pure functions for patches with
+append-only history (FR-1), elaboration with the auto-balancing remainder (FR-2), switches that keep
+hidden values (FR-3), events (FR-4), scenario overrides (FR-5), stale sensitivities (FR-6), clone
+with history reset, and organization-scoped queries with rev-checked transactional updates.
+`@pencil/parcels`: a 46-town Massachusetts table (cluster, approximate FY2025 residential rate,
+assessor URL, MBTA status), address parsing and the documented parcel-lookup stub.
+`@pencil/benchmarks`: schema, the empty seed template with every row of 9.2, CSV loader, segment
+resolution with fallback, defaults, flags and percentiles. `apps/web`: Auth.js (email link,
+Google, development sign-in), personal organizations, deal list with clone and templates, new
+deal from address (town → cluster, tax-rate default for stabilized taxes, parcel facts with
+`unknown` sources), Setup screen, Inputs screen in Tonight / All modes with value, unit, source,
+note, timestamp, history panel, benchmark range and flag on every input, elaboration editor with
+paste of a column, events, switches, waterfall tiers, unit-mix CSV import, scenario overrides,
+keyboard navigation and autosave with a revision-conflict banner; organization settings.
+
+**Verified.** 201 unit tests across 10 workspaces (engine 150 with property tests, db 16 on
+PGlite, benchmarks 9, parcels 6, package-pages 10, exports 3, cli 3, render 2), `pnpm lint` and
+`pnpm typecheck` clean, `next build` succeeds. End-to-end (Playwright against the production
+build with PGlite and the development sign-in): steps 1–6 of section 5 pass — create from a
+Needham address, defaults shown, two inputs changed with notes (history rows appended and
+listed), hard cost elaborated into three children with the remainder, an inflow event, commercial
+switched on and off with the value retained, everything surviving a reload; a concurrent edit with
+a stale revision shows the conflict banner and nothing is overwritten; unauthenticated access
+redirects to sign-in. The property tests also surfaced a real engine issue during this milestone
+(a two-cycle in the TPC fixed point when the first mezzanine draw month flips), now resolved and
+recorded in `docs/decisions.md` with a regression fixture.
+
+**Left.** Benchmarks are empty until Mark's seed arrives, so every default shows source `unknown`
+and no flags fire; Google and email sign-in are configured but untested without credentials;
+inviting members is not yet on the settings screen.
 
 ## Blockers and gaps
 

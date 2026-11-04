@@ -81,6 +81,7 @@ export {
   annuityFactor,
   sum,
   sumRange,
+  sumChildren,
 } from './math';
 export { getPath, setPath, applyOverrides, parsePath } from './paths';
 export type { Path, PathSegment } from './paths';

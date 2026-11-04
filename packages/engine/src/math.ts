@@ -204,3 +204,10 @@ export function annuityFactor(monthlyRate: number, n: number): number {
 export function approxEqual(a: number, b: number, tolerance: number): boolean {
   return Math.abs(a - b) <= tolerance;
 }
+
+/** Sum of elaborated child line amounts (FR-2.1): the one place children are added up. */
+export function sumChildren(children: ReadonlyArray<{ amount: number }>): number {
+  let s = 0;
+  for (const c of children) s += c.amount;
+  return s;
+}

@@ -1,2 +1,7 @@
-// @pencil/db — Drizzle schema, migrations and typed queries (spec 11.3)
-export const PACKAGE_NAME = '@pencil/db';
+// @pencil/db — Drizzle schema, migrations, typed queries and the deal-state document.
+export * as schema from './schema';
+export { createDb, migrate } from './client';
+export type { Db, DbHandle, CreateDbOptions } from './client';
+export * from './state';
+export * from './queries';
+export { MIGRATIONS } from './migrations.generated';

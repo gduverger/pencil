@@ -36,4 +36,5 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @pencil/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @pencil/web build
       - run: pnpm test:e2e

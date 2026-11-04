@@ -20,7 +20,8 @@ import {
   type ScenarioKey,
   type DealOutputs,
 } from '@pencil/engine';
-import { DEFAULT_PACKAGE_SETTINGS, packageFileName, registerFromInputs, renderPackageHtml, type PackageProps } from '@pencil/package-pages';
+import { DEFAULT_PACKAGE_SETTINGS, packageFileName, registerFromInputs, type PackageProps } from '@pencil/package-pages';
+import { renderPackageHtml } from '@pencil/package-pages/render';
 import { buildWorkbookBuffer } from '@pencil/exports';
 import { renderPlainPackage } from './html';
 

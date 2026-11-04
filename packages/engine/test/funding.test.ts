@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { run } from '../src/run';
+import { checkInvariants } from '../src/invariants';
 import { EngineError } from '../src/errors';
 import { solveFunding } from '../src/funding';
 import { buildCostSchedule } from '../src/costs';
@@ -193,5 +196,18 @@ describe('run() diagnostics', () => {
   it('accepts an already-parsed DealInputs object', () => {
     const inputs = fixtureInputs();
     expect(run(inputs).totals.tpc).toBeCloseTo(run(fixtureDeal()).totals.tpc, 6);
+  });
+});
+
+describe('7.6 fixed point: two-cycle on the first mezzanine draw month', () => {
+  it('accepts the closer schedule, reports the residual and flags it instead of failing', () => {
+    const deal = JSON.parse(readFileSync(join(__dirname, 'regressions', 'mezz-first-draw-oscillation.json'), 'utf8')) as DealInputsInput;
+    const out = run(deal);
+    expect(out.diagnostics.convergence).toBe('oscillation');
+    expect(out.diagnostics.residual).toBeGreaterThan(1);
+    expect(out.diagnostics.residual).toBeLessThan(5000);
+    expect(out.flags.some((f) => f.code === 'fixed-point-oscillation')).toBe(true);
+    expect(checkInvariants(out)).toEqual([]);
+    expect(JSON.stringify(run(deal))).toBe(JSON.stringify(out));
   });
 });

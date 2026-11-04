@@ -1,0 +1,154 @@
+{
+ "meta": {
+  "name": "regression: mezz first-draw month two-cycle (no construction loan, 12% mezz, owned land, inflow events)",
+  "analysisMonth": "2026-01",
+  "holdMonths": 101
+ },
+ "site": {
+  "lotSF": 50000,
+  "landCost": 555258,
+  "landOwned": true,
+  "closingCostPct": 0.02
+ },
+ "program": {
+  "totalUnits": 87,
+  "unitTypes": [
+   {
+    "key": "studio",
+    "mixPct": 0.15,
+    "avgSF": 450,
+    "rentPerMonth": 2885.9857407502245
+   },
+   {
+    "key": "1BR",
+    "mixPct": 0.35,
+    "avgSF": 650,
+    "rentPerMonth": 3541.8915909207303
+   },
+   {
+    "key": "2BR",
+    "mixPct": 0.35,
+    "avgSF": 950,
+    "rentPerMonth": 4328.978611125337
+   },
+   {
+    "key": "3BR",
+    "mixPct": 0.15,
+    "avgSF": 1200,
+    "rentPerMonth": 5116.065631329944
+   }
+  ],
+  "commercial": {
+   "enabled": false,
+   "grossSF": 3000,
+   "rentPerSFYear": 30,
+   "vacancyPct": 0.1,
+   "tiPerSF": 50,
+   "leaseUpMonths": 6,
+   "opexPerSFYear": 8
+  },
+  "affordable": {
+   "enabled": false,
+   "pctUnits": 0.15,
+   "rentDiscountPct": 0.4
+  }
+ },
+ "timeline": {
+  "predevMonths": 13,
+  "constructionMonths": 29,
+  "leaseUpMonths": 2
+ },
+ "costs": {
+  "hard": {
+   "perGrossSF": 340,
+   "distribution": {
+    "kind": "scurve"
+   }
+  },
+  "soft": {
+   "pctOfHard": 0.22696173611716394
+  },
+  "carry": {
+   "taxesDuringConstructionAnnual": 50000,
+   "insuranceDuringConstructionAnnual": 30000
+  },
+  "developerFeePct": 0.03
+ },
+ "events": [
+  {
+   "id": "e0",
+   "label": "Event 0",
+   "month": 47,
+   "amount": 268022,
+   "kind": "inflow",
+   "category": "inflow"
+  },
+  {
+   "id": "e1",
+   "label": "Event 1",
+   "month": 29,
+   "amount": 405470,
+   "kind": "inflow",
+   "category": "inflow"
+  },
+  {
+   "id": "e2",
+   "label": "Event 2",
+   "month": 42,
+   "amount": 1644421,
+   "kind": "cost",
+   "category": "land"
+  }
+ ],
+ "financing": {
+  "constructionLoan": {
+   "ltc": 6.618293517593222e-55,
+   "ratePct": 0.033520097688068684,
+   "feePct": 0.01
+  },
+  "landLoan": {
+   "enabled": false,
+   "ltv": 0.5,
+   "ratePct": 0.043520097688068686,
+   "feePct": 0.01
+  },
+  "mezz": {
+   "enabled": true,
+   "pctOfCost": 0.12394345221835319,
+   "ratePct": 0.13320314508155473,
+   "feePct": 0.01,
+   "repaidAt": "sale"
+  },
+  "permanent": {
+   "enabled": false,
+   "monthsAfterStabilization": 0,
+   "maxLTV": 0.65,
+   "minDSCR": 1.25,
+   "ratePct": 0.03739789228587821,
+   "amortYears": 30,
+   "ioMonths": 17,
+   "feePct": 0.01,
+   "refiCapRatePct": 0.05371069880842935
+  },
+  "capitalizeOperatingDeficits": true
+ },
+ "operations": {
+  "stabilizedVacancyPct": 0.08977862259989806,
+  "rentGrowthPct": 0,
+  "expenseGrowthPct": 0,
+  "otherIncomeGrowthPct": 0,
+  "absorption": {
+   "kind": "linear"
+  },
+  "opex": {
+   "taxesStabilizedAnnual": 1072429
+  }
+ },
+ "exit": {
+  "exitCapRatePct": 0.07499999999999993
+ },
+ "equity": {
+  "gpPct": 0.1,
+  "lpPct": 0.9
+ }
+}

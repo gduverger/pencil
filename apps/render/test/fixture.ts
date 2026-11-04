@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ENGINE_VERSION, runScenarios, scenarioOverridesFromDeltas, sensitivity, sensitivityPresets } from '@pencil/engine';
-import { DEFAULT_PACKAGE_SETTINGS, registerFromInputs, renderPackageHtml, type PackageProps } from '@pencil/package-pages';
+import { DEFAULT_PACKAGE_SETTINGS, registerFromInputs, type PackageProps } from '@pencil/package-pages';
+import { renderPackageHtml } from '@pencil/package-pages/render';
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const EXAMPLE_DEAL = join(here, '..', '..', 'cli', 'examples', 'needham-60.json');
