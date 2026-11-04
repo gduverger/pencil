@@ -28,16 +28,35 @@ class LocalStorage implements Storage {
 class S3Storage implements Storage {
   private client: Promise<S3Client>;
   constructor(private readonly bucket: string) {
-    this.client = import('@aws-sdk/client-s3').then((m) => new m.S3Client({ region: process.env.S3_REGION ?? 'auto', ...(process.env.S3_ENDPOINT ? { endpoint: process.env.S3_ENDPOINT, forcePathStyle: true } : {}) }));
+    this.client = import('@aws-sdk/client-s3').then(
+      (m) =>
+        new m.S3Client({
+          region: process.env.S3_REGION ?? 'auto',
+          ...(process.env.S3_ENDPOINT
+            ? { endpoint: process.env.S3_ENDPOINT, forcePathStyle: true }
+            : {}),
+        }),
+    );
   }
   async put(key: string, bytes: Buffer, contentType: string) {
     const { PutObjectCommand } = await import('@aws-sdk/client-s3');
-    await (await this.client).send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: bytes, ContentType: contentType }));
+    await (
+      await this.client
+    ).send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: bytes,
+        ContentType: contentType,
+      }),
+    );
   }
   async get(key: string) {
     const { GetObjectCommand } = await import('@aws-sdk/client-s3');
     try {
-      const res = await (await this.client).send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+      const res = await (
+        await this.client
+      ).send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
       const body = res.Body as { transformToByteArray(): Promise<Uint8Array> } | undefined;
       return body ? Buffer.from(await body.transformToByteArray()) : null;
     } catch {
@@ -50,9 +69,14 @@ let instance: Storage | undefined;
 
 export function storage(): Storage {
   if (!instance) {
-    instance = process.env.S3_BUCKET ? new S3Storage(process.env.S3_BUCKET) : new LocalStorage(resolve(process.env.PENCIL_FILES_DIR ?? '.data/files'));
+    instance = process.env.S3_BUCKET
+      ? new S3Storage(process.env.S3_BUCKET)
+      : new LocalStorage(resolve(process.env.PENCIL_FILES_DIR ?? '.data/files'));
   }
   return instance;
 }
 
-export const CONTENT_TYPES = { pdf: 'application/pdf', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' } as const;
+export const CONTENT_TYPES = {
+  pdf: 'application/pdf',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+} as const;

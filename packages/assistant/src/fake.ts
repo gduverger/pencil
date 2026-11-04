@@ -20,6 +20,12 @@ export class FakeProvider implements Provider {
     this.requests.push(request);
     const next = this.queue.shift();
     if (!next) throw new Error('FakeProvider: no recorded response left');
-    return { text: next.text, toolCalls: next.toolCalls ?? [], usage: next.usage ?? { inputTokens: 100, outputTokens: 50 }, stopReason: next.stopReason ?? (next.toolCalls?.length ? 'tool_use' : 'end_turn'), model: next.model ?? 'fake' };
+    return {
+      text: next.text,
+      toolCalls: next.toolCalls ?? [],
+      usage: next.usage ?? { inputTokens: 100, outputTokens: 50 },
+      stopReason: next.stopReason ?? (next.toolCalls?.length ? 'tool_use' : 'end_turn'),
+      model: next.model ?? 'fake',
+    };
   }
 }

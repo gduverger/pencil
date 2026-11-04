@@ -28,11 +28,24 @@ describe('PDF rendering (spec 8)', () => {
     try {
       const health = await fetch(`http://127.0.0.1:${port}/healthz`);
       expect(health.status).toBe(200);
-      const unauthorized = await fetch(`http://127.0.0.1:${port}/render`, { method: 'POST', body: JSON.stringify({ html: '<p>x</p>' }) });
+      const unauthorized = await fetch(`http://127.0.0.1:${port}/render`, {
+        method: 'POST',
+        body: JSON.stringify({ html: '<p>x</p>' }),
+      });
       expect(unauthorized.status).toBe(401);
-      const bad = await fetch(`http://127.0.0.1:${port}/render`, { method: 'POST', headers: { 'x-render-token': 'secret' }, body: JSON.stringify({}) });
+      const bad = await fetch(`http://127.0.0.1:${port}/render`, {
+        method: 'POST',
+        headers: { 'x-render-token': 'secret' },
+        body: JSON.stringify({}),
+      });
       expect(bad.status).toBe(400);
-      const ok = await fetch(`http://127.0.0.1:${port}/render`, { method: 'POST', headers: { 'x-render-token': 'secret' }, body: JSON.stringify({ html: '<html><body><section class="page">hello</section></body></html>' }) });
+      const ok = await fetch(`http://127.0.0.1:${port}/render`, {
+        method: 'POST',
+        headers: { 'x-render-token': 'secret' },
+        body: JSON.stringify({
+          html: '<html><body><section class="page">hello</section></body></html>',
+        }),
+      });
       expect(ok.status).toBe(200);
       expect(ok.headers.get('content-type')).toBe('application/pdf');
       const buf = Buffer.from(await ok.arrayBuffer());

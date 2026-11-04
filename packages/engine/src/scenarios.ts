@@ -27,7 +27,10 @@ export function runScenario(inputs: unknown, overrides: Overrides): DealOutputs 
 }
 
 /** Run Likely, Best and Worst side by side. */
-export function runScenarios(inputs: unknown, scenarios: ScenarioSet): Record<ScenarioKey, DealOutputs> {
+export function runScenarios(
+  inputs: unknown,
+  scenarios: ScenarioSet,
+): Record<ScenarioKey, DealOutputs> {
   return {
     likely: runScenario(inputs, {}),
     best: runScenario(inputs, scenarios.best),
@@ -43,7 +46,10 @@ export interface ScenarioDeltas {
 export const DEFAULT_SCENARIO_DELTAS: ScenarioDeltas = { rentPct: 0.05, hardCostPct: 0.1 };
 
 /** Build Best and Worst override maps from the base inputs and symmetric deltas. */
-export function scenarioOverridesFromDeltas(inputs: unknown, deltas: ScenarioDeltas = DEFAULT_SCENARIO_DELTAS): ScenarioSet {
+export function scenarioOverridesFromDeltas(
+  inputs: unknown,
+  deltas: ScenarioDeltas = DEFAULT_SCENARIO_DELTAS,
+): ScenarioSet {
   const base = parseInputs(inputs);
   const best: Overrides = {};
   const worst: Overrides = {};
@@ -84,13 +90,22 @@ const REL_TOL = 1e-9;
 
 function indexOfValue(values: number[], target: unknown): number | null {
   if (typeof target !== 'number') return null;
-  const i = values.findIndex((v) => Math.abs(v - target) <= REL_TOL * Math.max(1, Math.abs(target)));
+  const i = values.findIndex(
+    (v) => Math.abs(v - target) <= REL_TOL * Math.max(1, Math.abs(target)),
+  );
   return i >= 0 ? i : null;
 }
 
 /** Two-input grid on any metrics, computed on demand (FR-6.1). */
-export function sensitivity(inputs: unknown, scenario: Overrides, axisA: Axis, axisB: Axis, metrics: MetricKey[]): Grid {
-  if (axisA.values.length === 0 || axisB.values.length === 0) throw new EngineError('empty-axis', 'each sensitivity axis needs at least one value');
+export function sensitivity(
+  inputs: unknown,
+  scenario: Overrides,
+  axisA: Axis,
+  axisB: Axis,
+  metrics: MetricKey[],
+): Grid {
+  if (axisA.values.length === 0 || axisB.values.length === 0)
+    throw new EngineError('empty-axis', 'each sensitivity axis needs at least one value');
   const base = parseInputs(inputs);
   const scenarioInputs = Object.keys(scenario).length === 0 ? base : applyOverrides(base, scenario);
   const pick = (out: DealOutputs) => {
@@ -118,7 +133,10 @@ export function sensitivity(inputs: unknown, scenario: Overrides, axisA: Axis, a
     axisB,
     metrics,
     rows,
-    base: { a: indexOfValue(axisA.values, getPath(scenarioInputs, axisA.path)), b: indexOfValue(axisB.values, getPath(scenarioInputs, axisB.path)) },
+    base: {
+      a: indexOfValue(axisA.values, getPath(scenarioInputs, axisA.path)),
+      b: indexOfValue(axisB.values, getPath(scenarioInputs, axisB.path)),
+    },
     errors,
   };
 }
@@ -156,8 +174,14 @@ export function sensitivityPresets(inputs: unknown): SensitivityPreset[] {
     {
       key: 'hardCostXConstructionRate',
       label: 'Hard cost per SF × construction loan rate',
-      axisA: { path: 'costs.hard.perGrossSF', values: range(-0.2, 0.2, 0.05).map((d) => Number((hard * (1 + d)).toPrecision(12))) },
-      axisB: { path: 'financing.constructionLoan.ratePct', values: range(-0.02, 0.02, 0.005).map((d) => Number((rate + d).toPrecision(12))) },
+      axisA: {
+        path: 'costs.hard.perGrossSF',
+        values: range(-0.2, 0.2, 0.05).map((d) => Number((hard * (1 + d)).toPrecision(12))),
+      },
+      axisB: {
+        path: 'financing.constructionLoan.ratePct',
+        values: range(-0.02, 0.02, 0.005).map((d) => Number((rate + d).toPrecision(12))),
+      },
     },
     {
       key: 'vacancyXExitCap',

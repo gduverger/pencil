@@ -49,8 +49,11 @@ export function buildAnnual(months: MonthRow[]): AnnualRow[] {
     row.cashFlow = row.noi - row.debtService.total;
     row.dscr = row.debtService.total > 0 ? row.noi / row.debtService.total : null;
     cumulativeContributions += row.contributions.gp + row.contributions.lp;
-    const operating = slice.some((m) => m.noi !== 0 || m.debtService.interest !== 0 || m.debtService.principal !== 0);
-    row.cashOnCash = operating && cumulativeContributions > 0 ? row.cashFlow / cumulativeContributions : null;
+    const operating = slice.some(
+      (m) => m.noi !== 0 || m.debtService.interest !== 0 || m.debtService.principal !== 0,
+    );
+    row.cashOnCash =
+      operating && cumulativeContributions > 0 ? row.cashFlow / cumulativeContributions : null;
     rows.push(row);
   }
   return rows;

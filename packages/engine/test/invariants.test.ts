@@ -8,14 +8,72 @@ const variants: Array<[string, DealInputsInput]> = [
   ['fixture', fixtureDeal()],
   ['simple (no debt)', simpleDeal()],
   ['owned land', { ...fixtureDeal(), site: { ...fixtureDeal().site, landOwned: true } }],
-  ['land loan', { ...fixtureDeal(), financing: { ...fixtureDeal().financing, landLoan: { enabled: true, ltv: 0.5, ratePct: 0.09, feePct: 0.01 } } }],
-  ['mezz', { ...fixtureDeal(), financing: { ...fixtureDeal().financing, mezz: { enabled: true, pctOfCost: 0.1, ratePct: 0.12, feePct: 0.01, repaidAt: 'refi' } } }],
-  ['events', { ...fixtureDeal(), events: [
-    { id: 'a', label: 'Relocate house', month: 14, amount: 150000, kind: 'cost', category: 'hard' },
-    { id: 'b', label: 'Sell house', month: 3, amount: 900000, kind: 'inflow', category: 'inflow' },
-  ] }],
-  ['commercial', { ...fixtureDeal(), program: { ...fixtureDeal().program, commercial: { enabled: true, grossSF: 4000, rentPerSFYear: 30, vacancyPct: 0.1, tiPerSF: 50, leaseUpMonths: 6, opexPerSFYear: 8 } } }],
-  ['no predevelopment', { ...fixtureDeal(), timeline: { predevMonths: 0, constructionMonths: 18, leaseUpMonths: 12 } }],
+  [
+    'land loan',
+    {
+      ...fixtureDeal(),
+      financing: {
+        ...fixtureDeal().financing,
+        landLoan: { enabled: true, ltv: 0.5, ratePct: 0.09, feePct: 0.01 },
+      },
+    },
+  ],
+  [
+    'mezz',
+    {
+      ...fixtureDeal(),
+      financing: {
+        ...fixtureDeal().financing,
+        mezz: { enabled: true, pctOfCost: 0.1, ratePct: 0.12, feePct: 0.01, repaidAt: 'refi' },
+      },
+    },
+  ],
+  [
+    'events',
+    {
+      ...fixtureDeal(),
+      events: [
+        {
+          id: 'a',
+          label: 'Relocate house',
+          month: 14,
+          amount: 150000,
+          kind: 'cost',
+          category: 'hard',
+        },
+        {
+          id: 'b',
+          label: 'Sell house',
+          month: 3,
+          amount: 900000,
+          kind: 'inflow',
+          category: 'inflow',
+        },
+      ],
+    },
+  ],
+  [
+    'commercial',
+    {
+      ...fixtureDeal(),
+      program: {
+        ...fixtureDeal().program,
+        commercial: {
+          enabled: true,
+          grossSF: 4000,
+          rentPerSFYear: 30,
+          vacancyPct: 0.1,
+          tiPerSF: 50,
+          leaseUpMonths: 6,
+          opexPerSFYear: 8,
+        },
+      },
+    },
+  ],
+  [
+    'no predevelopment',
+    { ...fixtureDeal(), timeline: { predevMonths: 0, constructionMonths: 18, leaseUpMonths: 12 } },
+  ],
 ];
 
 describe('12.2 invariants on every variant (M1: 1, 2, 5)', () => {
@@ -47,7 +105,10 @@ describe('sources & uses and capital budget', () => {
     for (const g of out.capitalBudget) {
       expect(Math.abs(g.lines.reduce((s, l) => s + l.amount, 0) - g.subtotal)).toBeLessThan(0.01);
       for (const l of g.lines) {
-        if (l.children) expect(Math.abs(l.children.reduce((s, c) => s + c.amount, 0) - l.amount)).toBeLessThan(0.01);
+        if (l.children)
+          expect(Math.abs(l.children.reduce((s, c) => s + c.amount, 0) - l.amount)).toBeLessThan(
+            0.01,
+          );
         expect(l.perUnit).toBeCloseTo(l.amount / 60, 6);
       }
     }

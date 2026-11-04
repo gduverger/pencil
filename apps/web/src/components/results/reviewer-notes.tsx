@@ -6,8 +6,19 @@ import type { ScenarioKey } from '@pencil/engine';
 import { Button } from '@/components/ui';
 import { flagSentences } from '@/server/assistant-actions';
 
-export function ReviewerNotes({ dealId, scenario, rev }: { dealId: string; scenario: ScenarioKey; rev: number }) {
-  const [notes, setNotes] = useState<{ rev: number; items: Array<{ code: string; text: string; drafted: boolean }> } | null>(null);
+export function ReviewerNotes({
+  dealId,
+  scenario,
+  rev,
+}: {
+  dealId: string;
+  scenario: ScenarioKey;
+  rev: number;
+}) {
+  const [notes, setNotes] = useState<{
+    rev: number;
+    items: Array<{ code: string; text: string; drafted: boolean }>;
+  } | null>(null);
   const [busy, setBusy] = useState(false);
   return (
     <div className="mt-3">
@@ -27,12 +38,17 @@ export function ReviewerNotes({ dealId, scenario, rev }: { dealId: string; scena
       </Button>
       {notes ? (
         notes.items.length === 0 ? (
-          <p className="mt-1 text-xs text-neutral-500" data-testid="reviewer-empty">No flags for the {scenario} scenario.</p>
+          <p className="mt-1 text-xs text-neutral-500" data-testid="reviewer-empty">
+            No flags for the {scenario} scenario.
+          </p>
         ) : (
           <ul className="mt-1 space-y-1 text-xs" data-testid="reviewer-list">
             {notes.items.map((n, i) => (
               <li key={i} className="text-amber-900">
-                {n.text} {n.drafted ? <span className="text-[10px] text-neutral-400">(drafted by the assistant)</span> : null}
+                {n.text}{' '}
+                {n.drafted ? (
+                  <span className="text-[10px] text-neutral-400">(drafted by the assistant)</span>
+                ) : null}
               </li>
             ))}
           </ul>

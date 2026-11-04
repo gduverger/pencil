@@ -18,7 +18,10 @@ function signed(payload: string, secret = WEBHOOK_SECRET): string {
 
 async function postEvent(request: APIRequestContext, event: object, secret = WEBHOOK_SECRET) {
   const payload = JSON.stringify(event);
-  return request.post('/api/billing/webhook', { headers: { 'content-type': 'application/json', 'stripe-signature': signed(payload, secret) }, data: payload });
+  return request.post('/api/billing/webhook', {
+    headers: { 'content-type': 'application/json', 'stripe-signature': signed(payload, secret) },
+    data: payload,
+  });
 }
 
 async function signIn(page: Page, email: string) {
@@ -38,7 +41,10 @@ async function newDeal(page: Page, name: string): Promise<string> {
   return page.url().match(/\/deals\/([^/]+)\//)![1]!;
 }
 
-test('a Free organization is blocked at export and a Stripe webhook unlocks it', async ({ page, request }) => {
+test('a Free organization is blocked at export and a Stripe webhook unlocks it', async ({
+  page,
+  request,
+}) => {
   await signIn(page, 'free@example.com');
   await page.goto('/settings');
   await expect(page.getByTestId('org-tier')).toHaveText('free');
@@ -56,14 +62,37 @@ test('a Free organization is blocked at export and a Stripe webhook unlocks it',
   await expect(page.getByTestId('billing-message')).toContainText('not configured');
 
   // A bad signature is rejected; a missing secret header too.
-  const bad = await postEvent(request, { id: 'evt_bad', type: 'checkout.session.completed', data: { object: {} } }, 'whsec_wrong');
+  const bad = await postEvent(
+    request,
+    { id: 'evt_bad', type: 'checkout.session.completed', data: { object: {} } },
+    'whsec_wrong',
+  );
   expect(bad.status()).toBe(400);
 
   // The test purchase: checkout.session.completed for this deal, signed with the webhook secret.
-  const purchase = { id: 'evt_e2e_1', type: 'checkout.session.completed', data: { object: { id: 'cs_e2e_1', object: 'checkout.session', mode: 'payment', payment_status: 'paid', customer: 'cus_e2e', client_reference_id: orgId, metadata: { orgId, kind: 'per-deal', dealId: dealA } } } };
+  const purchase = {
+    id: 'evt_e2e_1',
+    type: 'checkout.session.completed',
+    data: {
+      object: {
+        id: 'cs_e2e_1',
+        object: 'checkout.session',
+        mode: 'payment',
+        payment_status: 'paid',
+        customer: 'cus_e2e',
+        client_reference_id: orgId,
+        metadata: { orgId, kind: 'per-deal', dealId: dealA },
+      },
+    },
+  };
   const first = await postEvent(request, purchase);
   expect(first.status()).toBe(200);
-  expect(await first.json()).toMatchObject({ received: true, applied: true, kind: 'per-deal', orgId });
+  expect(await first.json()).toMatchObject({
+    received: true,
+    applied: true,
+    kind: 'per-deal',
+    orgId,
+  });
   // Redelivery is acknowledged without being applied twice.
   const again = await postEvent(request, purchase);
   expect(await again.json()).toMatchObject({ received: true, applied: false, duplicate: true });
@@ -83,14 +112,35 @@ test('a Free organization is blocked at export and a Stripe webhook unlocks it',
   await expect(page.getByTestId('upgrade-prompt')).toBeVisible();
 
   // Pro unlocks the organization; cancellation keeps access to the paid-through date.
-  const pro = { id: 'evt_e2e_2', type: 'checkout.session.completed', data: { object: { id: 'cs_e2e_2', object: 'checkout.session', mode: 'subscription', payment_status: 'paid', customer: 'cus_e2e', subscription: 'sub_e2e', metadata: { orgId, kind: 'pro', dealId: '' } } } };
-  expect(await (await postEvent(request, pro)).json()).toMatchObject({ applied: true, kind: 'pro' });
+  const pro = {
+    id: 'evt_e2e_2',
+    type: 'checkout.session.completed',
+    data: {
+      object: {
+        id: 'cs_e2e_2',
+        object: 'checkout.session',
+        mode: 'subscription',
+        payment_status: 'paid',
+        customer: 'cus_e2e',
+        subscription: 'sub_e2e',
+        metadata: { orgId, kind: 'pro', dealId: '' },
+      },
+    },
+  };
+  expect(await (await postEvent(request, pro)).json()).toMatchObject({
+    applied: true,
+    kind: 'pro',
+  });
   await page.reload();
   await expect(page.getByTestId('upgrade-prompt')).toHaveCount(0);
   await expect(page.getByTestId('export-pdf')).toBeEnabled();
   await page.goto('/settings');
   await expect(page.getByTestId('org-tier')).toHaveText('pro');
-  const cancelled = { id: 'evt_e2e_3', type: 'customer.subscription.deleted', data: { object: { id: 'sub_e2e', object: 'subscription', customer: 'cus_e2e' } } };
+  const cancelled = {
+    id: 'evt_e2e_3',
+    type: 'customer.subscription.deleted',
+    data: { object: { id: 'sub_e2e', object: 'subscription', customer: 'cus_e2e' } },
+  };
   expect(await (await postEvent(request, cancelled)).json()).toMatchObject({ applied: true });
   await page.reload();
   await expect(page.getByTestId('org-tier')).toHaveText('free');

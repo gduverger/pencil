@@ -67,7 +67,11 @@ export function commercialOccupancyAt(inputs: DealInputs, tl: Timeline, t: numbe
   return Math.min(1, (t - tl.O + 1) / L);
 }
 
-export function computeOperations(inputs: DealInputs, program: ProgramSummary, tl: Timeline): OperationsSeries {
+export function computeOperations(
+  inputs: DealInputs,
+  program: ProgramSummary,
+  tl: Timeline,
+): OperationsSeries {
   const length = tl.S + 13;
   const ops = emptyOperations(length);
   const { operations: op, program: prog } = inputs;
@@ -81,7 +85,10 @@ export function computeOperations(inputs: DealInputs, program: ProgramSummary, t
     const oi = otherIncomeAt(inputs, t);
     const residentialCollected = gpr * occ * (1 - op.creditLossPct) + oi * occ;
     const commercialIncome = com.enabled
-      ? ((com.grossSF * com.rentPerSFYear) / 12) * growth(op.rentGrowthPct, t) * occC * (1 - com.vacancyPct)
+      ? ((com.grossSF * com.rentPerSFYear) / 12) *
+        growth(op.rentGrowthPct, t) *
+        occC *
+        (1 - com.vacancyPct)
       : 0;
     const egi = residentialCollected + commercialIncome;
 

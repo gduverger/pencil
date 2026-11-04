@@ -30,7 +30,12 @@ export interface CapitalResult {
   mezzRepaidAt: 'refi' | 'sale' | null;
 }
 
-export function computeCapital(inputs: DealInputs, tl: Timeline, ops: OperationsSeries, funding: FundingResult): CapitalResult {
+export function computeCapital(
+  inputs: DealInputs,
+  tl: Timeline,
+  ops: OperationsSeries,
+  funding: FundingResult,
+): CapitalResult {
   const n = tl.S + 1;
   const fin = inputs.financing;
   const perm = fin.permanent;
@@ -38,7 +43,11 @@ export function computeCapital(inputs: DealInputs, tl: Timeline, ops: Operations
   const B_R = funding.loanBalanceAtR;
   const MB_R = funding.mezzBalanceAtR;
   const mezzOutstanding = fin.mezz.enabled && MB_R > 0;
-  const mezzRepaidAt: 'refi' | 'sale' | null = !mezzOutstanding ? null : permOn && fin.mezz.repaidAt === 'refi' ? 'refi' : 'sale';
+  const mezzRepaidAt: 'refi' | 'sale' | null = !mezzOutstanding
+    ? null
+    : permOn && fin.mezz.repaidAt === 'refi'
+      ? 'refi'
+      : 'sale';
 
   const debtServiceInterest = zeros(n);
   const debtServicePrincipal = zeros(n);
@@ -132,7 +141,8 @@ export function computeCapital(inputs: DealInputs, tl: Timeline, ops: Operations
   // Operating cash flow after debt from R on (NOI at R has no debt service: the first payment is at R + 1).
   for (let t = tl.R; t < n; t++) {
     const inflows = t > tl.R ? (funding.months[t]?.inflows ?? 0) : 0;
-    operatingFlow[t] = (ops.noi[t] ?? 0) - debtServiceInterest[t]! - debtServicePrincipal[t]! + inflows;
+    operatingFlow[t] =
+      (ops.noi[t] ?? 0) - debtServiceInterest[t]! - debtServicePrincipal[t]! + inflows;
   }
   for (let t = 0; t < n; t++) flow[t] = operatingFlow[t]! + refinanceFlow[t]! + saleFlow[t]!;
 

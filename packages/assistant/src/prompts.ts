@@ -24,7 +24,11 @@ range of returns across the Likely, Best and Worst scenarios. State ranges, neve
 Cite the assumptions register's sources. Use only numbers present in the data given. Plain prose,
 no headings, no bullet points, about 120 words.`;
 
-export function intakeUserPrompt(data: unknown, transcript: Array<{ role: 'user' | 'assistant'; text: string }>, userText: string): string {
+export function intakeUserPrompt(
+  data: unknown,
+  transcript: Array<{ role: 'user' | 'assistant'; text: string }>,
+  userText: string,
+): string {
   return `Deal data (JSON; the only numbers you may use):\n${JSON.stringify(data)}\n\nConversation so far:\n${transcript.map((m) => `${m.role}: ${m.text}`).join('\n') || '(none)'}\n\nUser: ${userText}`;
 }
 

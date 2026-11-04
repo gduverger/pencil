@@ -19,7 +19,17 @@ export function DealTabs({ dealId }: { dealId: string }) {
         const href = `/deals/${dealId}/${t.key}`;
         const active = path?.startsWith(href);
         return (
-          <Link key={t.key} href={href} data-testid={`tab-${t.key}`} className={cn('rounded px-3 py-1 text-sm', active ? 'bg-white font-medium text-neutral-900 shadow-sm' : 'text-neutral-600 hover:text-neutral-900')}>
+          <Link
+            key={t.key}
+            href={href}
+            data-testid={`tab-${t.key}`}
+            className={cn(
+              'rounded px-3 py-1 text-sm',
+              active
+                ? 'bg-white font-medium text-neutral-900 shadow-sm'
+                : 'text-neutral-600 hover:text-neutral-900',
+            )}
+          >
             {t.label}
           </Link>
         );

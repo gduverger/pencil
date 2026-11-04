@@ -1,7 +1,13 @@
 // @pencil/package-pages — React components for the nine package pages (spec section 8).
 export * from './types';
 export * from './format';
-export { PACKAGE_CSS, PAGE_WIDTH_IN, PAGE_HEIGHT_IN, PDF_MARGIN_TOP_IN, PDF_MARGIN_BOTTOM_IN } from './styles';
+export {
+  PACKAGE_CSS,
+  PAGE_WIDTH_IN,
+  PAGE_HEIGHT_IN,
+  PDF_MARGIN_TOP_IN,
+  PDF_MARGIN_BOTTOM_IN,
+} from './styles';
 export { PackageDocument, planPages } from './document';
 export { packageFileName } from './files';
 // renderPackageHtml lives in '@pencil/package-pages/render' because it needs react-dom/server, which Next.js pages may not import.

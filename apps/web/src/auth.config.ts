@@ -5,7 +5,9 @@
  */
 import type { NextAuthConfig } from 'next-auth';
 
-export const authSecret = process.env.AUTH_SECRET ?? (process.env.NODE_ENV === 'production' ? undefined : 'pencil-dev-secret-change-me');
+export const authSecret =
+  process.env.AUTH_SECRET ??
+  (process.env.NODE_ENV === 'production' ? undefined : 'pencil-dev-secret-change-me');
 
 export const authConfig = {
   secret: authSecret,

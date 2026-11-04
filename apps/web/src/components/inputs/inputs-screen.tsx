@@ -35,8 +35,28 @@ import { TiersEditor } from './tiers-editor';
 import type { InputsScreenProps, Scenario } from './types';
 import { UnitMixImport } from './unit-mix-import';
 
-const SECTION_LABELS: Record<string, string> = { meta: 'Deal', site: 'Site', program: 'Program', timeline: 'Timeline', costs: 'Costs', financing: 'Financing', operations: 'Operations', exit: 'Exit', equity: 'Equity' };
-const SECTION_ORDER = ['meta', 'site', 'program', 'timeline', 'costs', 'financing', 'operations', 'exit', 'equity'];
+const SECTION_LABELS: Record<string, string> = {
+  meta: 'Deal',
+  site: 'Site',
+  program: 'Program',
+  timeline: 'Timeline',
+  costs: 'Costs',
+  financing: 'Financing',
+  operations: 'Operations',
+  exit: 'Exit',
+  equity: 'Equity',
+};
+const SECTION_ORDER = [
+  'meta',
+  'site',
+  'program',
+  'timeline',
+  'costs',
+  'financing',
+  'operations',
+  'exit',
+  'equity',
+];
 
 type Result = Awaited<ReturnType<typeof actions.updateInputs>>;
 
@@ -50,8 +70,13 @@ export function InputsScreen(props: InputsScreenProps) {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(0);
   const [historyPath, setHistoryPath] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>(() => Object.fromEntries(Object.keys(props.state.elaboration).map((p) => [p, true])));
-  const catalogByPath = useMemo(() => new Map(props.catalog.map((e) => [e.path, e])), [props.catalog]);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(Object.keys(props.state.elaboration).map((p) => [p, true])),
+  );
+  const catalogByPath = useMemo(
+    () => new Map(props.catalog.map((e) => [e.path, e])),
+    [props.catalog],
+  );
   const stars = useMemo(() => new Set(tonightPaths()), []);
   const queue = useRef(Promise.resolve());
 
@@ -110,7 +135,9 @@ export function InputsScreen(props: InputsScreenProps) {
             setRev(result.rev);
             setError(null);
           } else if (result.code === 'rev-conflict') {
-            setConflict(`This deal was changed elsewhere (now at revision ${result.rev}). Reload to see the latest values before editing again.`);
+            setConflict(
+              `This deal was changed elsewhere (now at revision ${result.rev}). Reload to see the latest values before editing again.`,
+            );
           } else {
             setError(result.message);
           }
@@ -122,10 +149,17 @@ export function InputsScreen(props: InputsScreenProps) {
   );
 
   const now = () => new Date().toISOString();
-  const patch = (patches: InputPatch[]) => commit((s) => applyPatches(s, patches, props.userId, now()).state, (r) => actions.updateInputs(props.dealId, r, patches));
+  const patch = (patches: InputPatch[]) =>
+    commit(
+      (s) => applyPatches(s, patches, props.userId, now()).state,
+      (r) => actions.updateInputs(props.dealId, r, patches),
+    );
 
   const visible = useMemo(() => visibleInputPaths(state), [state]);
-  const shown = useMemo(() => visible.filter((p) => (mode === 'tonight' ? stars.has(p) : true)), [visible, mode, stars]);
+  const shown = useMemo(
+    () => visible.filter((p) => (mode === 'tonight' ? stars.has(p) : true)),
+    [visible, mode, stars],
+  );
   const sections = useMemo(() => {
     const groups = new Map<string, string[]>();
     for (const p of shown) {
@@ -134,10 +168,17 @@ export function InputsScreen(props: InputsScreenProps) {
       list.push(p);
       groups.set(section, list);
     }
-    return SECTION_ORDER.filter((s) => groups.has(s)).map((s) => ({ key: s, label: SECTION_LABELS[s] ?? s, paths: groups.get(s)! }));
+    return SECTION_ORDER.filter((s) => groups.has(s)).map((s) => ({
+      key: s,
+      label: SECTION_LABELS[s] ?? s,
+      paths: groups.get(s)!,
+    }));
   }, [shown]);
 
-  const flagCount = useMemo(() => shown.filter((p) => isFlagged(p, state, props.benchmarks)).length, [shown, state, props.benchmarks]);
+  const flagCount = useMemo(
+    () => shown.filter((p) => isFlagged(p, state, props.benchmarks)).length,
+    [shown, state, props.benchmarks],
+  );
 
   const onValueKey = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== 'Enter' && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
@@ -160,14 +201,35 @@ export function InputsScreen(props: InputsScreenProps) {
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="flex rounded-md bg-neutral-100 p-0.5 text-sm">
-              <button type="button" className={cn('rounded px-3 py-1', mode === 'tonight' ? 'bg-white font-medium shadow-sm' : 'text-neutral-600')} onClick={() => chooseMode('tonight')} data-testid="mode-tonight">
+              <button
+                type="button"
+                className={cn(
+                  'rounded px-3 py-1',
+                  mode === 'tonight' ? 'bg-white font-medium shadow-sm' : 'text-neutral-600',
+                )}
+                onClick={() => chooseMode('tonight')}
+                data-testid="mode-tonight"
+              >
                 Tonight
               </button>
-              <button type="button" className={cn('rounded px-3 py-1', mode === 'all' ? 'bg-white font-medium shadow-sm' : 'text-neutral-600')} onClick={() => chooseMode('all')} data-testid="mode-all">
+              <button
+                type="button"
+                className={cn(
+                  'rounded px-3 py-1',
+                  mode === 'all' ? 'bg-white font-medium shadow-sm' : 'text-neutral-600',
+                )}
+                onClick={() => chooseMode('all')}
+                data-testid="mode-all"
+              >
                 All inputs
               </button>
             </div>
-            <Select value={scenario} onChange={(e) => setScenario(e.target.value as Scenario)} aria-label="Scenario" data-testid="scenario-select">
+            <Select
+              value={scenario}
+              onChange={(e) => setScenario(e.target.value as Scenario)}
+              aria-label="Scenario"
+              data-testid="scenario-select"
+            >
               <option value="likely">Likely (base)</option>
               <option value="best">Best</option>
               <option value="worst">Worst</option>
@@ -179,7 +241,11 @@ export function InputsScreen(props: InputsScreenProps) {
           </div>
         </div>
         {conflict ? (
-          <div className="mb-3 flex items-center justify-between gap-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" role="alert" data-testid="conflict-banner">
+          <div
+            className="mb-3 flex items-center justify-between gap-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+            role="alert"
+            data-testid="conflict-banner"
+          >
             <span>{conflict}</span>
             <Button size="sm" variant="secondary" onClick={() => router.refresh()}>
               Reload
@@ -187,11 +253,20 @@ export function InputsScreen(props: InputsScreenProps) {
           </div>
         ) : null}
         {error ? (
-          <div className="mb-3 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-900" role="alert" data-testid="error-banner">
+          <div
+            className="mb-3 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-900"
+            role="alert"
+            data-testid="error-banner"
+          >
             {error}
           </div>
         ) : null}
-        {scenario !== 'likely' ? <p className="mb-2 text-xs text-neutral-600">Editing the {scenario} scenario: a changed field becomes an override (marked); unchanged fields follow Likely.</p> : null}
+        {scenario !== 'likely' ? (
+          <p className="mb-2 text-xs text-neutral-600">
+            Editing the {scenario} scenario: a changed field becomes an override (marked); unchanged
+            fields follow Likely.
+          </p>
+        ) : null}
         <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
           <table className="w-full text-sm">
             <thead className="bg-neutral-50 text-left text-xs font-medium text-neutral-600">
@@ -206,33 +281,91 @@ export function InputsScreen(props: InputsScreenProps) {
             </thead>
             <tbody>
               {sections.map((section) => (
-                <SectionRows key={section.key} label={section.label} paths={section.paths} state={state} scenario={scenario} catalogByPath={catalogByPath} benchmarks={props.benchmarks} stars={stars} expanded={expanded} onToggleExpand={(p) => setExpanded((e) => ({ ...e, [p]: !e[p] }))} onPatch={patch} onHistory={setHistoryPath} onValueKey={onValueKey} dealId={props.dealId} userId={props.userId} commit={commit} />
+                <SectionRows
+                  key={section.key}
+                  label={section.label}
+                  paths={section.paths}
+                  state={state}
+                  scenario={scenario}
+                  catalogByPath={catalogByPath}
+                  benchmarks={props.benchmarks}
+                  stars={stars}
+                  expanded={expanded}
+                  onToggleExpand={(p) => setExpanded((e) => ({ ...e, [p]: !e[p] }))}
+                  onPatch={patch}
+                  onHistory={setHistoryPath}
+                  onValueKey={onValueKey}
+                  dealId={props.dealId}
+                  userId={props.userId}
+                  commit={commit}
+                />
               ))}
             </tbody>
           </table>
         </div>
         {mode === 'tonight' ? (
           <p className="mt-2 text-xs text-neutral-500">
-            Tonight mode shows the twelve inputs that drive the range. Switch to <button type="button" className="underline" onClick={() => chooseMode('all')}>All inputs</button> for everything else.
+            Tonight mode shows the twelve inputs that drive the range. Switch to{' '}
+            <button type="button" className="underline" onClick={() => chooseMode('all')}>
+              All inputs
+            </button>{' '}
+            for everything else.
           </p>
         ) : null}
-        {mode === 'all' ? <TiersEditor tiers={tiers} onSave={(t) => patch([{ scenario: 'likely', path: 'equity.tiers', value: t, source: 'my-number' }])} /> : null}
+        {mode === 'all' ? (
+          <TiersEditor
+            tiers={tiers}
+            onSave={(t) =>
+              patch([{ scenario: 'likely', path: 'equity.tiers', value: t, source: 'my-number' }])
+            }
+          />
+        ) : null}
         <EventsPanel
           events={state.events}
-          onSave={(e) => commit((s) => upsertEventLocal(s, e, props.userId, now()).state, (r) => actions.upsertEvent(props.dealId, r, e))}
-          onDelete={(id) => commit((s) => deleteEventLocal(s, id, props.userId, now()).state, (r) => actions.deleteEvent(props.dealId, r, id))}
+          onSave={(e) =>
+            commit(
+              (s) => upsertEventLocal(s, e, props.userId, now()).state,
+              (r) => actions.upsertEvent(props.dealId, r, e),
+            )
+          }
+          onDelete={(id) =>
+            commit(
+              (s) => deleteEventLocal(s, id, props.userId, now()).state,
+              (r) => actions.deleteEvent(props.dealId, r, id),
+            )
+          }
         />
       </div>
       <div className="space-y-4">
-        <SwitchPanel switches={props.switches} state={state.switches} onToggle={(key: SwitchKey, on) => commit((s) => setSwitchLocal(s, key, on, props.userId, now()).state, (r) => actions.setSwitch(props.dealId, r, key, on))} />
+        <SwitchPanel
+          switches={props.switches}
+          state={state.switches}
+          onToggle={(key: SwitchKey, on) =>
+            commit(
+              (s) => setSwitchLocal(s, key, on, props.userId, now()).state,
+              (r) => actions.setSwitch(props.dealId, r, key, on),
+            )
+          }
+        />
         <UnitMixImport onImport={(patches) => patch(patches)} />
       </div>
-      {historyPath ? <HistoryPanel dealId={props.dealId} path={historyPath} label={catalogByPath.get(historyPath)?.label ?? historyPath} onClose={() => setHistoryPath(null)} /> : null}
+      {historyPath ? (
+        <HistoryPanel
+          dealId={props.dealId}
+          path={historyPath}
+          label={catalogByPath.get(historyPath)?.label ?? historyPath}
+          onClose={() => setHistoryPath(null)}
+        />
+      ) : null}
     </div>
   );
 }
 
-function isFlagged(path: string, state: DealState, benchmarks: InputsScreenProps['benchmarks']): boolean {
+function isFlagged(
+  path: string,
+  state: DealState,
+  benchmarks: InputsScreenProps['benchmarks'],
+): boolean {
   const b = benchmarks[path];
   const v = state.inputs[path]?.value;
   return Boolean(b && typeof v === 'number' && (v < b.low || v > b.high));
@@ -260,7 +393,10 @@ function SectionRows(p: SectionProps) {
   return (
     <>
       <tr className="bg-neutral-50/60">
-        <td colSpan={6} className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+        <td
+          colSpan={6}
+          className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-500"
+        >
           {p.label}
         </td>
       </tr>
@@ -289,7 +425,8 @@ function InputRow(p: SectionProps & { path: string }) {
     setNote(record?.note ?? '');
   }, [record?.value, record?.note, scenario, elaborated, derived]);
   const b = p.benchmarks[path];
-  const flagged = typeof record?.value === 'number' && b ? record.value < b.low || record.value > b.high : false;
+  const flagged =
+    typeof record?.value === 'number' && b ? record.value < b.low || record.value > b.high : false;
   const isSwitchHidden = false;
   if (isSwitchHidden) return null;
   const lastCommitted = useRef<string | null>(null);
@@ -303,7 +440,17 @@ function InputRow(p: SectionProps & { path: string }) {
     if (JSON.stringify(parsed) === JSON.stringify(record?.value)) return;
     if (lastCommitted.current === JSON.stringify([scenario, parsed])) return;
     lastCommitted.current = JSON.stringify([scenario, parsed]);
-    p.onPatch([{ scenario, path, value: parsed, ...(scenario === 'likely' && (record?.source === 'benchmark' || record?.source === 'unknown') ? { source: 'my-number' } : {}) }]);
+    p.onPatch([
+      {
+        scenario,
+        path,
+        value: parsed,
+        ...(scenario === 'likely' &&
+        (record?.source === 'benchmark' || record?.source === 'unknown')
+          ? { source: 'my-number' }
+          : {}),
+      },
+    ]);
   };
   const commitNote = () => {
     if (note === (record?.note ?? '')) return;
@@ -322,13 +469,23 @@ function InputRow(p: SectionProps & { path: string }) {
   };
   return (
     <>
-      <tr className={cn('border-t border-neutral-100 align-top', override ? 'bg-blue-50/40' : '')} data-testid={`row-${path}`}>
+      <tr
+        className={cn('border-t border-neutral-100 align-top', override ? 'bg-blue-50/40' : '')}
+        data-testid={`row-${path}`}
+      >
         <td className="px-3 py-1.5">
           <div className="flex items-center gap-1.5">
             <span className="font-medium text-neutral-800">{entry?.label ?? path}</span>
-            {p.stars.has(path) ? <span className="text-amber-500" title="One of the twelve tonight inputs">★</span> : null}
+            {p.stars.has(path) ? (
+              <span className="text-amber-500" title="One of the twelve tonight inputs">
+                ★
+              </span>
+            ) : null}
             {override ? (
-              <Badge tone="info" title={`Likely: ${toDisplay(likely?.value, unit)} ${unitLabel(unit)}`}>
+              <Badge
+                tone="info"
+                title={`Likely: ${toDisplay(likely?.value, unit)} ${unitLabel(unit)}`}
+              >
                 override
               </Badge>
             ) : null}
@@ -338,7 +495,14 @@ function InputRow(p: SectionProps & { path: string }) {
         </td>
         <td className="px-3 py-1.5">
           {unit === 'flag' ? (
-            <Select value={String(Boolean(record?.value))} onChange={(e) => p.onPatch([{ scenario, path, value: e.target.value === 'true' }])} className="w-full" aria-label={entry?.label ?? path} data-value-input data-testid={`value-${path}`}>
+            <Select
+              value={String(Boolean(record?.value))}
+              onChange={(e) => p.onPatch([{ scenario, path, value: e.target.value === 'true' }])}
+              className="w-full"
+              aria-label={entry?.label ?? path}
+              data-value-input
+              data-testid={`value-${path}`}
+            >
               <option value="true">Yes</option>
               <option value="false">No</option>
             </Select>
@@ -356,16 +520,30 @@ function InputRow(p: SectionProps & { path: string }) {
                 aria-label={entry?.label ?? path}
                 data-value-input
                 data-testid={`value-${path}`}
-                className={cn('h-8 w-full rounded-md border border-neutral-300 px-2 text-right text-sm tabular focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500', elaborated ? 'bg-neutral-100 text-neutral-600' : 'bg-white', flagged ? 'border-amber-400' : '')}
+                className={cn(
+                  'h-8 w-full rounded-md border border-neutral-300 px-2 text-right text-sm tabular focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
+                  elaborated ? 'bg-neutral-100 text-neutral-600' : 'bg-white',
+                  flagged ? 'border-amber-400' : '',
+                )}
                 inputMode={unit === 'text' ? 'text' : 'decimal'}
               />
               <span className="w-12 text-[11px] text-neutral-500">{unitLabel(unit)}</span>
             </div>
           )}
-          {elaborated ? <div className="text-[11px] text-neutral-500">Σ of {children!.length} children (read-only)</div> : null}
+          {elaborated ? (
+            <div className="text-[11px] text-neutral-500">
+              Σ of {children!.length} children (read-only)
+            </div>
+          ) : null}
         </td>
         <td className="px-3 py-1.5">
-          <Select value={record?.source ?? 'unknown'} onChange={(e) => changeSource(e.target.value as Source)} className="h-8 w-full text-xs" aria-label={`Source of ${entry?.label ?? path}`} data-testid={`source-${path}`}>
+          <Select
+            value={record?.source ?? 'unknown'}
+            onChange={(e) => changeSource(e.target.value as Source)}
+            className="h-8 w-full text-xs"
+            aria-label={`Source of ${entry?.label ?? path}`}
+            data-testid={`source-${path}`}
+          >
             {SOURCES.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -374,8 +552,21 @@ function InputRow(p: SectionProps & { path: string }) {
           </Select>
         </td>
         <td className="px-3 py-1.5">
-          <input value={note} onChange={(e) => setNote(e.target.value)} onBlur={commitNote} onKeyDown={(e) => e.key === 'Enter' && commitNote()} placeholder="Why, from where" aria-label={`Note for ${entry?.label ?? path}`} data-testid={`note-${path}`} className="h-8 w-full rounded-md border border-neutral-300 px-2 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
-          <div className="text-[10px] text-neutral-400">{record?.updatedAt ? `${record.updatedAt.slice(0, 10)} · ${record.updatedBy.slice(0, 12)}` : ''}</div>
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            onBlur={commitNote}
+            onKeyDown={(e) => e.key === 'Enter' && commitNote()}
+            placeholder="Why, from where"
+            aria-label={`Note for ${entry?.label ?? path}`}
+            data-testid={`note-${path}`}
+            className="h-8 w-full rounded-md border border-neutral-300 px-2 text-xs focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          <div className="text-[10px] text-neutral-400">
+            {record?.updatedAt
+              ? `${record.updatedAt.slice(0, 10)} · ${record.updatedBy.slice(0, 12)}`
+              : ''}
+          </div>
         </td>
         <td className="px-3 py-1.5 text-xs">
           {b ? (
@@ -386,7 +577,11 @@ function InputRow(p: SectionProps & { path: string }) {
                 {b.sampleSize ? ` (n=${b.sampleSize})` : ''}
               </div>
               {flagged ? (
-                <Badge tone="warn" className="mt-0.5" title={`Outside the ${formatRange(b.low, b.high, unit)} range`}>
+                <Badge
+                  tone="warn"
+                  className="mt-0.5"
+                  title={`Outside the ${formatRange(b.low, b.high, unit)} range`}
+                >
                   outside range
                 </Badge>
               ) : null}
@@ -396,31 +591,71 @@ function InputRow(p: SectionProps & { path: string }) {
           )}
         </td>
         <td className="px-3 py-1.5 text-right text-xs">
-          <button type="button" className="text-neutral-500 underline-offset-2 hover:underline" onClick={() => p.onHistory(path)} data-testid={`history-${path}`}>
+          <button
+            type="button"
+            className="text-neutral-500 underline-offset-2 hover:underline"
+            onClick={() => p.onHistory(path)}
+            data-testid={`history-${path}`}
+          >
             history
           </button>
           {entry?.elaborable && scenario === 'likely' ? (
-            <button type="button" className="ml-2 text-neutral-500 underline-offset-2 hover:underline" onClick={() => p.onToggleExpand(path)} data-testid={`elaborate-${path}`}>
-              {elaborated ? (p.expanded[path] ? 'collapse' : `expand (${children!.length})`) : 'elaborate'}
+            <button
+              type="button"
+              className="ml-2 text-neutral-500 underline-offset-2 hover:underline"
+              onClick={() => p.onToggleExpand(path)}
+              data-testid={`elaborate-${path}`}
+            >
+              {elaborated
+                ? p.expanded[path]
+                  ? 'collapse'
+                  : `expand (${children!.length})`
+                : 'elaborate'}
             </button>
           ) : null}
           {override ? (
-            <button type="button" className="ml-2 text-neutral-500 underline-offset-2 hover:underline" onClick={() => p.onPatch([{ scenario, path, clear: true }])} data-testid={`clear-${path}`}>
+            <button
+              type="button"
+              className="ml-2 text-neutral-500 underline-offset-2 hover:underline"
+              onClick={() => p.onPatch([{ scenario, path, clear: true }])}
+              data-testid={`clear-${path}`}
+            >
               clear
             </button>
           ) : null}
         </td>
       </tr>
-      {entry?.elaborable && scenario === 'likely' && (p.expanded[path] || (elaborated && p.expanded[path] !== false)) ? (
+      {entry?.elaborable &&
+      scenario === 'likely' &&
+      (p.expanded[path] || (elaborated && p.expanded[path] !== false)) ? (
         <tr className="border-t border-neutral-100">
           <td colSpan={6} className="px-3 pb-2">
             <ChildrenEditor
               path={path}
-              unit={path === 'costs.hard.perGrossSF' || path === 'costs.soft.pctOfHard' ? 'usd' : unit}
+              unit={
+                path === 'costs.hard.perGrossSF' || path === 'costs.soft.pctOfHard' ? 'usd' : unit
+              }
               children={children ?? []}
-              onAdd={(c) => p.commit((s) => addChildLocal(s, path, c, p.userId, new Date().toISOString()).state, (r) => actions.addChild(p.dealId, r, path, c))}
-              onUpdate={(id, changes) => p.commit((s) => updateChildLocal(s, path, id, changes, p.userId, new Date().toISOString()).state, (r) => actions.updateChild(p.dealId, r, path, id, changes))}
-              onDelete={(id) => p.commit((s) => deleteChildLocal(s, path, id, p.userId, new Date().toISOString()).state, (r) => actions.deleteChild(p.dealId, r, path, id))}
+              onAdd={(c) =>
+                p.commit(
+                  (s) => addChildLocal(s, path, c, p.userId, new Date().toISOString()).state,
+                  (r) => actions.addChild(p.dealId, r, path, c),
+                )
+              }
+              onUpdate={(id, changes) =>
+                p.commit(
+                  (s) =>
+                    updateChildLocal(s, path, id, changes, p.userId, new Date().toISOString())
+                      .state,
+                  (r) => actions.updateChild(p.dealId, r, path, id, changes),
+                )
+              }
+              onDelete={(id) =>
+                p.commit(
+                  (s) => deleteChildLocal(s, path, id, p.userId, new Date().toISOString()).state,
+                  (r) => actions.deleteChild(p.dealId, r, path, id),
+                )
+              }
             />
           </td>
         </tr>

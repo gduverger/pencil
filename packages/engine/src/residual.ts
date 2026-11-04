@@ -20,11 +20,16 @@ export interface ResidualLandValue {
 export function residualLandValue(inputs: unknown, targetYieldOnCost?: number): ResidualLandValue {
   const base = parseInputs(inputs);
   const target = targetYieldOnCost ?? base.exit.exitCapRatePct + 0.015;
-  const yoc = (landCost: number): number | null => run({ ...base, site: { ...base.site, landCost } }).metrics.yieldOnCost;
+  const yoc = (landCost: number): number | null =>
+    run({ ...base, site: { ...base.site, landCost } }).metrics.yieldOnCost;
   const baseline = run(base);
   const lo0 = 0;
   const hi0 = base.site.landCost > 0 ? 5 * base.site.landCost : baseline.totals.tpc;
-  const result = (landCost: number, iterations: number, atBound: ResidualLandValue['atBound']): ResidualLandValue => ({
+  const result = (
+    landCost: number,
+    iterations: number,
+    atBound: ResidualLandValue['atBound'],
+  ): ResidualLandValue => ({
     landCost,
     perUnit: base.program.totalUnits > 0 ? landCost / base.program.totalUnits : 0,
     perLotSF: base.site.lotSF > 0 ? landCost / base.site.lotSF : null,

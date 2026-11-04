@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
-import { applyBillingEvent, billingConfig, subscriptionPeriodEnd, verifyWebhook } from '@/lib/billing';
+import {
+  applyBillingEvent,
+  billingConfig,
+  subscriptionPeriodEnd,
+  verifyWebhook,
+} from '@/lib/billing';
 import { getDb } from '@/lib/db';
 import { log } from '@/lib/log';
 
@@ -13,7 +18,8 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(req: Request) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!secret) return NextResponse.json({ error: 'billing webhook not configured' }, { status: 503 });
+  if (!secret)
+    return NextResponse.json({ error: 'billing webhook not configured' }, { status: 503 });
   const payload = await req.text();
   let event;
   try {
@@ -23,7 +29,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'invalid signature' }, { status: 400 });
   }
   try {
-    const result = await applyBillingEvent(await getDb(), event, billingConfig() ? { periodEnd: subscriptionPeriodEnd } : {});
+    const result = await applyBillingEvent(
+      await getDb(),
+      event,
+      billingConfig() ? { periodEnd: subscriptionPeriodEnd } : {},
+    );
     log.info('billing.event', { eventId: event.id, type: event.type, ...result });
     return NextResponse.json({ received: true, ...result });
   } catch (e) {

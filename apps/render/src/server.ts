@@ -8,11 +8,20 @@ import { closeSharedBrowser, htmlToPdf, urlToPdf } from './pdf';
 
 // Observability (spec 14.1): Sentry when SENTRY_DSN is set, structured JSON logs always.
 if (process.env.SENTRY_DSN) {
-  Sentry.init({ dsn: process.env.SENTRY_DSN, environment: process.env.FLY_APP_NAME ? 'production' : (process.env.NODE_ENV ?? 'development'), tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? '0.1') });
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.FLY_APP_NAME ? 'production' : (process.env.NODE_ENV ?? 'development'),
+    tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? '0.1'),
+  });
 }
 
 function logLine(level: 'info' | 'error', fields: Record<string, unknown>) {
-  const line = JSON.stringify({ level, service: 'render', at: new Date().toISOString(), ...fields });
+  const line = JSON.stringify({
+    level,
+    service: 'render',
+    at: new Date().toISOString(),
+    ...fields,
+  });
   if (level === 'error') console.error(line);
   else console.log(line);
 }
@@ -42,7 +51,12 @@ function readBody(req: IncomingMessage, maxBody: number): Promise<string> {
   });
 }
 
-function send(res: ServerResponse, status: number, body: string | Buffer, type = 'application/json') {
+function send(
+  res: ServerResponse,
+  status: number,
+  body: string | Buffer,
+  type = 'application/json',
+) {
   res.writeHead(status, { 'content-type': type, 'content-length': Buffer.byteLength(body) });
   res.end(body);
 }
@@ -53,27 +67,53 @@ export function createRenderServer(opts: ServerOptions = {}) {
   return createServer(async (req, res) => {
     const started = Date.now();
     try {
-      if (req.method === 'GET' && req.url === '/healthz') return send(res, 200, JSON.stringify({ ok: true }));
-      if (req.method !== 'POST' || req.url !== '/render') return send(res, 404, JSON.stringify({ error: 'not found' }));
-      if (token && req.headers['x-render-token'] !== token) return send(res, 401, JSON.stringify({ error: 'unauthorized' }));
-      const body = JSON.parse(await readBody(req, maxBody)) as { html?: string; url?: string; footerText?: string; headers?: Record<string, string>; versionId?: string };
+      if (req.method === 'GET' && req.url === '/healthz')
+        return send(res, 200, JSON.stringify({ ok: true }));
+      if (req.method !== 'POST' || req.url !== '/render')
+        return send(res, 404, JSON.stringify({ error: 'not found' }));
+      if (token && req.headers['x-render-token'] !== token)
+        return send(res, 401, JSON.stringify({ error: 'unauthorized' }));
+      const body = JSON.parse(await readBody(req, maxBody)) as {
+        html?: string;
+        url?: string;
+        footerText?: string;
+        headers?: Record<string, string>;
+        versionId?: string;
+      };
       let pdf: Buffer;
-      if (typeof body.html === 'string') pdf = await htmlToPdf(body.html, { footerText: body.footerText });
-      else if (typeof body.url === 'string') pdf = await urlToPdf(body.url, { footerText: body.footerText, headers: body.headers });
+      if (typeof body.html === 'string')
+        pdf = await htmlToPdf(body.html, { footerText: body.footerText });
+      else if (typeof body.url === 'string')
+        pdf = await urlToPdf(body.url, { footerText: body.footerText, headers: body.headers });
       else return send(res, 400, JSON.stringify({ error: 'html or url required' }));
       const ms = Date.now() - started;
       res.setHeader('x-render-ms', String(ms));
-      logLine('info', { event: 'render', versionId: body.versionId ?? null, bytes: pdf.length, ms });
+      logLine('info', {
+        event: 'render',
+        versionId: body.versionId ?? null,
+        bytes: pdf.length,
+        ms,
+      });
       return send(res, 200, pdf, 'application/pdf');
     } catch (e) {
-      logLine('error', { event: 'render.failed', message: e instanceof Error ? e.message : String(e), ms: Date.now() - started });
+      logLine('error', {
+        event: 'render.failed',
+        message: e instanceof Error ? e.message : String(e),
+        ms: Date.now() - started,
+      });
       if (process.env.SENTRY_DSN) Sentry.captureException(e);
-      return send(res, 500, JSON.stringify({ error: e instanceof Error ? e.message : 'render failed' }));
+      return send(
+        res,
+        500,
+        JSON.stringify({ error: e instanceof Error ? e.message : 'render failed' }),
+      );
     }
   });
 }
 
-export async function startServer(opts: ServerOptions = {}): Promise<{ port: number; close: () => Promise<void> }> {
+export async function startServer(
+  opts: ServerOptions = {},
+): Promise<{ port: number; close: () => Promise<void> }> {
   const server = createRenderServer(opts);
   const port = opts.port ?? Number(process.env.PORT ?? 8787);
   await new Promise<void>((resolve) => server.listen(port, resolve));
@@ -88,7 +128,8 @@ export async function startServer(opts: ServerOptions = {}): Promise<{ port: num
   };
 }
 
-const invokedDirectly = process.argv[1] !== undefined && import.meta.url === new URL(`file://${process.argv[1]}`).href;
+const invokedDirectly =
+  process.argv[1] !== undefined && import.meta.url === new URL(`file://${process.argv[1]}`).href;
 if (invokedDirectly) {
   startServer().then(({ port }) => logLine('info', { event: 'listening', port }));
 }

@@ -6,7 +6,16 @@
 import type { AnnualRow, Line } from '@pencil/engine';
 import { formatUsd } from './format';
 
-const SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948'];
+const SERIES = [
+  '#2a78d6',
+  '#eb6834',
+  '#1baf7a',
+  '#eda100',
+  '#e87ba4',
+  '#008300',
+  '#6250d6',
+  '#e34948',
+];
 
 function niceMax(v: number): number {
   if (v <= 0) return 1;
@@ -18,11 +27,24 @@ function niceMax(v: number): number {
 
 function compactUsd(v: number): string {
   const abs = Math.abs(v);
-  const s = abs >= 1e6 ? `$${(abs / 1e6).toFixed(abs >= 1e7 ? 0 : 1)}M` : abs >= 1e3 ? `$${Math.round(abs / 1e3)}k` : `$${Math.round(abs)}`;
+  const s =
+    abs >= 1e6
+      ? `$${(abs / 1e6).toFixed(abs >= 1e7 ? 0 : 1)}M`
+      : abs >= 1e3
+        ? `$${Math.round(abs / 1e3)}k`
+        : `$${Math.round(abs)}`;
   return v < 0 ? `−${s}` : s;
 }
 
-export function NoiDebtServiceChart({ annual, width = 680, height = 200 }: { annual: AnnualRow[]; width?: number; height?: number }) {
+export function NoiDebtServiceChart({
+  annual,
+  width = 680,
+  height = 200,
+}: {
+  annual: AnnualRow[];
+  width?: number;
+  height?: number;
+}) {
   const rows = annual.filter((a) => !a.partial);
   const pad = { l: 44, r: 8, t: 14, b: 22 };
   const w = width - pad.l - pad.r;
@@ -45,10 +67,22 @@ export function NoiDebtServiceChart({ annual, width = 680, height = 200 }: { ann
           Debt service
         </span>
       </div>
-      <svg className="chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Annual net operating income and debt service over the hold">
+      <svg
+        className="chart"
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label="Annual net operating income and debt service over the hold"
+      >
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={pad.l} x2={width - pad.r} y1={y(t)} y2={y(t)} stroke="#ecebe7" strokeWidth={1} />
+            <line
+              x1={pad.l}
+              x2={width - pad.r}
+              y1={y(t)}
+              y2={y(t)}
+              stroke="#ecebe7"
+              strokeWidth={1}
+            />
             <text x={pad.l - 6} y={y(t) + 3} fontSize={8} fill="#8a8884" textAnchor="end">
               {compactUsd(t)}
             </text>
@@ -65,7 +99,9 @@ export function NoiDebtServiceChart({ annual, width = 680, height = 200 }: { ann
               {bars.map((b, j) => {
                 const top = y(b.v);
                 const bh = Math.max(0, pad.t + h - top);
-                return bh > 0 ? <rect key={j} x={b.x} y={top} width={barW} height={bh} rx={2} fill={b.c} /> : null;
+                return bh > 0 ? (
+                  <rect key={j} x={b.x} y={top} width={barW} height={bh} rx={2} fill={b.c} />
+                ) : null;
               })}
               <text x={x0} y={height - 8} fontSize={8} fill="#52514e" textAnchor="middle">
                 {`Y${r.year}`}
@@ -74,11 +110,24 @@ export function NoiDebtServiceChart({ annual, width = 680, height = 200 }: { ann
           );
         })}
         {lastNoi && lastNoi.noi > 0 ? (
-          <text x={pad.l + (rows.length - 1) * groupW + groupW / 2 - 1 - barW / 2} y={y(lastNoi.noi) - 4} fontSize={8} fill="#111" textAnchor="middle">
+          <text
+            x={pad.l + (rows.length - 1) * groupW + groupW / 2 - 1 - barW / 2}
+            y={y(lastNoi.noi) - 4}
+            fontSize={8}
+            fill="#111"
+            textAnchor="middle"
+          >
             {compactUsd(lastNoi.noi)}
           </text>
         ) : null}
-        <line x1={pad.l} x2={width - pad.r} y1={pad.t + h} y2={pad.t + h} stroke="#d9d7d2" strokeWidth={1} />
+        <line
+          x1={pad.l}
+          x2={width - pad.r}
+          y1={pad.t + h}
+          y2={pad.t + h}
+          stroke="#d9d7d2"
+          strokeWidth={1}
+        />
       </svg>
     </div>
   );
@@ -99,21 +148,45 @@ export function SourcesDonut({ sources, size = 170 }: { sources: Line[]; size?: 
       const a1 = angle + frac * Math.PI * 2;
       angle = a1;
       const large = a1 - a0 > Math.PI ? 1 : 0;
-      const p = (a: number, rad: number) => [cx + rad * Math.cos(a), cy + rad * Math.sin(a)] as const;
+      const p = (a: number, rad: number) =>
+        [cx + rad * Math.cos(a), cy + rad * Math.sin(a)] as const;
       const [x0, y0] = p(a0, r);
       const [x1, y1] = p(a1, r);
       const [xi0, yi0] = p(a0, inner);
       const [xi1, yi1] = p(a1, inner);
-      const d = frac >= 0.9999
-        ? `M ${cx + r} ${cy} A ${r} ${r} 0 1 1 ${cx - r} ${cy} A ${r} ${r} 0 1 1 ${cx + r} ${cy} Z M ${cx + inner} ${cy} A ${inner} ${inner} 0 1 0 ${cx - inner} ${cy} A ${inner} ${inner} 0 1 0 ${cx + inner} ${cy} Z`
-        : `M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} L ${xi1} ${yi1} A ${inner} ${inner} 0 ${large} 0 ${xi0} ${yi0} Z`;
-      return { key: l.key, label: l.label, amount: l.amount, frac, d, color: SERIES[i % SERIES.length]! };
+      const d =
+        frac >= 0.9999
+          ? `M ${cx + r} ${cy} A ${r} ${r} 0 1 1 ${cx - r} ${cy} A ${r} ${r} 0 1 1 ${cx + r} ${cy} Z M ${cx + inner} ${cy} A ${inner} ${inner} 0 1 0 ${cx - inner} ${cy} A ${inner} ${inner} 0 1 0 ${cx + inner} ${cy} Z`
+          : `M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} L ${xi1} ${yi1} A ${inner} ${inner} 0 ${large} 0 ${xi0} ${yi0} Z`;
+      return {
+        key: l.key,
+        label: l.label,
+        amount: l.amount,
+        frac,
+        d,
+        color: SERIES[i % SERIES.length]!,
+      };
     });
   return (
     <div className="cols" style={{ alignItems: 'center', gap: 12 }}>
-      <svg className="chart" width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flex: `0 0 ${size}px` }} role="img" aria-label="Sources of funds">
+      <svg
+        className="chart"
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        style={{ flex: `0 0 ${size}px` }}
+        role="img"
+        aria-label="Sources of funds"
+      >
         {slices.map((s) => (
-          <path key={s.key} d={s.d} fill={s.color} stroke="#fff" strokeWidth={2} fillRule="evenodd" />
+          <path
+            key={s.key}
+            d={s.d}
+            fill={s.color}
+            stroke="#fff"
+            strokeWidth={2}
+            fillRule="evenodd"
+          />
         ))}
         <text x={cx} y={cy - 2} fontSize={8} fill="#52514e" textAnchor="middle">
           Total sources
@@ -127,7 +200,18 @@ export function SourcesDonut({ sources, size = 170 }: { sources: Line[]; size?: 
           {slices.map((s) => (
             <tr key={s.key}>
               <td>
-                <span className="sw" style={{ background: s.color, display: 'inline-block', width: 9, height: 9, borderRadius: 2, marginRight: 5, verticalAlign: -1 }} />
+                <span
+                  className="sw"
+                  style={{
+                    background: s.color,
+                    display: 'inline-block',
+                    width: 9,
+                    height: 9,
+                    borderRadius: 2,
+                    marginRight: 5,
+                    verticalAlign: -1,
+                  }}
+                />
                 {s.label}
               </td>
               <td className="num">{formatUsd(s.amount)}</td>
@@ -140,7 +224,15 @@ export function SourcesDonut({ sources, size = 170 }: { sources: Line[]; size?: 
   );
 }
 
-export function EquityBars({ peak, total, width = 320 }: { peak: number; total: number; width?: number }) {
+export function EquityBars({
+  peak,
+  total,
+  width = 320,
+}: {
+  peak: number;
+  total: number;
+  width?: number;
+}) {
   const max = Math.max(peak, total, 1);
   const rows = [
     { label: 'Peak equity', v: peak, c: SERIES[0]! },
@@ -149,7 +241,12 @@ export function EquityBars({ peak, total, width = 320 }: { peak: number; total: 
   const labelW = 130;
   const barMax = width - labelW - 70;
   return (
-    <svg className="chart" viewBox={`0 0 ${width} 44`} role="img" aria-label="Peak equity compared with total equity contributed">
+    <svg
+      className="chart"
+      viewBox={`0 0 ${width} 44`}
+      role="img"
+      aria-label="Peak equity compared with total equity contributed"
+    >
       {rows.map((r, i) => {
         const bw = Math.max(1, (r.v / max) * barMax);
         const y = 4 + i * 20;

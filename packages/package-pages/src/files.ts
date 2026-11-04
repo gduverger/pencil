@@ -1,5 +1,10 @@
 /** File name for exports: <deal>-<scenario>-<version date>.<ext> (spec 8). */
-export function packageFileName(dealName: string, scenario: string, versionDate: string, ext: 'pdf' | 'xlsx' | 'html'): string {
+export function packageFileName(
+  dealName: string,
+  scenario: string,
+  versionDate: string,
+  ext: 'pdf' | 'xlsx' | 'html',
+): string {
   const slug =
     dealName
       .toLowerCase()

@@ -19,7 +19,13 @@ describe('7.10 waterfall with IRR-hurdle balances', () => {
     const contributionsGp = [10, ...new Array(12).fill(0)];
     const contributionsLp = [90, ...new Array(12).fill(0)];
     const distributions = [...new Array(12).fill(0), 120];
-    const w = runWaterfall({ tiers, contributionsGp, contributionsLp, distributions, saleMonth: 12 });
+    const w = runWaterfall({
+      tiers,
+      contributionsGp,
+      contributionsLp,
+      distributions,
+      saleMonth: 12,
+    });
     const m = w.byMonth[12]!;
     expect(m.byTier[0]).toBeCloseTo(108, 9);
     expect(m.byTier[1]).toBeCloseTo(9, 9);
@@ -34,7 +40,14 @@ describe('7.10 waterfall with IRR-hurdle balances', () => {
 
   it('a single-tier pro rata structure returns LP IRR = GP IRR = project IRR', () => {
     const d = fixtureDeal();
-    const out = run({ ...d, equity: { gpPct: 0.1, lpPct: 0.9, tiers: [{ hurdleIrrPct: null, lpSplit: 0.9, gpSplit: 0.1 }] } });
+    const out = run({
+      ...d,
+      equity: {
+        gpPct: 0.1,
+        lpPct: 0.9,
+        tiers: [{ hurdleIrrPct: null, lpSplit: 0.9, gpSplit: 0.1 }],
+      },
+    });
     expect(out.metrics.projectIrr).not.toBeNull();
     expect(out.metrics.lpIrr).toBeCloseTo(out.metrics.projectIrr!, 8);
     expect(out.metrics.gpIrr).toBeCloseTo(out.metrics.projectIrr!, 8);
@@ -47,7 +60,14 @@ describe('7.10 waterfall with IRR-hurdle balances', () => {
     expect(base.metrics.projectIrr).toBeGreaterThan(0.08);
     const out = run({
       ...d,
-      equity: { gpPct: 0.1, lpPct: 0.9, tiers: [{ hurdleIrrPct: 0.08, lpSplit: 0.9, gpSplit: 0.1 }, { hurdleIrrPct: null, lpSplit: 0.6, gpSplit: 0.4 }] },
+      equity: {
+        gpPct: 0.1,
+        lpPct: 0.9,
+        tiers: [
+          { hurdleIrrPct: 0.08, lpSplit: 0.9, gpSplit: 0.1 },
+          { hurdleIrrPct: null, lpSplit: 0.6, gpSplit: 0.4 },
+        ],
+      },
     } as DealInputsInput);
     expect(out.metrics.gpIrr!).toBeGreaterThan(out.metrics.lpIrr!);
     expect(out.metrics.lpIrr!).toBeLessThan(out.metrics.projectIrr!);
@@ -70,11 +90,15 @@ describe('7.10 waterfall with IRR-hurdle balances', () => {
       }
     }
     // every tier payout is non-negative and partner totals add up
-    for (const m of out.months) for (const x of m.distributions.byTier) expect(x).toBeGreaterThanOrEqual(0);
+    for (const m of out.months)
+      for (const x of m.distributions.byTier) expect(x).toBeGreaterThanOrEqual(0);
     const lp = out.months.reduce((s, m) => s + m.distributions.lp, 0);
     const gp = out.months.reduce((s, m) => s + m.distributions.gp, 0);
     expect(lp + gp).toBeCloseTo(out.totals.totalDistributions, 6);
-    expect(out.waterfall.tiers.reduce((s, t) => s + t.total, 0)).toBeCloseTo(out.totals.totalDistributions, 6);
+    expect(out.waterfall.tiers.reduce((s, t) => s + t.total, 0)).toBeCloseTo(
+      out.totals.totalDistributions,
+      6,
+    );
   });
 
   it('in-kind land counts as a GP contribution in the waterfall', () => {

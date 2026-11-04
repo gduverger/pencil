@@ -10,7 +10,10 @@ async function signIn(page: Page, email: string) {
 }
 
 test.describe('walkthrough step 9: package, versions, sharing', () => {
-  test('export PDF and Excel, share, open logged out, see the notes, revoke → 404, phone width readable', async ({ page, browser }) => {
+  test('export PDF and Excel, share, open logged out, see the notes, revoke → 404, phone width readable', async ({
+    page,
+    browser,
+  }) => {
     test.setTimeout(300_000);
     await signIn(page, 'dana@example.com');
     await page.getByTestId('new-deal').click();
@@ -37,7 +40,9 @@ test.describe('walkthrough step 9: package, versions, sharing', () => {
 
     // Export PDF → Version 1 with a downloadable file.
     await page.getByTestId('export-pdf').click();
-    await expect(page.getByTestId('package-message')).toContainText('Version 1 created', { timeout: 120_000 });
+    await expect(page.getByTestId('package-message')).toContainText('Version 1 created', {
+      timeout: 120_000,
+    });
     await expect(page.getByTestId('package-message')).toContainText('.pdf');
     const pdfUrl = await page.getByTestId('message-link').getAttribute('href');
     const pdfRes = await page.request.get(pdfUrl!);
@@ -48,7 +53,9 @@ test.describe('walkthrough step 9: package, versions, sharing', () => {
 
     // Export Excel → Version 2.
     await page.getByTestId('export-xlsx').click();
-    await expect(page.getByTestId('package-message')).toContainText('Version 2 created', { timeout: 60_000 });
+    await expect(page.getByTestId('package-message')).toContainText('Version 2 created', {
+      timeout: 60_000,
+    });
     await expect(page.getByTestId('package-message')).toContainText('.xlsx');
     await expect(page.getByTestId('version-1')).toBeVisible();
     await expect(page.getByTestId('version-2')).toBeVisible();
@@ -72,7 +79,9 @@ test.describe('walkthrough step 9: package, versions, sharing', () => {
     const register = readerPage.locator('[data-page="assumptions"]');
     await expect(register).toContainText('GC budget 2026-10-15');
     await expect(register).toContainText('Broker opinion Q3 2026');
-    await expect(register).toContainText('Prepared for Needham Cooperative Bank.').catch(() => undefined);
+    await expect(register)
+      .toContainText('Prepared for Needham Cooperative Bank.')
+      .catch(() => undefined);
     // Readable at phone width: no horizontal page scroll.
     const scrollWidth = await readerPage.evaluate(() => document.documentElement.scrollWidth);
     expect(scrollWidth).toBeLessThanOrEqual(375);

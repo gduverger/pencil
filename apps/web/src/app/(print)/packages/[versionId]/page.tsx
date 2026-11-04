@@ -7,7 +7,13 @@ import { versionPackageProps } from '@/server/package';
 export const dynamic = 'force-dynamic';
 
 /** The package route rendered to PDF (spec 8): token-protected, frozen to the Version. */
-export default async function PackageRoute({ params, searchParams }: { params: Promise<{ versionId: string }>; searchParams: Promise<{ t?: string }> }) {
+export default async function PackageRoute({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ versionId: string }>;
+  searchParams: Promise<{ t?: string }>;
+}) {
   const { versionId } = await params;
   const { t } = await searchParams;
   const payload = verifyToken<{ v: string; k: string }>(t);

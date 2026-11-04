@@ -1,5 +1,11 @@
 import { redirect } from 'next/navigation';
-import { ensureOrganization, getOrganization, listMemberships, type OrgSettings, type Role } from '@pencil/db';
+import {
+  ensureOrganization,
+  getOrganization,
+  listMemberships,
+  type OrgSettings,
+  type Role,
+} from '@pencil/db';
 import { auth } from '@/auth';
 import { getDb } from './db';
 
@@ -21,9 +27,20 @@ export async function requireUser(): Promise<CurrentUser> {
   if (!user?.id || !user.email) redirect('/signin');
   const db = await getDb();
   const memberships = await listMemberships(db, user.id);
-  const m = memberships[0] ?? (await ensureOrganization(db, user.id, user.name ?? user.email.split('@')[0] ?? 'My'));
+  const m =
+    memberships[0] ??
+    (await ensureOrganization(db, user.id, user.name ?? user.email.split('@')[0] ?? 'My'));
   const org = await getOrganization(db, m.orgId);
-  return { id: user.id, email: user.email, name: user.name ?? user.email, orgId: m.orgId, orgName: org.name, role: m.role as Role, tier: org.tier, settings: org.settings };
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name ?? user.email,
+    orgId: m.orgId,
+    orgName: org.name,
+    role: m.role as Role,
+    tier: org.tier,
+    settings: org.settings,
+  };
 }
 
 export async function currentUserOrNull(): Promise<CurrentUser | null> {

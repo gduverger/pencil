@@ -19,7 +19,10 @@ describe('7.7 lease-up and operations', () => {
   });
 
   it('units-per-month absorption: min(occ_s, units × (t − O + 1) / totalUnits)', () => {
-    const inputs = fixtureInputs((d) => ({ ...d, operations: { ...d.operations, absorption: { kind: 'unitsPerMonth', units: 10 } } }));
+    const inputs = fixtureInputs((d) => ({
+      ...d,
+      operations: { ...d.operations, absorption: { kind: 'unitsPerMonth', units: 10 } },
+    }));
     const tl = buildTimeline(inputs);
     // 10 of 60 units per month: 1/6, 2/6, ..., capped at 0.95 from month O + 5
     expect(occupancyAt(inputs, tl, 30)).toBeCloseTo(10 / 60, 12);
@@ -43,7 +46,15 @@ describe('7.7 lease-up and operations', () => {
     expect(ops.egi[18]).toBeCloseTo(24340.1875, 4);
     expect(ops.vacancyAndCreditLoss[18]).toBeCloseTo(25750 - 24340.1875, 4);
     expect(ops.opex.taxes[18]).toBeCloseTo(2575, 6);
-    expect(ops.opex.insurance[18]! + ops.opex.repairs[18]! + ops.opex.payroll[18]! + ops.opex.utilities[18]! + ops.opex.admin[18]! + ops.opex.marketing[18]! + ops.opex.reserves[18]!).toBeCloseTo(3090, 6);
+    expect(
+      ops.opex.insurance[18]! +
+        ops.opex.repairs[18]! +
+        ops.opex.payroll[18]! +
+        ops.opex.utilities[18]! +
+        ops.opex.admin[18]! +
+        ops.opex.marketing[18]! +
+        ops.opex.reserves[18]!,
+    ).toBeCloseTo(3090, 6);
     expect(ops.opex.management[18]).toBeCloseTo(0.03 * 24340.1875, 4);
     expect(ops.opexTotal[18]).toBeCloseTo(2575 + 3090 + 730.205625, 4);
     expect(ops.noi[18]).toBeCloseTo(24340.1875 - 6395.205625, 4);
@@ -70,7 +81,18 @@ describe('7.7 lease-up and operations', () => {
   it('commercial income and opex follow their own lease-up when the switch is on', () => {
     const inputs = fixtureInputs((d) => ({
       ...d,
-      program: { ...d.program, commercial: { enabled: true, grossSF: 4000, rentPerSFYear: 36, vacancyPct: 0.1, tiPerSF: 50, leaseUpMonths: 4, opexPerSFYear: 6 } },
+      program: {
+        ...d.program,
+        commercial: {
+          enabled: true,
+          grossSF: 4000,
+          rentPerSFYear: 36,
+          vacancyPct: 0.1,
+          tiPerSF: 50,
+          leaseUpMonths: 4,
+          opexPerSFYear: 6,
+        },
+      },
     }));
     const tl = buildTimeline(inputs);
     const ops = computeOperations(inputs, computeProgram(inputs), tl);
@@ -97,7 +119,10 @@ describe('7.7 lease-up and operations', () => {
       expect(m.costs.operatingDeficit).toBeCloseTo(-m.noi, 6);
       expect(m.deficitContribution).toBe(0);
     }
-    const off = run({ ...fixtureDeal(), financing: { ...fixtureDeal().financing, capitalizeOperatingDeficits: false } });
+    const off = run({
+      ...fixtureDeal(),
+      financing: { ...fixtureDeal().financing, capitalizeOperatingDeficits: false },
+    });
     expect(off.totals.operatingDeficit).toBe(0);
     for (const m of off.months) {
       if (m.t >= 30 && m.t < 42 && m.noi < 0) {
@@ -114,13 +139,25 @@ describe('7.7 lease-up and operations', () => {
   it('positive NOI before the refinance month reduces the funding requirement and any surplus is distributed at R', () => {
     // Refinance 6 months after stabilization: months 42–47 are stabilized with no costs, so their
     // NOI accumulates as surplus and is distributed at R = 48.
-    const out = run({ ...fixtureDeal(), financing: { ...fixtureDeal().financing, permanent: { ...fixtureDeal().financing!.permanent, monthsAfterStabilization: 6 } } });
+    const out = run({
+      ...fixtureDeal(),
+      financing: {
+        ...fixtureDeal().financing,
+        permanent: { ...fixtureDeal().financing!.permanent, monthsAfterStabilization: 6 },
+      },
+    });
     expect(out.timeline.R).toBe(48);
     const stabilizedNoi = out.months.slice(42, 48).reduce((s, m) => s + m.noi, 0);
     expect(stabilizedNoi).toBeGreaterThan(0);
     expect(out.totals.surplusDistributed).toBeGreaterThan(0);
-    expect(out.totals.leaseUpNoi + out.totals.surplusDistributed).toBeCloseTo(out.months.slice(30, 48).reduce((s, m) => s + Math.max(0, m.noi), 0), 3);
-    expect(out.months[48]!.refinance).toBeCloseTo((out.refinance?.net ?? 0) + out.totals.surplusDistributed, 6);
+    expect(out.totals.leaseUpNoi + out.totals.surplusDistributed).toBeCloseTo(
+      out.months.slice(30, 48).reduce((s, m) => s + Math.max(0, m.noi), 0),
+      3,
+    );
+    expect(out.months[48]!.refinance).toBeCloseTo(
+      (out.refinance?.net ?? 0) + out.totals.surplusDistributed,
+      6,
+    );
     expect(Math.abs(out.sourcesUses.totalSources - out.sourcesUses.totalUses)).toBeLessThan(0.01);
   });
 });

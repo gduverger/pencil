@@ -7,7 +7,17 @@ import { expect, test } from '@playwright/test';
 // Spec 12.5: render each package page for the fixture deal to PNG and compare against the stored
 // snapshot. The first snapshots were reviewed by eye and committed (docs/demos/m4/).
 const here = dirname(fileURLToPath(import.meta.url));
-const PAGE_KEYS = ['summary', 'returns', 'sourcesUses', 'capitalBudget', 'annualCashFlow', 'saleAnalysis', 'sensitivities', 'assumptions', 'appendix'];
+const PAGE_KEYS = [
+  'summary',
+  'returns',
+  'sourcesUses',
+  'capitalBudget',
+  'annualCashFlow',
+  'saleAnalysis',
+  'sensitivities',
+  'assumptions',
+  'appendix',
+];
 
 function fixtureHtml(): string {
   // The package HTML is produced in a separate Node process (see render-fixture.ts).

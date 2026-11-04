@@ -73,7 +73,10 @@ export function SourcesUsesPage({ props }: { props: PackageProps }) {
           </table>
         </div>
       </div>
-      <p className="footnote">Figures rounded; totals may not foot. Sources and uses balance to the dollar before rounding.</p>
+      <p className="footnote">
+        Figures rounded; totals may not foot. Sources and uses balance to the dollar before
+        rounding.
+      </p>
       <h3>Sources of funds</h3>
       <SourcesDonut sources={su.sources} />
     </>

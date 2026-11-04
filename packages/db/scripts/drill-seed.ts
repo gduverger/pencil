@@ -19,11 +19,38 @@ async function main() {
     townCluster: 'inner-suburbs',
     town: 'Needham',
     address: '120 Highland Avenue, Needham, MA',
-    parcel: { lotSF: null, zoningDistrict: null, mbtaCommunitiesDistrict: null, assessedValue: null, annualTax: null, unitsByRight: null, lookupDate: now.slice(0, 10), notes: [] },
+    parcel: {
+      lotSF: null,
+      zoningDistrict: null,
+      mbtaCommunitiesDistrict: null,
+      assessedValue: null,
+      annualTax: null,
+      unitsByRight: null,
+      lookupDate: now.slice(0, 10),
+      notes: [],
+    },
   };
-  const defaults = resolveDefaults([], { townCluster: 'inner-suburbs', constructionType: 'wood-frame', projectSize: '51-150' });
-  const state = newDealState(defaults, setup, user.id, now, { 'meta.name': { path: 'meta.name', value: 'Restore drill', source: 'my-number', note: '', benchmarkId: null } });
-  const deal = await createDeal(handle.db, { orgId: org.orgId, userId: user.id, name: 'Restore drill', town: 'Needham', state });
+  const defaults = resolveDefaults([], {
+    townCluster: 'inner-suburbs',
+    constructionType: 'wood-frame',
+    projectSize: '51-150',
+  });
+  const state = newDealState(defaults, setup, user.id, now, {
+    'meta.name': {
+      path: 'meta.name',
+      value: 'Restore drill',
+      source: 'my-number',
+      note: '',
+      benchmarkId: null,
+    },
+  });
+  const deal = await createDeal(handle.db, {
+    orgId: org.orgId,
+    userId: user.id,
+    name: 'Restore drill',
+    town: 'Needham',
+    state,
+  });
   await handle.close();
   process.stdout.write(`${deal.id}\n`);
 }

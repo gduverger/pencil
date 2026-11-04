@@ -13,7 +13,15 @@ describe('7.11 metrics', () => {
     const tl = buildTimeline(fixtureInputs());
     const series = metricSeries(out.months, out.sale, tl);
     const m0 = out.months[0]!;
-    expect(series.unlevered[0]).toBeCloseTo(-(m0.costTotal - m0.costs.financingFees - m0.costs.capitalizedInterest - m0.costs.operatingDeficit), 6);
+    expect(series.unlevered[0]).toBeCloseTo(
+      -(
+        m0.costTotal -
+        m0.costs.financingFees -
+        m0.costs.capitalizedInterest -
+        m0.costs.operatingDeficit
+      ),
+      6,
+    );
     const m50 = out.months[50]!;
     expect(series.unlevered[50]).toBeCloseTo(m50.noi, 6);
     const mS = out.months[120]!;
@@ -22,7 +30,9 @@ describe('7.11 metrics', () => {
   });
 
   it('project, LP and GP IRRs come from contributions and distributions', () => {
-    const project = out.months.map((m) => -(m.contributions.gp + m.contributions.lp) + m.distributions.gp + m.distributions.lp);
+    const project = out.months.map(
+      (m) => -(m.contributions.gp + m.contributions.lp) + m.distributions.gp + m.distributions.lp,
+    );
     expect(out.metrics.projectIrr).toBeCloseTo(irrAnnual(project)!, 10);
     const lp = out.months.map((m) => -m.contributions.lp + m.distributions.lp);
     expect(out.metrics.lpIrr).toBeCloseTo(irrAnnual(lp)!, 10);
@@ -37,7 +47,8 @@ describe('7.11 metrics', () => {
     let cumulative = 0;
     let peak = 0;
     for (const m of out.months) {
-      cumulative += m.contributions.gp + m.contributions.lp - m.distributions.gp - m.distributions.lp;
+      cumulative +=
+        m.contributions.gp + m.contributions.lp - m.distributions.gp - m.distributions.lp;
       peak = Math.max(peak, cumulative);
     }
     expect(out.metrics.peakEquity).toBeCloseTo(peak, 6);
@@ -59,11 +70,15 @@ describe('7.11 metrics', () => {
     expect(out.annual[10]).toMatchObject({ year: 11, fromMonth: 120, toMonth: 120, partial: true });
     const y5 = out.annual[4]!; // months 48–59, full permanent debt service
     const noi = sum(out.months.slice(48, 60).map((m) => m.noi));
-    const ds = sum(out.months.slice(48, 60).map((m) => m.debtService.interest + m.debtService.principal));
+    const ds = sum(
+      out.months.slice(48, 60).map((m) => m.debtService.interest + m.debtService.principal),
+    );
     expect(y5.noi).toBeCloseTo(noi, 6);
     expect(y5.debtService.total).toBeCloseTo(ds, 6);
     expect(y5.dscr).toBeCloseTo(noi / ds, 10);
-    const cumulativeContrib = sum(out.months.slice(0, 60).map((m) => m.contributions.gp + m.contributions.lp));
+    const cumulativeContrib = sum(
+      out.months.slice(0, 60).map((m) => m.contributions.gp + m.contributions.lp),
+    );
     expect(y5.cashOnCash).toBeCloseTo((noi - ds) / cumulativeContrib, 10);
     expect(out.annual[0]!.dscr).toBeNull();
     expect(out.annual[0]!.cashOnCash).toBeNull();

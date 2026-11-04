@@ -9,7 +9,9 @@ async function signIn(page: Page, email: string) {
   await page.waitForURL(/\/deals/);
 }
 
-test('intake proposes inputs from a conversation and writes them only on confirmation', async ({ page }) => {
+test('intake proposes inputs from a conversation and writes them only on confirmation', async ({
+  page,
+}) => {
   await signIn(page, 'frank@example.com');
   await page.getByTestId('new-deal').click();
   await page.getByTestId('address').fill('9 River Street, Needham, MA');
@@ -18,7 +20,11 @@ test('intake proposes inputs from a conversation and writes them only on confirm
   await page.waitForURL(/\/inputs/);
   await expect(page.getByTestId('value-site.landCost')).toHaveValue('0');
 
-  await page.getByTestId('assistant-input').fill('We are planning 72 units, wood frame. We have an LOI for the land at $2,500,000 and our GC says $335 per SF.');
+  await page
+    .getByTestId('assistant-input')
+    .fill(
+      'We are planning 72 units, wood frame. We have an LOI for the land at $2,500,000 and our GC says $335 per SF.',
+    );
   await page.getByTestId('assistant-send').click();
   await expect(page.getByTestId('assistant-assistant').first()).toContainText('confirm each one');
   const proposals = page.getByTestId('assistant-proposals');
@@ -35,7 +41,9 @@ test('intake proposes inputs from a conversation and writes them only on confirm
   await expect(page.getByTestId('value-program.totalUnits')).toHaveValue('72');
   await expect(page.getByTestId('value-costs.hard.perGrossSF')).toHaveValue('335');
   await expect(page.getByTestId('source-costs.hard.perGrossSF')).toHaveValue('quote');
-  await expect(page.getByTestId('note-costs.hard.perGrossSF')).toHaveValue(/confirmed from the assistant/);
+  await expect(page.getByTestId('note-costs.hard.perGrossSF')).toHaveValue(
+    /confirmed from the assistant/,
+  );
   // The transcript is stored with the deal.
   await expect(page.getByTestId('assistant-user')).toContainText('72 units');
 
@@ -57,7 +65,9 @@ test('intake proposes inputs from a conversation and writes them only on confirm
   // Narrative draft on the Package screen, labeled until edited.
   await page.getByTestId('tab-package').click();
   await page.getByTestId('draft-narrative').click();
-  await expect(page.getByTestId('narrative')).toHaveValue(/project IRR ranges from/, { timeout: 30000 });
+  await expect(page.getByTestId('narrative')).toHaveValue(/project IRR ranges from/, {
+    timeout: 30000,
+  });
   await expect(page.getByText('drafted by the assistant').first()).toBeVisible();
   await page.getByTestId('narrative').fill('My own narrative.');
   await page.getByTestId('narrative').blur();

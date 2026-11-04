@@ -1,7 +1,10 @@
 {
   "model": "apartment-development",
   "file": "ApartmentDevelopmentModel_v2.95.xlsm",
-  "notes": ["Apartment development model v2.95.", "Cell addresses are TBD until the workbook is available in reference/."],
+  "notes": [
+    "Apartment development model v2.95.",
+    "Cell addresses are TBD until the workbook is available in reference/."
+  ],
   "inputs": {
     "totalUnits": "TBD",
     "landCost": "TBD",

@@ -84,7 +84,14 @@ function emptyCosts(): Record<CostCategory, number> {
  * One pass of the monthly schedule with given commitments. Pure; returns every monthly row and
  * the totals that feed the next fixed-point iteration.
  */
-function runPass(inputs: DealInputs, tl: Timeline, cost: CostSchedule, noi: readonly number[], p: PassParams, mezzFeeAtP = false) {
+function runPass(
+  inputs: DealInputs,
+  tl: Timeline,
+  cost: CostSchedule,
+  noi: readonly number[],
+  p: PassParams,
+  mezzFeeAtP = false,
+) {
   const n = cost.monthCount;
   const fin = inputs.financing;
   const rc = fin.constructionLoan.ratePct / 12;
@@ -272,7 +279,12 @@ function runPass(inputs: DealInputs, tl: Timeline, cost: CostSchedule, noi: read
   const inflowsApplied = Math.min(totalInflows, applied);
   const leaseUpNoiApplied = applied - inflowsApplied;
 
-  const fees = { land: landLoanOn ? landFee : 0, construction: constructionFee, mezz: mezzFee, total: 0 };
+  const fees = {
+    land: landLoanOn ? landFee : 0,
+    construction: constructionFee,
+    mezz: mezzFee,
+    total: 0,
+  };
   fees.total = fees.land + fees.construction + fees.mezz;
   const interestTotal = interest.construction + interest.land + interest.mezz;
   let tpcOut = 0;
@@ -295,7 +307,12 @@ function runPass(inputs: DealInputs, tl: Timeline, cost: CostSchedule, noi: read
   };
 }
 
-export function solveFunding(inputs: DealInputs, tl: Timeline, cost: CostSchedule, noi: readonly number[]): FundingResult {
+export function solveFunding(
+  inputs: DealInputs,
+  tl: Timeline,
+  cost: CostSchedule,
+  noi: readonly number[],
+): FundingResult {
   const fin = inputs.financing;
   const ltc = fin.constructionLoan.ltc;
   const mezzPct = fin.mezz.enabled ? fin.mezz.pctOfCost : 0;
@@ -316,9 +333,25 @@ export function solveFunding(inputs: DealInputs, tl: Timeline, cost: CostSchedul
   let tpcIn = (fixed + landFee) / feeFactor;
   const trace: Array<{ tpcIn: number; tpcOut: number }> = [];
   type Pass = ReturnType<typeof runPass>;
-  let previous: { pass: Pass; tpcIn: number; lc: number; mezzCommitment: number; equityCommitment: number } | null = null;
+  let previous: {
+    pass: Pass;
+    tpcIn: number;
+    lc: number;
+    mezzCommitment: number;
+    equityCommitment: number;
+  } | null = null;
 
-  const result = (chosen: { pass: Pass; tpcIn: number; lc: number; mezzCommitment: number; equityCommitment: number }, iterations: number, oscillation: boolean): FundingResult => ({
+  const result = (
+    chosen: {
+      pass: Pass;
+      tpcIn: number;
+      lc: number;
+      mezzCommitment: number;
+      equityCommitment: number;
+    },
+    iterations: number,
+    oscillation: boolean,
+  ): FundingResult => ({
     months: chosen.pass.months,
     tpc: chosen.pass.tpcOut,
     lc: chosen.lc,
@@ -358,11 +391,18 @@ export function solveFunding(inputs: DealInputs, tl: Timeline, cost: CostSchedul
     // small jump in the map, so no exact fixed point exists. Accept the pass with the smaller
     // residual and report it (see docs/decisions.md).
     if (previous && Math.abs(pass.tpcOut - previous.tpcIn) < 1) {
-      const chosen = Math.abs(previous.pass.tpcOut - previous.tpcIn) <= Math.abs(pass.tpcOut - tpcIn) ? previous : current;
+      const chosen =
+        Math.abs(previous.pass.tpcOut - previous.tpcIn) <= Math.abs(pass.tpcOut - tpcIn)
+          ? previous
+          : current;
       const residual = Math.abs(chosen.pass.tpcOut - chosen.tpcIn);
       // Only an immaterial jump is accepted (0.1% of TPC); a wide cycle is divergence and throws below.
       if (residual <= 1e-3 * Math.abs(chosen.tpcIn)) return result(chosen, k, true);
-      throw new EngineError('non-convergent', 'total project cost alternates between two schedules that differ materially', { lastIterations: trace.slice(-2) });
+      throw new EngineError(
+        'non-convergent',
+        'total project cost alternates between two schedules that differ materially',
+        { lastIterations: trace.slice(-2) },
+      );
     }
     previous = current;
     tpcIn = pass.tpcOut;

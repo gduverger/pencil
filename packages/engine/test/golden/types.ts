@@ -24,7 +24,10 @@ export interface GoldenTolerances {
   /** Annual series tolerance per year (default 0.01). */
   annual?: number;
   /** Per-metric overrides, e.g. { capitalizedInterest: { moneyRel: 0.02 } }. */
-  perMetric?: Record<string, { moneyRel?: number; moneyAbs?: number; irr?: number; annual?: number }>;
+  perMetric?: Record<
+    string,
+    { moneyRel?: number; moneyAbs?: number; irr?: number; annual?: number }
+  >;
 }
 
 export interface GoldenAdaptation {

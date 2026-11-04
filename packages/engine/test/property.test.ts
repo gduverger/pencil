@@ -19,7 +19,10 @@ describe('12.4 property tests', () => {
       fc.property(arbDeal(), (deal) => {
         if (LOG) writeFileSync(LOG, JSON.stringify(deal));
         const issues = validate(deal);
-        if (hasErrors(issues)) throw new Error(`generator produced an invalid deal: ${issues.map((i) => i.code).join(', ')}`);
+        if (hasErrors(issues))
+          throw new Error(
+            `generator produced an invalid deal: ${issues.map((i) => i.code).join(', ')}`,
+          );
         const out = run(deal);
         const violations = checkInvariants(out);
         if (violations.length > 0) {
@@ -27,10 +30,21 @@ describe('12.4 property tests', () => {
         }
         // every number in the outputs is finite
         for (const m of out.months) {
-          if (!Number.isFinite(m.noi) || !Number.isFinite(m.loanBalance) || !Number.isFinite(m.distributions.lp)) throw new Error(`non-finite value at month ${m.t}`);
+          if (
+            !Number.isFinite(m.noi) ||
+            !Number.isFinite(m.loanBalance) ||
+            !Number.isFinite(m.distributions.lp)
+          )
+            throw new Error(`non-finite value at month ${m.t}`);
         }
       }),
-      { numRuns: 500, verbose: true, seed: SEED, interruptAfterTimeLimit: 60_000, markInterruptAsFailure: true },
+      {
+        numRuns: 500,
+        verbose: true,
+        seed: SEED,
+        interruptAfterTimeLimit: 60_000,
+        markInterruptAsFailure: true,
+      },
     );
   });
 
@@ -40,7 +54,12 @@ describe('12.4 property tests', () => {
         if (LOG) writeFileSync(LOG, JSON.stringify(deal));
         expect(JSON.stringify(run(deal))).toBe(JSON.stringify(run(deal)));
       }),
-      { numRuns: 50, seed: SEED + 1, interruptAfterTimeLimit: 30_000, markInterruptAsFailure: true },
+      {
+        numRuns: 50,
+        seed: SEED + 1,
+        interruptAfterTimeLimit: 30_000,
+        markInterruptAsFailure: true,
+      },
     );
   });
 

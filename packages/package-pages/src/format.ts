@@ -21,7 +21,10 @@ export function roundUsd(x: number, prefs: RoundingPreferences = DEFAULT_ROUNDIN
 }
 
 const intFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
-const twoDecimals = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const twoDecimals = new Intl.NumberFormat('en-US', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 
 function wrapNegative(s: string, negative: boolean, parens: boolean): string {
   if (!negative) return s;
@@ -39,7 +42,11 @@ export interface FormatOptions {
 export function formatUsd(x: number | null | undefined, opts: FormatOptions = {}): string {
   if (x === null || x === undefined || !Number.isFinite(x)) return opts.empty ?? '—';
   const rounded = roundUsd(x, opts.rounding);
-  return wrapNegative(`$${intFormatter.format(Math.abs(rounded))}`, rounded < 0, opts.parens ?? true);
+  return wrapNegative(
+    `$${intFormatter.format(Math.abs(rounded))}`,
+    rounded < 0,
+    opts.parens ?? true,
+  );
 }
 
 /** $/SF → 2 decimals. */
@@ -52,7 +59,11 @@ export function formatUsdPerSF(x: number | null | undefined, opts: FormatOptions
 export function formatUsdWhole(x: number | null | undefined, opts: FormatOptions = {}): string {
   if (x === null || x === undefined || !Number.isFinite(x)) return opts.empty ?? '—';
   const rounded = Math.round(x);
-  return wrapNegative(`$${intFormatter.format(Math.abs(rounded))}`, rounded < 0, opts.parens ?? true);
+  return wrapNegative(
+    `$${intFormatter.format(Math.abs(rounded))}`,
+    rounded < 0,
+    opts.parens ?? true,
+  );
 }
 
 /** Percentages and rates → 2 decimals. */
@@ -86,7 +97,11 @@ export function formatCount(x: number | null | undefined, opts: FormatOptions = 
 }
 
 /** Format any input or output value by its unit (FR-1.4). */
-export function formatByUnit(value: unknown, unit: Unit | 'irr' | 'multiple', opts: FormatOptions = {}): string {
+export function formatByUnit(
+  value: unknown,
+  unit: Unit | 'irr' | 'multiple',
+  opts: FormatOptions = {},
+): string {
   if (value === null || value === undefined) return opts.empty ?? '—';
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (typeof value === 'string') return value;

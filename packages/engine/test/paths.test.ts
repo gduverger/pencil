@@ -25,7 +25,10 @@ describe('FR-1.3 dotted paths', () => {
 
   it('applies a map of overrides', () => {
     const inputs = fixtureInputs();
-    const next = applyOverrides(inputs, { 'exit.exitCapRatePct': 0.06, 'costs.hard.perGrossSF': 400 });
+    const next = applyOverrides(inputs, {
+      'exit.exitCapRatePct': 0.06,
+      'costs.hard.perGrossSF': 400,
+    });
     expect(next.exit.exitCapRatePct).toBe(0.06);
     expect(next.costs.hard.perGrossSF).toBe(400);
   });

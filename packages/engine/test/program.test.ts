@@ -22,9 +22,19 @@ describe('7.3 program and revenue basis', () => {
   });
 
   it('adds commercial gross SF to GSF_total only when the switch is on', () => {
-    const on = computeProgram(fixtureInputs((d) => ({ ...d, program: { ...d.program!, commercial: { enabled: true, grossSF: 5000 } } })));
+    const on = computeProgram(
+      fixtureInputs((d) => ({
+        ...d,
+        program: { ...d.program!, commercial: { enabled: true, grossSF: 5000 } },
+      })),
+    );
     expect(on.gsfTotal).toBeCloseTo(56823.5294 + 5000, 3);
-    const off = computeProgram(fixtureInputs((d) => ({ ...d, program: { ...d.program!, commercial: { enabled: false, grossSF: 5000 } } })));
+    const off = computeProgram(
+      fixtureInputs((d) => ({
+        ...d,
+        program: { ...d.program!, commercial: { enabled: false, grossSF: 5000 } },
+      })),
+    );
     expect(off.gsfTotal).toBeCloseTo(56823.5294, 3);
   });
 
@@ -37,7 +47,13 @@ describe('7.3 program and revenue basis', () => {
   });
 
   it('applies the affordable discount to the affordable share of each type', () => {
-    const aff = fixtureInputs((d) => ({ ...d, program: { ...d.program!, affordable: { enabled: true, pctUnits: 0.2, rentDiscountPct: 0.5 } } }));
+    const aff = fixtureInputs((d) => ({
+      ...d,
+      program: {
+        ...d.program!,
+        affordable: { enabled: true, pctUnits: 0.2, rentDiscountPct: 0.5 },
+      },
+    }));
     const p = computeProgram(aff);
     // 20% of units at half rent → GPR × (1 − 0.2 × 0.5) = 180,600 × 0.9 = 162,540
     expect(gprAt(aff, p, 0)).toBeCloseTo(162540, 6);

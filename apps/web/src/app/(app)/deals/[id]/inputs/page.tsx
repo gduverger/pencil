@@ -14,19 +14,58 @@ export default async function InputsPage({ params }: { params: Promise<{ id: str
   const db = await getDb();
   const { deal, state } = await getDeal(db, user.orgId, id);
   const rows = await listBenchmarks(db);
-  const benchmarks: Benchmark[] = rows.map((b) => ({ id: b.id, metric: b.metric, segment: b.segment as Segment, low: b.low, mid: b.mid, high: b.high, unit: b.unit, asOf: b.asOf, source: b.source, contributorOrgId: b.contributorOrgId ?? null, sampleSize: b.sampleSize ?? null }));
+  const benchmarks: Benchmark[] = rows.map((b) => ({
+    id: b.id,
+    metric: b.metric,
+    segment: b.segment as Segment,
+    low: b.low,
+    mid: b.mid,
+    high: b.high,
+    unit: b.unit,
+    asOf: b.asOf,
+    source: b.source,
+    contributorOrgId: b.contributorOrgId ?? null,
+    sampleSize: b.sampleSize ?? null,
+  }));
   const units = state.inputs['program.totalUnits']?.value;
-  const segment: Segment = { constructionType: state.setup.constructionType, projectSize: projectSizeOf(typeof units === 'number' ? units : 60), ...(state.setup.townCluster ? { townCluster: state.setup.townCluster } : {}) };
+  const segment: Segment = {
+    constructionType: state.setup.constructionType,
+    projectSize: projectSizeOf(typeof units === 'number' ? units : 60),
+    ...(state.setup.townCluster ? { townCluster: state.setup.townCluster } : {}),
+  };
   const byPath: Record<string, BenchmarkInfo> = {};
   for (const e of inputCatalog()) {
     const b = resolveBenchmark(benchmarks, e.path, segment);
-    if (b) byPath[e.path] = { id: b.id, low: b.low, mid: b.mid, high: b.high, asOf: b.asOf, source: b.source, sampleSize: b.sampleSize };
+    if (b)
+      byPath[e.path] = {
+        id: b.id,
+        low: b.low,
+        mid: b.mid,
+        high: b.high,
+        asOf: b.asOf,
+        source: b.source,
+        sampleSize: b.sampleSize,
+      };
   }
   const available = await assistantAvailable();
   return (
     <div className="space-y-4">
-      <AssistantPanel dealId={deal.id} rev={deal.rev} transcript={state.assistantTranscript} available={available} />
-      <InputsScreen dealId={deal.id} dealName={deal.name} rev={deal.rev} state={state} catalog={inputCatalog()} benchmarks={byPath} switches={SWITCHES} userId={user.id} />
+      <AssistantPanel
+        dealId={deal.id}
+        rev={deal.rev}
+        transcript={state.assistantTranscript}
+        available={available}
+      />
+      <InputsScreen
+        dealId={deal.id}
+        dealName={deal.name}
+        rev={deal.rev}
+        state={state}
+        catalog={inputCatalog()}
+        benchmarks={byPath}
+        switches={SWITCHES}
+        userId={user.id}
+      />
     </div>
   );
 }

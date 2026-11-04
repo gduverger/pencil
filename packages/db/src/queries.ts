@@ -69,7 +69,13 @@ export async function upsertUser(db: Db, u: { email: string; name?: string | nul
 /** The organizations a user belongs to, with roles. */
 export async function listMemberships(db: Db, userId: string) {
   return db
-    .select({ orgId: t.memberships.orgId, role: t.memberships.role, orgName: t.organizations.name, tier: t.organizations.tier, settings: t.organizations.settings })
+    .select({
+      orgId: t.memberships.orgId,
+      role: t.memberships.role,
+      orgName: t.organizations.name,
+      tier: t.organizations.tier,
+      settings: t.organizations.settings,
+    })
     .from(t.memberships)
     .innerJoin(t.organizations, eq(t.organizations.id, t.memberships.orgId))
     .where(eq(t.memberships.userId, userId))
@@ -85,13 +91,22 @@ export async function ensureOrganization(db: Db, userId: string, displayName: st
     .values({ name: `${displayName}'s organization`, settings: {} })
     .returning();
   await db.insert(t.memberships).values({ userId, orgId: org!.id, role: 'owner' });
-  return { orgId: org!.id, role: 'owner', orgName: org!.name, tier: org!.tier, settings: org!.settings };
+  return {
+    orgId: org!.id,
+    role: 'owner',
+    orgName: org!.name,
+    tier: org!.tier,
+    settings: org!.settings,
+  };
 }
 
 export async function requireMembership(db: Db, userId: string, orgId: string, roles?: Role[]) {
-  const m = await db.query.memberships.findFirst({ where: and(eq(t.memberships.userId, userId), eq(t.memberships.orgId, orgId)) });
+  const m = await db.query.memberships.findFirst({
+    where: and(eq(t.memberships.userId, userId), eq(t.memberships.orgId, orgId)),
+  });
   if (!m) throw new ForbiddenError();
-  if (roles && !roles.includes(m.role as Role)) throw new ForbiddenError(`requires role ${roles.join(' or ')}`);
+  if (roles && !roles.includes(m.role as Role))
+    throw new ForbiddenError(`requires role ${roles.join(' or ')}`);
   return m;
 }
 
@@ -101,8 +116,22 @@ export async function getOrganization(db: Db, orgId: string) {
   return { ...org, settings: (org.settings ?? {}) as OrgSettings };
 }
 
-export async function updateOrganization(db: Db, orgId: string, changes: { name?: string; settings?: OrgSettings; letterheadKey?: string | null; tier?: string; stripeCustomerId?: string | null }) {
-  const [row] = await db.update(t.organizations).set(changes).where(eq(t.organizations.id, orgId)).returning();
+export async function updateOrganization(
+  db: Db,
+  orgId: string,
+  changes: {
+    name?: string;
+    settings?: OrgSettings;
+    letterheadKey?: string | null;
+    tier?: string;
+    stripeCustomerId?: string | null;
+  },
+) {
+  const [row] = await db
+    .update(t.organizations)
+    .set(changes)
+    .where(eq(t.organizations.id, orgId))
+    .returning();
   if (!row) throw new NotFoundError('organization');
   return row;
 }
@@ -133,16 +162,29 @@ export interface DealRow {
 }
 
 export async function listDeals(db: Db, orgId: string): Promise<DealRow[]> {
-  const rows = await db.select().from(t.deals).where(eq(t.deals.orgId, orgId)).orderBy(desc(t.deals.updatedAt));
+  const rows = await db
+    .select()
+    .from(t.deals)
+    .where(eq(t.deals.orgId, orgId))
+    .orderBy(desc(t.deals.updatedAt));
   return rows.map((r) => ({ ...r, address: (r.address ?? {}) as Record<string, unknown> }));
 }
 
-export async function getDeal(db: Db, orgId: string, dealId: string): Promise<{ deal: DealRow; state: DealState }> {
-  const deal = await db.query.deals.findFirst({ where: and(eq(t.deals.id, dealId), eq(t.deals.orgId, orgId)) });
+export async function getDeal(
+  db: Db,
+  orgId: string,
+  dealId: string,
+): Promise<{ deal: DealRow; state: DealState }> {
+  const deal = await db.query.deals.findFirst({
+    where: and(eq(t.deals.id, dealId), eq(t.deals.orgId, orgId)),
+  });
   if (!deal) throw new NotFoundError('deal');
   const state = await db.query.dealState.findFirst({ where: eq(t.dealState.dealId, dealId) });
   if (!state) throw new NotFoundError('deal state');
-  return { deal: { ...deal, address: (deal.address ?? {}) as Record<string, unknown> }, state: parseDealState(stateFromRow(state)) };
+  return {
+    deal: { ...deal, address: (deal.address ?? {}) as Record<string, unknown> },
+    state: parseDealState(stateFromRow(state)),
+  };
 }
 
 function stateFromRow(row: typeof t.dealState.$inferSelect): DealState {
@@ -173,16 +215,46 @@ function stateToRow(state: DealState) {
   };
 }
 
-export async function createDeal(db: Db, args: { orgId: string; userId: string; name: string; address?: Record<string, unknown>; town?: string | null; state: DealState; clonedFrom?: string | null; history?: HistoryRow[] }) {
+export async function createDeal(
+  db: Db,
+  args: {
+    orgId: string;
+    userId: string;
+    name: string;
+    address?: Record<string, unknown>;
+    town?: string | null;
+    state: DealState;
+    clonedFrom?: string | null;
+    history?: HistoryRow[];
+  },
+) {
   return db.transaction(async (tx) => {
     const [deal] = await tx
       .insert(t.deals)
-      .values({ orgId: args.orgId, name: args.name, address: args.address ?? {}, town: args.town ?? null, createdBy: args.userId, clonedFrom: args.clonedFrom ?? null })
+      .values({
+        orgId: args.orgId,
+        name: args.name,
+        address: args.address ?? {},
+        town: args.town ?? null,
+        createdBy: args.userId,
+        clonedFrom: args.clonedFrom ?? null,
+      })
       .returning();
     await tx.insert(t.dealState).values({ dealId: deal!.id, ...stateToRow(args.state) });
     // Creation itself is recorded as one row per input ("created with <source>") so the history is never empty.
-    const created: HistoryRow[] = args.history ?? Object.entries(args.state.inputs).map(([path, rec]) => ({ scenario: 'likely', path, priorValue: rec.value, priorSource: rec.source, priorNote: `created (${rec.source})`, changedBy: args.userId, changedAt: rec.updatedAt }));
-    if (created.length > 0) await tx.insert(t.inputHistory).values(created.map((h) => ({ dealId: deal!.id, ...h })));
+    const created: HistoryRow[] =
+      args.history ??
+      Object.entries(args.state.inputs).map(([path, rec]) => ({
+        scenario: 'likely',
+        path,
+        priorValue: rec.value,
+        priorSource: rec.source,
+        priorNote: `created (${rec.source})`,
+        changedBy: args.userId,
+        changedAt: rec.updatedAt,
+      }));
+    if (created.length > 0)
+      await tx.insert(t.inputHistory).values(created.map((h) => ({ dealId: deal!.id, ...h })));
     return { ...deal!, address: (deal!.address ?? {}) as Record<string, unknown> } as DealRow;
   });
 }
@@ -194,7 +266,16 @@ export async function createDeal(db: Db, args: { orgId: string; userId: string; 
  */
 export async function updateDealState(
   db: Db,
-  args: { orgId: string; dealId: string; expectedRev: number; mutate: (state: DealState) => { state: DealState; history?: HistoryRow[] } | Promise<{ state: DealState; history?: HistoryRow[] }> },
+  args: {
+    orgId: string;
+    dealId: string;
+    expectedRev: number;
+    mutate: (
+      state: DealState,
+    ) =>
+      | { state: DealState; history?: HistoryRow[] }
+      | Promise<{ state: DealState; history?: HistoryRow[] }>;
+  },
 ): Promise<{ deal: DealRow; state: DealState; history: HistoryRow[] }> {
   return db.transaction(async (tx) => {
     const [deal] = await tx
@@ -203,20 +284,29 @@ export async function updateDealState(
       .where(and(eq(t.deals.id, args.dealId), eq(t.deals.orgId, args.orgId)))
       .for('update');
     if (!deal) throw new NotFoundError('deal');
-    if (deal.rev !== args.expectedRev) throw new RevConflictError(args.dealId, args.expectedRev, deal.rev);
+    if (deal.rev !== args.expectedRev)
+      throw new RevConflictError(args.dealId, args.expectedRev, deal.rev);
     const row = await tx.query.dealState.findFirst({ where: eq(t.dealState.dealId, args.dealId) });
     if (!row) throw new NotFoundError('deal state');
     const current = stateFromRow(row);
     const result = await args.mutate(current);
     const history = result.history ?? [];
-    await tx.update(t.dealState).set(stateToRow(result.state)).where(eq(t.dealState.dealId, args.dealId));
+    await tx
+      .update(t.dealState)
+      .set(stateToRow(result.state))
+      .where(eq(t.dealState.dealId, args.dealId));
     const [updated] = await tx
       .update(t.deals)
       .set({ rev: deal.rev + 1, updatedAt: sql`now()` })
       .where(eq(t.deals.id, args.dealId))
       .returning();
-    if (history.length > 0) await tx.insert(t.inputHistory).values(history.map((h) => ({ dealId: args.dealId, ...h })));
-    return { deal: { ...updated!, address: (updated!.address ?? {}) as Record<string, unknown> }, state: result.state, history };
+    if (history.length > 0)
+      await tx.insert(t.inputHistory).values(history.map((h) => ({ dealId: args.dealId, ...h })));
+    return {
+      deal: { ...updated!, address: (updated!.address ?? {}) as Record<string, unknown> },
+      state: result.state,
+      history,
+    };
   });
 }
 
@@ -249,37 +339,79 @@ export async function deleteDeal(db: Db, orgId: string, dealId: string) {
   if (deleted.length === 0) throw new NotFoundError('deal');
 }
 
-export async function cloneDeal(db: Db, args: { orgId: string; userId: string; sourceDealId: string; name?: string; now?: string }) {
+export async function cloneDeal(
+  db: Db,
+  args: { orgId: string; userId: string; sourceDealId: string; name?: string; now?: string },
+) {
   const { deal, state } = await getDeal(db, args.orgId, args.sourceDealId);
   const now = args.now ?? new Date().toISOString();
   const cloned = cloneState(state, deal.name, args.userId, now);
   const history = cloneHistory(cloned, deal.name, args.userId, now);
-  return createDeal(db, { orgId: args.orgId, userId: args.userId, name: args.name ?? `${deal.name} (copy)`, address: deal.address, town: deal.town, state: cloned, clonedFrom: deal.id, history });
+  return createDeal(db, {
+    orgId: args.orgId,
+    userId: args.userId,
+    name: args.name ?? `${deal.name} (copy)`,
+    address: deal.address,
+    town: deal.town,
+    state: cloned,
+    clonedFrom: deal.id,
+    history,
+  });
 }
 
 export async function listHistory(db: Db, orgId: string, dealId: string, path?: string) {
   await getDealRow(db, orgId, dealId);
-  const where = path ? and(eq(t.inputHistory.dealId, dealId), eq(t.inputHistory.path, path)) : eq(t.inputHistory.dealId, dealId);
-  return db.select().from(t.inputHistory).where(where).orderBy(desc(t.inputHistory.changedAt), desc(t.inputHistory.createdAt));
+  const where = path
+    ? and(eq(t.inputHistory.dealId, dealId), eq(t.inputHistory.path, path))
+    : eq(t.inputHistory.dealId, dealId);
+  return db
+    .select()
+    .from(t.inputHistory)
+    .where(where)
+    .orderBy(desc(t.inputHistory.changedAt), desc(t.inputHistory.createdAt));
 }
 
 async function getDealRow(db: Db, orgId: string, dealId: string) {
-  const deal = await db.query.deals.findFirst({ where: and(eq(t.deals.id, dealId), eq(t.deals.orgId, orgId)) });
+  const deal = await db.query.deals.findFirst({
+    where: and(eq(t.deals.id, dealId), eq(t.deals.orgId, orgId)),
+  });
   if (!deal) throw new NotFoundError('deal');
   return deal;
 }
 
 // ---------- versions, files, shares ----------
 
-export async function createVersion(db: Db, args: { orgId: string; dealId: string; userId: string; snapshot: DealState; outputs: unknown; engineVersion: string }) {
+export async function createVersion(
+  db: Db,
+  args: {
+    orgId: string;
+    dealId: string;
+    userId: string;
+    snapshot: DealState;
+    outputs: unknown;
+    engineVersion: string;
+  },
+) {
   return db.transaction(async (tx) => {
-    const deal = await tx.query.deals.findFirst({ where: and(eq(t.deals.id, args.dealId), eq(t.deals.orgId, args.orgId)) });
+    const deal = await tx.query.deals.findFirst({
+      where: and(eq(t.deals.id, args.dealId), eq(t.deals.orgId, args.orgId)),
+    });
     if (!deal) throw new NotFoundError('deal');
-    const [last] = await tx.select({ n: sql<number>`coalesce(max(${t.versions.number}), 0)` }).from(t.versions).where(eq(t.versions.dealId, args.dealId));
+    const [last] = await tx
+      .select({ n: sql<number>`coalesce(max(${t.versions.number}), 0)` })
+      .from(t.versions)
+      .where(eq(t.versions.dealId, args.dealId));
     const number = Number(last?.n ?? 0) + 1;
     const [row] = await tx
       .insert(t.versions)
-      .values({ dealId: args.dealId, number, snapshot: stateToRow(args.snapshot), outputs: args.outputs as object, engineVersion: args.engineVersion, createdBy: args.userId })
+      .values({
+        dealId: args.dealId,
+        number,
+        snapshot: stateToRow(args.snapshot),
+        outputs: args.outputs as object,
+        engineVersion: args.engineVersion,
+        createdBy: args.userId,
+      })
       .returning();
     return row!;
   });
@@ -288,7 +420,15 @@ export async function createVersion(db: Db, args: { orgId: string; dealId: strin
 export async function listVersions(db: Db, orgId: string, dealId: string) {
   await getDealRow(db, orgId, dealId);
   return db
-    .select({ id: t.versions.id, number: t.versions.number, engineVersion: t.versions.engineVersion, createdBy: t.versions.createdBy, createdAt: t.versions.createdAt, reviewedBy: t.versions.reviewedBy, reviewedAt: t.versions.reviewedAt })
+    .select({
+      id: t.versions.id,
+      number: t.versions.number,
+      engineVersion: t.versions.engineVersion,
+      createdBy: t.versions.createdBy,
+      createdAt: t.versions.createdAt,
+      reviewedBy: t.versions.reviewedBy,
+      reviewedAt: t.versions.reviewedAt,
+    })
     .from(t.versions)
     .where(eq(t.versions.dealId, dealId))
     .orderBy(desc(t.versions.number));
@@ -299,7 +439,10 @@ export async function getVersion(db: Db, versionId: string) {
   if (!row) throw new NotFoundError('version');
   const deal = await db.query.deals.findFirst({ where: eq(t.deals.id, row.dealId) });
   if (!deal) throw new NotFoundError('deal');
-  return { version: { ...row, snapshot: parseDealState(row.snapshot) }, deal: { ...deal, address: (deal.address ?? {}) as Record<string, unknown> } as DealRow };
+  return {
+    version: { ...row, snapshot: parseDealState(row.snapshot) },
+    deal: { ...deal, address: (deal.address ?? {}) as Record<string, unknown> } as DealRow,
+  };
 }
 
 export async function markReviewed(db: Db, versionId: string, reviewedBy: string) {
@@ -312,7 +455,10 @@ export async function markReviewed(db: Db, versionId: string, reviewedBy: string
   return row;
 }
 
-export async function recordFile(db: Db, args: { versionId: string; kind: 'pdf' | 'xlsx'; storageKey: string; bytes: number }) {
+export async function recordFile(
+  db: Db,
+  args: { versionId: string; kind: 'pdf' | 'xlsx'; storageKey: string; bytes: number },
+) {
   const [row] = await db.insert(t.files).values(args).returning();
   return row!;
 }
@@ -321,10 +467,18 @@ export async function listFiles(db: Db, versionId: string) {
   return db.select().from(t.files).where(eq(t.files.versionId, versionId));
 }
 
-export async function createShare(db: Db, args: { versionId: string; userId: string; token: string; expiresAt?: string | null }) {
+export async function createShare(
+  db: Db,
+  args: { versionId: string; userId: string; token: string; expiresAt?: string | null },
+) {
   const [row] = await db
     .insert(t.shares)
-    .values({ versionId: args.versionId, createdBy: args.userId, token: args.token, expiresAt: args.expiresAt ?? null })
+    .values({
+      versionId: args.versionId,
+      createdBy: args.userId,
+      token: args.token,
+      expiresAt: args.expiresAt ?? null,
+    })
     .returning();
   return row!;
 }
@@ -341,7 +495,15 @@ export async function revokeShare(db: Db, shareId: string) {
 
 export async function listShares(db: Db, dealId: string) {
   return db
-    .select({ id: t.shares.id, versionId: t.shares.versionId, versionNumber: t.versions.number, token: t.shares.token, expiresAt: t.shares.expiresAt, revokedAt: t.shares.revokedAt, createdAt: t.shares.createdAt })
+    .select({
+      id: t.shares.id,
+      versionId: t.shares.versionId,
+      versionNumber: t.versions.number,
+      token: t.shares.token,
+      expiresAt: t.shares.expiresAt,
+      revokedAt: t.shares.revokedAt,
+      createdAt: t.shares.createdAt,
+    })
     .from(t.shares)
     .innerJoin(t.versions, eq(t.versions.id, t.shares.versionId))
     .where(eq(t.versions.dealId, dealId))
@@ -365,7 +527,18 @@ export async function seedBenchmarks(db: Db, rows: Array<typeof t.benchmarks.$in
   await db
     .insert(t.benchmarks)
     .values(rows)
-    .onConflictDoUpdate({ target: t.benchmarks.id, set: { low: sql`excluded.low`, mid: sql`excluded.mid`, high: sql`excluded.high`, asOf: sql`excluded.as_of`, source: sql`excluded.source`, sampleSize: sql`excluded.sample_size`, segment: sql`excluded.segment` } });
+    .onConflictDoUpdate({
+      target: t.benchmarks.id,
+      set: {
+        low: sql`excluded.low`,
+        mid: sql`excluded.mid`,
+        high: sql`excluded.high`,
+        asOf: sql`excluded.as_of`,
+        source: sql`excluded.source`,
+        sampleSize: sql`excluded.sample_size`,
+        segment: sql`excluded.segment`,
+      },
+    });
   return rows.length;
 }
 
@@ -378,7 +551,15 @@ export async function seedTowns(db: Db, rows: Array<typeof t.towns.$inferInsert>
   await db
     .insert(t.towns)
     .values(rows)
-    .onConflictDoUpdate({ target: t.towns.town, set: { cluster: sql`excluded.cluster`, residentialTaxRate: sql`excluded.residential_tax_rate`, assessorUrl: sql`excluded.assessor_url`, mbtaStatus: sql`excluded.mbta_status` } });
+    .onConflictDoUpdate({
+      target: t.towns.town,
+      set: {
+        cluster: sql`excluded.cluster`,
+        residentialTaxRate: sql`excluded.residential_tax_rate`,
+        assessorUrl: sql`excluded.assessor_url`,
+        mbtaStatus: sql`excluded.mbta_status`,
+      },
+    });
   return rows.length;
 }
 
@@ -407,36 +588,62 @@ export async function addEntitlement(db: Db, row: typeof t.entitlements.$inferIn
 
 /** The entitlement a Stripe object (checkout session, subscription, invoice) already produced, if any. */
 export async function findEntitlementByRef(db: Db, stripeRef: string) {
-  return (await db.query.entitlements.findFirst({ where: eq(t.entitlements.stripeRef, stripeRef) })) ?? null;
+  return (
+    (await db.query.entitlements.findFirst({ where: eq(t.entitlements.stripeRef, stripeRef) })) ??
+    null
+  );
 }
 
 // ---------- billing (M10) ----------
 
 export async function findOrganizationByStripeCustomer(db: Db, customerId: string) {
-  return (await db.query.organizations.findFirst({ where: eq(t.organizations.stripeCustomerId, customerId) })) ?? null;
+  return (
+    (await db.query.organizations.findFirst({
+      where: eq(t.organizations.stripeCustomerId, customerId),
+    })) ?? null
+  );
 }
 
 /** True when a Stripe event id has already been applied (webhook redelivery). */
 export async function billingEventSeen(db: Db, id: string): Promise<boolean> {
-  return (await db.query.billingEvents.findFirst({ where: eq(t.billingEvents.id, id) })) !== undefined;
+  return (
+    (await db.query.billingEvents.findFirst({ where: eq(t.billingEvents.id, id) })) !== undefined
+  );
 }
 
 /** Records an applied Stripe event; false when another delivery recorded it first. */
 export async function recordBillingEvent(db: Db, id: string, type: string): Promise<boolean> {
-  const rows = await db.insert(t.billingEvents).values({ id, type }).onConflictDoNothing().returning({ id: t.billingEvents.id });
+  const rows = await db
+    .insert(t.billingEvents)
+    .values({ id, type })
+    .onConflictDoNothing()
+    .returning({ id: t.billingEvents.id });
   return rows.length > 0;
 }
 
 // ---------- assistant budgets (10.5) ----------
 
 /** Monthly request and token totals for an organization. */
-export async function assistantUsage(db: Db, orgId: string, month: string): Promise<{ requests: number; tokens: number }> {
-  const row = await db.query.assistantUsage.findFirst({ where: and(eq(t.assistantUsage.orgId, orgId), eq(t.assistantUsage.month, month)) });
+export async function assistantUsage(
+  db: Db,
+  orgId: string,
+  month: string,
+): Promise<{ requests: number; tokens: number }> {
+  const row = await db.query.assistantUsage.findFirst({
+    where: and(eq(t.assistantUsage.orgId, orgId), eq(t.assistantUsage.month, month)),
+  });
   return { requests: row?.requests ?? 0, tokens: row?.tokens ?? 0 };
 }
 
-export async function recordAssistantUsage(db: Db, orgId: string, month: string, tokens: number): Promise<void> {
-  const existing = await db.query.assistantUsage.findFirst({ where: and(eq(t.assistantUsage.orgId, orgId), eq(t.assistantUsage.month, month)) });
+export async function recordAssistantUsage(
+  db: Db,
+  orgId: string,
+  month: string,
+  tokens: number,
+): Promise<void> {
+  const existing = await db.query.assistantUsage.findFirst({
+    where: and(eq(t.assistantUsage.orgId, orgId), eq(t.assistantUsage.month, month)),
+  });
   if (existing) {
     await db
       .update(t.assistantUsage)

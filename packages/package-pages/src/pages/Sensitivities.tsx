@@ -37,7 +37,10 @@ function axisValue(path: string, v: number): string {
 }
 
 export function SensitivityGrid({ grid, metric }: { grid: Grid; metric: MetricKey }) {
-  const values = grid.rows.flat().map((c) => c.metrics[metric]).filter((v): v is number => v !== null);
+  const values = grid.rows
+    .flat()
+    .map((c) => c.metrics[metric])
+    .filter((v): v is number => v !== null);
   const lo = Math.min(...values);
   const hi = Math.max(...values);
   const rank = (v: number | null) => (v === null || hi === lo ? 0 : (v - lo) / (hi - lo));
@@ -56,12 +59,19 @@ export function SensitivityGrid({ grid, metric }: { grid: Grid; metric: MetricKe
       <tbody>
         {grid.rows.map((row, i) => (
           <tr key={i}>
-            <th className={`num${grid.base.a === i ? ' highlight' : ''}`}>{axisValue(grid.axisA.path, grid.axisA.values[i]!)}</th>
+            <th className={`num${grid.base.a === i ? ' highlight' : ''}`}>
+              {axisValue(grid.axisA.path, grid.axisA.values[i]!)}
+            </th>
             {row.map((cell, j) => {
               const v = cell.metrics[metric] ?? null;
               const isBase = grid.base.a === i && grid.base.b === j;
               return (
-                <td key={j} className={`num${isBase ? ' highlight' : ''}`} style={{ background: isBase ? undefined : heatColor(rank(v)) }} title={cell.error}>
+                <td
+                  key={j}
+                  className={`num${isBase ? ' highlight' : ''}`}
+                  style={{ background: isBase ? undefined : heatColor(rank(v)) }}
+                  title={cell.error}
+                >
                   {cell.error ? 'n/a' : fmt(metric, v)}
                 </td>
               );
@@ -73,7 +83,13 @@ export function SensitivityGrid({ grid, metric }: { grid: Grid; metric: MetricKe
   );
 }
 
-export function SensitivitiesPage({ entries, staleCount }: { entries: SensitivityEntry[]; staleCount: number }) {
+export function SensitivitiesPage({
+  entries,
+  staleCount,
+}: {
+  entries: SensitivityEntry[];
+  staleCount: number;
+}) {
   return (
     <>
       {entries.map((e) => (
@@ -81,15 +97,24 @@ export function SensitivitiesPage({ entries, staleCount }: { entries: Sensitivit
           <h3 style={{ marginTop: 0 }}>{`${e.label} — ${e.scenario} scenario`}</h3>
           {e.grid.metrics.map((m) => (
             <div key={m} style={{ marginBottom: 8 }}>
-              <div className="small" style={{ marginBottom: 2 }}>{METRIC_LABEL[m] ?? m}</div>
+              <div className="small" style={{ marginBottom: 2 }}>
+                {METRIC_LABEL[m] ?? m}
+              </div>
               <SensitivityGrid grid={e.grid} metric={m} />
             </div>
           ))}
         </div>
       ))}
-      {staleCount > 0 ? <p className="stale-note">{`${staleCount} saved ${staleCount === 1 ? 'grid is' : 'grids are'} stale (inputs changed since it was run) and ${staleCount === 1 ? 'is' : 'are'} omitted. Re-run sensitivities to include ${staleCount === 1 ? 'it' : 'them'}.`}</p> : null}
-      {entries.length === 0 && staleCount === 0 ? <p className="stale-note">No sensitivities have been run for this deal.</p> : null}
-      <p className="footnote">Figures rounded; totals may not foot. The likely case is outlined; shading is light to dark from the lowest to the highest value in each grid.</p>
+      {staleCount > 0 ? (
+        <p className="stale-note">{`${staleCount} saved ${staleCount === 1 ? 'grid is' : 'grids are'} stale (inputs changed since it was run) and ${staleCount === 1 ? 'is' : 'are'} omitted. Re-run sensitivities to include ${staleCount === 1 ? 'it' : 'them'}.`}</p>
+      ) : null}
+      {entries.length === 0 && staleCount === 0 ? (
+        <p className="stale-note">No sensitivities have been run for this deal.</p>
+      ) : null}
+      <p className="footnote">
+        Figures rounded; totals may not foot. The likely case is outlined; shading is light to dark
+        from the lowest to the highest value in each grid.
+      </p>
     </>
   );
 }

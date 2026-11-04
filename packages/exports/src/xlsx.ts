@@ -25,7 +25,11 @@ export const FORMATS = {
   ratio: '0.00',
 } as const;
 
-const HEADER_FILL: ExcelJS.Fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F2F2' } };
+const HEADER_FILL: ExcelJS.Fill = {
+  type: 'pattern',
+  pattern: 'solid',
+  fgColor: { argb: 'FFF2F2F2' },
+};
 
 function styleHeader(row: ExcelJS.Row) {
   row.font = { bold: true };
@@ -79,7 +83,8 @@ function addAssumptions(wb: ExcelJS.Workbook, d: WorkbookData) {
       const cell = row.getCell('value');
       if (e.unit === 'usd') cell.numFmt = FORMATS.usd;
       else if (e.unit === 'usd_per_sf') cell.numFmt = FORMATS.usdCents;
-      else if (e.unit === 'usd_per_unit' || e.unit === 'usd_per_unit_month') cell.numFmt = FORMATS.usd;
+      else if (e.unit === 'usd_per_unit' || e.unit === 'usd_per_unit_month')
+        cell.numFmt = FORMATS.usd;
       else if (e.unit === 'pct' || e.unit === 'rate_pct') cell.numFmt = FORMATS.pct;
       else cell.numFmt = e.unit === 'count' ? FORMATS.ratio : FORMATS.count;
     }
@@ -97,14 +102,31 @@ function addAnnual(wb: ExcelJS.Workbook, o: DealOutputs) {
   const ws = wb.addWorksheet('Annual');
   const years = o.annual;
   ws.getCell(1, 1).value = 'Line';
-  years.forEach((y, j) => (ws.getCell(1, 2 + j).value = `Year ${y.year}${y.partial ? ' (sale)' : ''}`));
+  years.forEach(
+    (y, j) => (ws.getCell(1, 2 + j).value = `Year ${y.year}${y.partial ? ' (sale)' : ''}`),
+  );
   styleHeader(ws.getRow(1));
   ws.views = [{ state: 'frozen', xSplit: 1, ySplit: 1 }];
   ws.getColumn(1).width = 34;
   for (let j = 0; j < years.length; j++) ws.getColumn(2 + j).width = 15;
-  const opexLabels: Record<(typeof OPEX_LINES)[number], string> = { taxes: 'Property taxes', insurance: 'Insurance', repairs: 'Repairs and maintenance', payroll: 'Payroll', utilities: 'Utilities', admin: 'Administrative', marketing: 'Marketing', reserves: 'Replacement reserves', management: 'Management', commercial: 'Commercial opex' };
+  const opexLabels: Record<(typeof OPEX_LINES)[number], string> = {
+    taxes: 'Property taxes',
+    insurance: 'Insurance',
+    repairs: 'Repairs and maintenance',
+    payroll: 'Payroll',
+    utilities: 'Utilities',
+    admin: 'Administrative',
+    marketing: 'Marketing',
+    reserves: 'Replacement reserves',
+    management: 'Management',
+    commercial: 'Commercial opex',
+  };
   let r = 2;
-  const put = (label: string, f: (y: (typeof years)[number]) => number, fmt: string = FORMATS.usd) => {
+  const put = (
+    label: string,
+    f: (y: (typeof years)[number]) => number,
+    fmt: string = FORMATS.usd,
+  ) => {
     ws.getCell(r, 1).value = label;
     years.forEach((y, j) => {
       const c = ws.getCell(r, 2 + j);
@@ -178,7 +200,11 @@ function addMonthly(wb: ExcelJS.Workbook, o: DealOutputs) {
   ws.getColumn(2).width = 16;
   for (let j = 0; j < months.length; j++) ws.getColumn(3 + j).width = 13;
   let r = 3;
-  const put = (label: string, f: (m: (typeof months)[number]) => number, opts: { total?: boolean; fmt?: string } = {}) => {
+  const put = (
+    label: string,
+    f: (m: (typeof months)[number]) => number,
+    opts: { total?: boolean; fmt?: string } = {},
+  ) => {
     ws.getCell(r, 1).value = label;
     months.forEach((m, j) => {
       const c = ws.getCell(r, 3 + j);
@@ -266,7 +292,12 @@ function addCapitalBudget(wb: ExcelJS.Workbook, o: DealOutputs) {
     ws.getCell(r, 1).value = `Subtotal — ${g.label}`;
     ws.getCell(r, 1).font = { bold: true };
     const c = ws.getCell(r, 2);
-    c.value = { formula: topRows.length === r - first ? `SUM(B${first}:B${r - 1})` : topRows.map((x) => `B${x}`).join('+') };
+    c.value = {
+      formula:
+        topRows.length === r - first
+          ? `SUM(B${first}:B${r - 1})`
+          : topRows.map((x) => `B${x}`).join('+'),
+    };
     c.numFmt = FORMATS.usd;
     c.font = { bold: true };
     ws.getCell(r, 3).value = { formula: `B${r}/${o.program.totalUnits}` };
@@ -305,7 +336,10 @@ function addSourcesUses(wb: ExcelJS.Workbook, o: DealOutputs) {
   }
   ws.getCell(r, 1).value = 'Total sources';
   ws.getCell(r, 1).font = { bold: true };
-  ws.getCell(r, 2).value = { formula: top.length === r - first ? `SUM(B${first}:B${r - 1})` : top.map((x) => `B${x}`).join('+') };
+  ws.getCell(r, 2).value = {
+    formula:
+      top.length === r - first ? `SUM(B${first}:B${r - 1})` : top.map((x) => `B${x}`).join('+'),
+  };
   ws.getCell(r, 2).numFmt = FORMATS.usd;
   ws.getCell(r, 2).font = { bold: true };
   r++;
@@ -328,14 +362,27 @@ function addSourcesUses(wb: ExcelJS.Workbook, o: DealOutputs) {
   }
   ws.getCell(r, 1).value = 'Total uses';
   ws.getCell(r, 1).font = { bold: true };
-  ws.getCell(r, 2).value = { formula: topUses.length === r - firstUse ? `SUM(B${firstUse}:B${r - 1})` : topUses.map((x) => `B${x}`).join('+') };
+  ws.getCell(r, 2).value = {
+    formula:
+      topUses.length === r - firstUse
+        ? `SUM(B${firstUse}:B${r - 1})`
+        : topUses.map((x) => `B${x}`).join('+'),
+  };
   ws.getCell(r, 2).numFmt = FORMATS.usd;
   ws.getCell(r, 2).font = { bold: true };
 }
 
 function addAmortization(wb: ExcelJS.Workbook, o: DealOutputs) {
   const ws = wb.addWorksheet('Amortization');
-  ws.addRow(['Period', 'Beginning balance', 'Payment', 'Interest', 'Principal', 'Ending balance', 'Interest only']);
+  ws.addRow([
+    'Period',
+    'Beginning balance',
+    'Payment',
+    'Interest',
+    'Principal',
+    'Ending balance',
+    'Interest only',
+  ]);
   styleHeader(ws.getRow(1));
   ws.views = [{ state: 'frozen', ySplit: 1 }];
   [10, 18, 16, 16, 16, 18, 12].forEach((w, i) => (ws.getColumn(i + 1).width = w));
@@ -400,12 +447,18 @@ function addReturns(wb: ExcelJS.Workbook, d: WorkbookData) {
     [2, 3, 4].forEach((c) => (row.getCell(c).numFmt = fmt));
   });
   ws.addRow([]);
-  ws.addRow(['DSCR by year (' + d.scenario + ')', ...d.outputs[d.scenario].annual.map((a) => `Year ${a.year}`)]);
+  ws.addRow([
+    'DSCR by year (' + d.scenario + ')',
+    ...d.outputs[d.scenario].annual.map((a) => `Year ${a.year}`),
+  ]);
   const dscr = ws.addRow(['DSCR', ...d.outputs[d.scenario].annual.map((a) => a.dscr ?? '')]);
   dscr.eachCell((c, i) => {
     if (i > 1) c.numFmt = FORMATS.ratio;
   });
-  const coc = ws.addRow(['Cash-on-cash', ...d.outputs[d.scenario].annual.map((a) => a.cashOnCash ?? '')]);
+  const coc = ws.addRow([
+    'Cash-on-cash',
+    ...d.outputs[d.scenario].annual.map((a) => a.cashOnCash ?? ''),
+  ]);
   coc.eachCell((c, i) => {
     if (i > 1) c.numFmt = FORMATS.pct;
   });

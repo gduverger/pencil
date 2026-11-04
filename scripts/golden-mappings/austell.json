@@ -1,7 +1,10 @@
 {
   "model": "austell",
   "file": "AustellModel20190113v01_ed1.7mm.xlsm",
-  "notes": ["Acquisition model: use its amortization, waterfall and sale sections only.", "Cell addresses are TBD until the workbook is available in reference/."],
+  "notes": [
+    "Acquisition model: use its amortization, waterfall and sale sections only.",
+    "Cell addresses are TBD until the workbook is available in reference/."
+  ],
   "inputs": {
     "totalUnits": "TBD",
     "landCost": "TBD",

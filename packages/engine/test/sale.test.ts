@@ -11,11 +11,17 @@ describe('7.9 sale', () => {
     expect(out.sale.value).toBeCloseTo(noiForward / 0.055, 6);
     expect(out.sale.sellingCosts).toBeCloseTo(0.03 * out.sale.value, 6);
     expect(out.sale.payoff).toBeCloseTo(out.sale.loanPayoff + out.sale.mezzPayoff, 6);
-    expect(out.sale.netToEquity).toBeCloseTo(out.sale.value - out.sale.sellingCosts - out.sale.payoff, 6);
+    expect(out.sale.netToEquity).toBeCloseTo(
+      out.sale.value - out.sale.sellingCosts - out.sale.payoff,
+      6,
+    );
     const mS = out.months[120]!;
     expect(mS.saleProceeds).toBeCloseTo(out.sale.netToEquity, 6);
     expect(mS.phase).toBe('sale');
-    expect(mS.cashFlowAfterDebt).toBeCloseTo(mS.noi - mS.debtService.interest - mS.debtService.principal + out.sale.netToEquity, 6);
+    expect(mS.cashFlowAfterDebt).toBeCloseTo(
+      mS.noi - mS.debtService.interest - mS.debtService.principal + out.sale.netToEquity,
+      6,
+    );
     expect(mS.distributions.gp + mS.distributions.lp).toBeCloseTo(mS.cashFlowAfterDebt, 6);
     // No flows after the sale month exist: the months array ends at S
     expect(out.months).toHaveLength(121);
@@ -28,12 +34,21 @@ describe('7.9 sale', () => {
     expect(out.flags.some((f) => f.code === 'negative-net-to-equity')).toBe(true);
     // The shortfall is a pro rata contribution at S
     const mS = out.months[120]!;
-    expect(mS.contributions.gp + mS.contributions.lp).toBeCloseTo(Math.max(0, -mS.cashFlowAfterDebt), 6);
+    expect(mS.contributions.gp + mS.contributions.lp).toBeCloseTo(
+      Math.max(0, -mS.cashFlowAfterDebt),
+      6,
+    );
   });
 
   it('mezzanine repaid at sale is paid off from the proceeds and serviced interest-only after R', () => {
     const d = fixtureDeal();
-    const out = run({ ...d, financing: { ...d.financing, mezz: { enabled: true, pctOfCost: 0.1, ratePct: 0.12, feePct: 0.01, repaidAt: 'sale' } } });
+    const out = run({
+      ...d,
+      financing: {
+        ...d.financing,
+        mezz: { enabled: true, pctOfCost: 0.1, ratePct: 0.12, feePct: 0.01, repaidAt: 'sale' },
+      },
+    });
     const MB = out.totals.mezz;
     expect(MB).toBeGreaterThan(0);
     expect(out.refinance!.mezzPayoff).toBe(0);
@@ -44,7 +59,13 @@ describe('7.9 sale', () => {
       const row = out.amortization[t - 43]!;
       expect(out.months[t]!.debtService.interest).toBeCloseTo(row.interest + (MB * 0.12) / 12, 6);
     }
-    const atRefi = run({ ...d, financing: { ...d.financing, mezz: { enabled: true, pctOfCost: 0.1, ratePct: 0.12, feePct: 0.01, repaidAt: 'refi' } } });
+    const atRefi = run({
+      ...d,
+      financing: {
+        ...d.financing,
+        mezz: { enabled: true, pctOfCost: 0.1, ratePct: 0.12, feePct: 0.01, repaidAt: 'refi' },
+      },
+    });
     expect(atRefi.refinance!.mezzPayoff).toBeCloseTo(atRefi.totals.mezz, 6);
     expect(atRefi.sale.mezzPayoff).toBe(0);
     expect(atRefi.months[50]!.mezzBalance).toBe(0);

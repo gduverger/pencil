@@ -7,7 +7,12 @@ import type { AmortRow } from './types';
  * 12 × amortYears level-payment rows with the standard principal/interest split. The final
  * balance is zero (to floating-point precision).
  */
-export function amortize(principal: number, ratePct: number, amortYears: number, ioMonths: number): AmortRow[] {
+export function amortize(
+  principal: number,
+  ratePct: number,
+  amortYears: number,
+  ioMonths: number,
+): AmortRow[] {
   const rows: AmortRow[] = [];
   if (!(principal > 0)) return rows;
   const i = ratePct / 12;
@@ -17,7 +22,15 @@ export function amortize(principal: number, ratePct: number, amortYears: number,
   for (let k = 0; k < ioMonths; k++) {
     period += 1;
     const interest = balance * i;
-    rows.push({ period, beginningBalance: balance, payment: interest, interest, principal: 0, endingBalance: balance, interestOnly: true });
+    rows.push({
+      period,
+      beginningBalance: balance,
+      payment: interest,
+      interest,
+      principal: 0,
+      endingBalance: balance,
+      interestOnly: true,
+    });
   }
   const payment = levelPayment(principal, i, n);
   for (let k = 0; k < n; k++) {
@@ -56,7 +69,14 @@ export interface PermanentSizing {
  */
 export function sizePermanentLoan(
   noi12: number,
-  p: { refiCapRatePct: number; maxLTV: number; minDSCR: number; ratePct: number; amortYears: number; feePct: number },
+  p: {
+    refiCapRatePct: number;
+    maxLTV: number;
+    minDSCR: number;
+    ratePct: number;
+    amortYears: number;
+    feePct: number;
+  },
 ): PermanentSizing {
   const value = noi12 / p.refiCapRatePct;
   const loanLTV = p.maxLTV * value;

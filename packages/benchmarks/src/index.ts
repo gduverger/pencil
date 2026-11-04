@@ -10,7 +10,13 @@ export const CONSTRUCTION_TYPES = ['wood-frame', 'podium', 'steel-concrete', 'mo
 export type ConstructionType = (typeof CONSTRUCTION_TYPES)[number];
 export const PROJECT_SIZES = ['20-50', '51-150', '151-300'] as const;
 export type ProjectSize = (typeof PROJECT_SIZES)[number];
-export const TOWN_CLUSTERS = ['boston-core', 'inner-suburbs', 'outer-suburbs', 'gateway-cities', 'other-ma'] as const;
+export const TOWN_CLUSTERS = [
+  'boston-core',
+  'inner-suburbs',
+  'outer-suburbs',
+  'gateway-cities',
+  'other-ma',
+] as const;
 export type TownCluster = (typeof TOWN_CLUSTERS)[number];
 
 export const SegmentSchema = z.object({
@@ -92,7 +98,8 @@ export function parseSeedCsv(text: string): SeedRow[] {
     const get = (name: string) => r[idx(name)] ?? '';
     const segment: Segment = {};
     if (get('town_cluster')) segment.townCluster = get('town_cluster') as TownCluster;
-    if (get('construction_type')) segment.constructionType = get('construction_type') as ConstructionType;
+    if (get('construction_type'))
+      segment.constructionType = get('construction_type') as ConstructionType;
     if (get('unit_type')) segment.unitType = get('unit_type');
     if (get('project_size')) segment.projectSize = get('project_size') as ProjectSize;
     return {
@@ -154,7 +161,9 @@ export function segmentMatches(benchmark: Segment, deal: Segment): boolean {
 }
 
 export function specificity(segment: Segment): number {
-  return ['townCluster', 'constructionType', 'unitType', 'projectSize'].filter((k) => segment[k as keyof Segment] !== undefined).length;
+  return ['townCluster', 'constructionType', 'unitType', 'projectSize'].filter(
+    (k) => segment[k as keyof Segment] !== undefined,
+  ).length;
 }
 
 /** The deal segment for one metric: a unit-type path (`program.unitTypes[2BR].…`) implies its unit type. */
@@ -167,9 +176,15 @@ export function segmentForPath(deal: Segment, path: string): Segment {
  * The most specific benchmark for a metric and deal segment (9.3), falling back to less specific
  * segments. Ties go to the most recent `asOf`, then to larger samples, then to seed rows.
  */
-export function resolveBenchmark(benchmarks: readonly Benchmark[], metric: string, dealSegment: Segment): Benchmark | undefined {
+export function resolveBenchmark(
+  benchmarks: readonly Benchmark[],
+  metric: string,
+  dealSegment: Segment,
+): Benchmark | undefined {
   const deal = segmentForPath(dealSegment, metric);
-  const candidates = benchmarks.filter((b) => b.metric === metric && segmentMatches(b.segment, deal));
+  const candidates = benchmarks.filter(
+    (b) => b.metric === metric && segmentMatches(b.segment, deal),
+  );
   if (candidates.length === 0) return undefined;
   return [...candidates].sort((a, b) => {
     const s = specificity(b.segment) - specificity(a.segment);
@@ -177,7 +192,8 @@ export function resolveBenchmark(benchmarks: readonly Benchmark[], metric: strin
     if (a.asOf !== b.asOf) return a.asOf < b.asOf ? 1 : -1;
     const n = (b.sampleSize ?? 0) - (a.sampleSize ?? 0);
     if (n !== 0) return n;
-    if ((a.contributorOrgId === null) !== (b.contributorOrgId === null)) return a.contributorOrgId === null ? -1 : 1;
+    if ((a.contributorOrgId === null) !== (b.contributorOrgId === null))
+      return a.contributorOrgId === null ? -1 : 1;
     return a.id < b.id ? -1 : 1;
   })[0];
 }
@@ -195,18 +211,40 @@ export interface ResolvedDefault {
  * Defaults for every catalogued input: the resolved benchmark's `mid` when one exists, otherwise
  * the schema default with source `unknown` (14.2 — see docs/decisions.md).
  */
-export function resolveDefaults(benchmarks: readonly Benchmark[], deal: Segment): ResolvedDefault[] {
+export function resolveDefaults(
+  benchmarks: readonly Benchmark[],
+  deal: Segment,
+): ResolvedDefault[] {
   return inputCatalog().map((entry) => {
     const b = resolveBenchmark(benchmarks, entry.path, deal);
     if (b) {
-      return { path: entry.path, value: b.mid, unit: entry.unit, source: 'benchmark', benchmarkId: b.id, note: `Benchmark mid for ${describeSegment(b.segment)} (${b.source}, ${b.asOf})` };
+      return {
+        path: entry.path,
+        value: b.mid,
+        unit: entry.unit,
+        source: 'benchmark',
+        benchmarkId: b.id,
+        note: `Benchmark mid for ${describeSegment(b.segment)} (${b.source}, ${b.asOf})`,
+      };
     }
-    return { path: entry.path, value: entry.default, unit: entry.unit, source: 'unknown', benchmarkId: null, note: 'Schema default; no benchmark seeded for this segment' };
+    return {
+      path: entry.path,
+      value: entry.default,
+      unit: entry.unit,
+      source: 'unknown',
+      benchmarkId: null,
+      note: 'Schema default; no benchmark seeded for this segment',
+    };
   });
 }
 
 export function describeSegment(s: Segment): string {
-  const parts = [s.townCluster, s.constructionType, s.unitType, s.projectSize ? `${s.projectSize} units` : undefined].filter(Boolean);
+  const parts = [
+    s.townCluster,
+    s.constructionType,
+    s.unitType,
+    s.projectSize ? `${s.projectSize} units` : undefined,
+  ].filter(Boolean);
   return parts.length > 0 ? parts.join(', ') : 'all segments';
 }
 
@@ -219,7 +257,11 @@ export interface BenchmarkCheck {
 }
 
 /** Flag `{ path, code: 'outside-benchmark', message }` when a value is outside [low, high] (9.4). */
-export function checkAgainstBenchmark(path: string, value: unknown, benchmark: Benchmark | undefined): BenchmarkCheck | null {
+export function checkAgainstBenchmark(
+  path: string,
+  value: unknown,
+  benchmark: Benchmark | undefined,
+): BenchmarkCheck | null {
   if (!benchmark || typeof value !== 'number') return null;
   const inRange = value >= benchmark.low && value <= benchmark.high;
   const label = catalogEntry(path)?.label ?? path;
@@ -235,7 +277,11 @@ export function checkAgainstBenchmark(path: string, value: unknown, benchmark: B
 }
 
 /** Check every numeric value in a path→value map against the resolved benchmarks. */
-export function flagsForValues(benchmarks: readonly Benchmark[], deal: Segment, values: Record<string, unknown>): Flag[] {
+export function flagsForValues(
+  benchmarks: readonly Benchmark[],
+  deal: Segment,
+  values: Record<string, unknown>,
+): Flag[] {
   const flags: Flag[] = [];
   for (const [path, value] of Object.entries(values)) {
     const check = checkAgainstBenchmark(path, value, resolveBenchmark(benchmarks, path, deal));
@@ -261,7 +307,9 @@ function formatForUnit(v: number, unit: string): string {
 }
 
 /** 25th / 50th / 75th percentiles (linear interpolation), for contributed ranges (9.6). */
-export function percentiles(values: readonly number[]): { p25: number; p50: number; p75: number } | null {
+export function percentiles(
+  values: readonly number[],
+): { p25: number; p50: number; p75: number } | null {
   if (values.length === 0) return null;
   const sorted = [...values].sort((a, b) => a - b);
   const at = (p: number) => {

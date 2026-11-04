@@ -1,7 +1,10 @@
 {
   "model": "student-housing",
   "file": "Student_Housing_Development_v18.xlsm",
-  "notes": ["Student housing development model.", "Cell addresses are TBD until the workbook is available in reference/."],
+  "notes": [
+    "Student housing development model.",
+    "Cell addresses are TBD until the workbook is available in reference/."
+  ],
   "inputs": {
     "totalUnits": "TBD",
     "landCost": "TBD",

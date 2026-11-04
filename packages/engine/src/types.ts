@@ -277,7 +277,13 @@ export interface DealOutputs {
   forwardNoi: number[];
   annual: AnnualRow[];
   totals: Totals;
-  sourcesUses: { sources: Line[]; uses: Line[]; memo: Line[]; totalSources: number; totalUses: number };
+  sourcesUses: {
+    sources: Line[];
+    uses: Line[];
+    memo: Line[];
+    totalSources: number;
+    totalUses: number;
+  };
   capitalBudget: Group[];
   refinance: RefinanceResult | null;
   sale: SaleResult;

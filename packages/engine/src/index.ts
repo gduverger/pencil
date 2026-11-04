@@ -45,7 +45,16 @@ export {
   DEFAULT_SCENARIO_DELTAS,
   SCENARIO_KEYS,
 } from './scenarios';
-export type { ScenarioKey, ScenarioSet, Overrides, Axis, Grid, GridCell, SensitivityPreset, ScenarioDeltas } from './scenarios';
+export type {
+  ScenarioKey,
+  ScenarioSet,
+  Overrides,
+  Axis,
+  Grid,
+  GridCell,
+  SensitivityPreset,
+  ScenarioDeltas,
+} from './scenarios';
 export { residualLandValue } from './residual';
 export type { ResidualLandValue } from './residual';
 export { explain, explainableCells } from './explain';

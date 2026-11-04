@@ -3,13 +3,16 @@ import type { DealInputsInput, Distribution } from '../src/schema';
 
 /** Random valid DealInputs per 12.4. */
 export function arbDeal(): fc.Arbitrary<DealInputsInput> {
-  const pct = (lo: number, hi: number) => fc.double({ min: lo, max: hi, noNaN: true, noDefaultInfinity: true });
+  const pct = (lo: number, hi: number) =>
+    fc.double({ min: lo, max: hi, noNaN: true, noDefaultInfinity: true });
   const money = (lo: number, hi: number) => fc.integer({ min: lo, max: hi });
   const distribution = (len: number): fc.Arbitrary<Distribution> =>
     fc.oneof(
       fc.constant<Distribution>({ kind: 'scurve' }),
       fc.constant<Distribution>({ kind: 'straight' }),
-      fc.array(fc.integer({ min: 1, max: 9 }), { minLength: len, maxLength: len }).map((weights) => ({ kind: 'custom', weights }) as Distribution),
+      fc
+        .array(fc.integer({ min: 1, max: 9 }), { minLength: len, maxLength: len })
+        .map((weights) => ({ kind: 'custom', weights }) as Distribution),
     );
   return fc
     .record({
@@ -40,7 +43,10 @@ export function arbDeal(): fc.Arbitrary<DealInputsInput> {
       refiCap: pct(0.045, 0.075),
       rentMultiplier: pct(0.7, 1.5),
       growth: pct(0, 0.04),
-      absorption: fc.oneof(fc.constant({ kind: 'linear' } as const), fc.integer({ min: 2, max: 40 }).map((units) => ({ kind: 'unitsPerMonth', units }) as const)),
+      absorption: fc.oneof(
+        fc.constant({ kind: 'linear' } as const),
+        fc.integer({ min: 2, max: 40 }).map((units) => ({ kind: 'unitsPerMonth', units }) as const),
+      ),
       events: fc.array(
         fc.record({
           month: fc.integer({ min: 0, max: 60 }),
@@ -61,7 +67,13 @@ export function arbDeal(): fc.Arbitrary<DealInputsInput> {
       const generated = r.hardDist;
       const hardDist: Distribution =
         generated.kind === 'custom'
-          ? { kind: 'custom', weights: Array.from({ length: C }, (_, i) => generated.weights[i % generated.weights.length]!) }
+          ? {
+              kind: 'custom',
+              weights: Array.from(
+                { length: C },
+                (_, i) => generated.weights[i % generated.weights.length]!,
+              ),
+            }
           : generated;
       return {
         meta: { name: 'random', analysisMonth: '2026-01', holdMonths: hold },
@@ -74,11 +86,31 @@ export function arbDeal(): fc.Arbitrary<DealInputsInput> {
             { key: '2BR', mixPct: 0.35, avgSF: 950, rentPerMonth: 3300 * r.rentMultiplier },
             { key: '3BR', mixPct: 0.15, avgSF: 1200, rentPerMonth: 3900 * r.rentMultiplier },
           ],
-          commercial: { enabled: r.commercialOn, grossSF: 3000, rentPerSFYear: 30, vacancyPct: 0.1, tiPerSF: 50, leaseUpMonths: 6, opexPerSFYear: 8 },
+          commercial: {
+            enabled: r.commercialOn,
+            grossSF: 3000,
+            rentPerSFYear: 30,
+            vacancyPct: 0.1,
+            tiPerSF: 50,
+            leaseUpMonths: 6,
+            opexPerSFYear: 8,
+          },
           affordable: { enabled: r.affordableOn, pctUnits: 0.15, rentDiscountPct: 0.4 },
         },
-        timeline: { predevMonths: r.predev, constructionMonths: r.construction, leaseUpMonths: r.leaseUp },
-        costs: { hard: { perGrossSF: r.perGrossSF, distribution: hardDist }, soft: { pctOfHard: r.pctOfHard }, carry: { taxesDuringConstructionAnnual: 50_000, insuranceDuringConstructionAnnual: 30_000 }, developerFeePct: 0.03 },
+        timeline: {
+          predevMonths: r.predev,
+          constructionMonths: r.construction,
+          leaseUpMonths: r.leaseUp,
+        },
+        costs: {
+          hard: { perGrossSF: r.perGrossSF, distribution: hardDist },
+          soft: { pctOfHard: r.pctOfHard },
+          carry: {
+            taxesDuringConstructionAnnual: 50_000,
+            insuranceDuringConstructionAnnual: 30_000,
+          },
+          developerFeePct: 0.03,
+        },
         events: r.events.map((e, i) => ({
           id: `e${i}`,
           label: `Event ${i}`,
@@ -89,15 +121,42 @@ export function arbDeal(): fc.Arbitrary<DealInputsInput> {
         })),
         financing: {
           constructionLoan: { ltc: r.ltc, ratePct: r.rate, feePct: 0.01 },
-          landLoan: { enabled: r.landLoanOn && !r.landOwned, ltv: 0.5, ratePct: r.rate + 0.01, feePct: 0.01 },
-          mezz: { enabled: r.mezzOn, pctOfCost: r.mezzPct, ratePct: r.mezzRate, feePct: 0.01, repaidAt: r.mezzOn && r.permOn ? 'refi' : 'sale' },
-          permanent: { enabled: r.permOn, monthsAfterStabilization: r.refiOffset, maxLTV: 0.65, minDSCR: 1.25, ratePct: r.permRate, amortYears: 30, ioMonths: r.ioMonths, feePct: 0.01, refiCapRatePct: r.refiCap },
+          landLoan: {
+            enabled: r.landLoanOn && !r.landOwned,
+            ltv: 0.5,
+            ratePct: r.rate + 0.01,
+            feePct: 0.01,
+          },
+          mezz: {
+            enabled: r.mezzOn,
+            pctOfCost: r.mezzPct,
+            ratePct: r.mezzRate,
+            feePct: 0.01,
+            repaidAt: r.mezzOn && r.permOn ? 'refi' : 'sale',
+          },
+          permanent: {
+            enabled: r.permOn,
+            monthsAfterStabilization: r.refiOffset,
+            maxLTV: 0.65,
+            minDSCR: 1.25,
+            ratePct: r.permRate,
+            amortYears: 30,
+            ioMonths: r.ioMonths,
+            feePct: 0.01,
+            refiCapRatePct: r.refiCap,
+          },
           capitalizeOperatingDeficits: r.capitalize,
         },
-        operations: { stabilizedVacancyPct: r.vacancy, rentGrowthPct: r.growth, expenseGrowthPct: r.growth, otherIncomeGrowthPct: r.growth, absorption: r.absorption, opex: { taxesStabilizedAnnual: r.taxes } },
+        operations: {
+          stabilizedVacancyPct: r.vacancy,
+          rentGrowthPct: r.growth,
+          expenseGrowthPct: r.growth,
+          otherIncomeGrowthPct: r.growth,
+          absorption: r.absorption,
+          opex: { taxesStabilizedAnnual: r.taxes },
+        },
         exit: { exitCapRatePct: r.exitCap },
         equity: { gpPct: 0.1, lpPct: 0.9 },
       };
     });
 }
-

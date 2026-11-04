@@ -55,7 +55,8 @@ export async function htmlToPdf(html: string, opts: PdfOptions = {}): Promise<Bu
   try {
     const page = await context.newPage();
     await page.setContent(html, { waitUntil: 'load' });
-    if (opts.waitForFonts !== false) await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    if (opts.waitForFonts !== false)
+      await page.evaluate(() => document.fonts.ready.then(() => undefined));
     await page.emulateMedia({ media: 'print' });
     const pdf = await page.pdf({
       preferCSSPageSize: true,
@@ -72,13 +73,17 @@ export async function htmlToPdf(html: string, opts: PdfOptions = {}): Promise<Bu
 }
 
 /** Render a URL (the web app's package route) rather than inline HTML. */
-export async function urlToPdf(url: string, opts: PdfOptions & { headers?: Record<string, string> } = {}): Promise<Buffer> {
+export async function urlToPdf(
+  url: string,
+  opts: PdfOptions & { headers?: Record<string, string> } = {},
+): Promise<Buffer> {
   const browser = opts.browser ?? (await sharedBrowser());
   const context = await browser.newContext({ extraHTTPHeaders: opts.headers });
   try {
     const page = await context.newPage();
     await page.goto(url, { waitUntil: 'networkidle' });
-    if (opts.waitForFonts !== false) await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    if (opts.waitForFonts !== false)
+      await page.evaluate(() => document.fonts.ready.then(() => undefined));
     await page.emulateMedia({ media: 'print' });
     const pdf = await page.pdf({
       preferCSSPageSize: true,
@@ -95,9 +100,15 @@ export async function urlToPdf(url: string, opts: PdfOptions & { headers?: Recor
 }
 
 /** Screenshot every `.page` element of a package HTML, in order (used by the snapshot tests and demos). */
-export async function htmlToPagePngs(html: string, opts: { browser?: Browser; scale?: number } = {}): Promise<Buffer[]> {
+export async function htmlToPagePngs(
+  html: string,
+  opts: { browser?: Browser; scale?: number } = {},
+): Promise<Buffer[]> {
   const browser = opts.browser ?? (await sharedBrowser());
-  const context = await browser.newContext({ deviceScaleFactor: opts.scale ?? 1, viewport: { width: 1200, height: 1600 } });
+  const context = await browser.newContext({
+    deviceScaleFactor: opts.scale ?? 1,
+    viewport: { width: 1200, height: 1600 },
+  });
   try {
     const page = await context.newPage();
     await page.setContent(html, { waitUntil: 'load' });
@@ -105,7 +116,8 @@ export async function htmlToPagePngs(html: string, opts: { browser?: Browser; sc
     const pages = page.locator('.page');
     const n = await pages.count();
     const out: Buffer[] = [];
-    for (let i = 0; i < n; i++) out.push(Buffer.from(await pages.nth(i).screenshot({ type: 'png' })));
+    for (let i = 0; i < n; i++)
+      out.push(Buffer.from(await pages.nth(i).screenshot({ type: 'png' })));
     return out;
   } finally {
     await context.close();

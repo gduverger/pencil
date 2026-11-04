@@ -20,12 +20,35 @@
     "developerFeePct": 0.03
   },
   "events": [
-    { "id": "relocate-house", "label": "Relocate historic house", "month": 14, "amount": 150000, "kind": "cost", "category": "hard" },
-    { "id": "sell-house", "label": "Sell relocated house", "month": 24, "amount": 400000, "kind": "inflow", "category": "inflow" }
+    {
+      "id": "relocate-house",
+      "label": "Relocate historic house",
+      "month": 14,
+      "amount": 150000,
+      "kind": "cost",
+      "category": "hard"
+    },
+    {
+      "id": "sell-house",
+      "label": "Sell relocated house",
+      "month": 24,
+      "amount": 400000,
+      "kind": "inflow",
+      "category": "inflow"
+    }
   ],
   "financing": {
     "constructionLoan": { "ltc": 0.65, "ratePct": 0.08, "feePct": 0.01 },
-    "permanent": { "enabled": true, "maxLTV": 0.65, "minDSCR": 1.25, "ratePct": 0.06, "amortYears": 30, "ioMonths": 0, "feePct": 0.01, "refiCapRatePct": 0.055 }
+    "permanent": {
+      "enabled": true,
+      "maxLTV": 0.65,
+      "minDSCR": 1.25,
+      "ratePct": 0.06,
+      "amortYears": 30,
+      "ioMonths": 0,
+      "feePct": 0.01,
+      "refiCapRatePct": 0.055
+    }
   },
   "operations": {
     "stabilizedVacancyPct": 0.05,

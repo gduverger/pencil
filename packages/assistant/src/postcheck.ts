@@ -9,7 +9,8 @@ export interface NumberToken {
   kind: 'currency' | 'percent' | 'plain';
 }
 
-const TOKEN_RE = /(\$\s?\d[\d,]*(?:\.\d+)?(?:\s?(?:k|m|million|thousand|bn|billion))?)|(\d[\d,]*(?:\.\d+)?\s?%)|(\b\d[\d,]*(?:\.\d+)?\s?(?:x|×)\b)/gi;
+const TOKEN_RE =
+  /(\$\s?\d[\d,]*(?:\.\d+)?(?:\s?(?:k|m|million|thousand|bn|billion))?)|(\d[\d,]*(?:\.\d+)?\s?%)|(\b\d[\d,]*(?:\.\d+)?\s?(?:x|×)\b)/gi;
 
 function parseNumber(s: string): number {
   return Number(s.replace(/[$,%\sx×]/gi, ''));
@@ -72,7 +73,8 @@ function closeTo(x: number, a: number): boolean {
   const rel = Math.abs(x - a) / scale;
   if (rel <= 0.006) return true;
   // Rounding steps of 7.13: within half a step at the step that applies to the allowed value.
-  const step = Math.abs(a) >= 100_000 ? 1000 : Math.abs(a) >= 1000 ? 100 : Math.abs(a) >= 1 ? 1 : 0.0001;
+  const step =
+    Math.abs(a) >= 100_000 ? 1000 : Math.abs(a) >= 1000 ? 100 : Math.abs(a) >= 1 ? 1 : 0.0001;
   return Math.abs(x - a) <= step / 2 + 1e-9;
 }
 

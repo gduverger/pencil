@@ -13,11 +13,30 @@ export default async function PackagePage({ params }: { params: Promise<{ id: st
   const user = await requireUser();
   const db = await getDb();
   const { deal, state } = await getDeal(db, user.orgId, id);
-  const [versions, shares, entitlements, benchmarks] = await Promise.all([listVersions(db, user.orgId, id), listShares(db, id), listEntitlements(db, user.orgId), loadBenchmarks(db)]);
+  const [versions, shares, entitlements, benchmarks] = await Promise.all([
+    listVersions(db, user.orgId, id),
+    listShares(db, id),
+    listEntitlements(db, user.orgId),
+    loadBenchmarks(db),
+  ]);
   const h = await headers();
-  const baseUrl = process.env.PENCIL_BASE_URL ?? `${h.get('x-forwarded-proto') ?? 'http'}://${h.get('x-forwarded-host') ?? h.get('host') ?? '127.0.0.1:3000'}`;
+  const baseUrl =
+    process.env.PENCIL_BASE_URL ??
+    `${h.get('x-forwarded-proto') ?? 'http'}://${h.get('x-forwarded-host') ?? h.get('host') ?? '127.0.0.1:3000'}`;
   // Preview props without outputs: the client runs the engine on the live state.
-  const previewProps = buildPackageProps({ state, outputs: {} as never, version: { dealName: deal.name, versionNumber: versions.length + 1, versionDate: new Date().toISOString().slice(0, 10), engineVersion: ENGINE_VERSION, ...(user.settings.letterheadName ? { preparedBy: user.settings.letterheadName } : {}) }, org: { name: user.orgName, settings: user.settings }, benchmarks });
+  const previewProps = buildPackageProps({
+    state,
+    outputs: {} as never,
+    version: {
+      dealName: deal.name,
+      versionNumber: versions.length + 1,
+      versionDate: new Date().toISOString().slice(0, 10),
+      engineVersion: ENGINE_VERSION,
+      ...(user.settings.letterheadName ? { preparedBy: user.settings.letterheadName } : {}),
+    },
+    org: { name: user.orgName, settings: user.settings },
+    benchmarks,
+  });
   const { outputs: _omit, ...rest } = previewProps;
   void _omit;
   return (

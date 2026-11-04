@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { growth, largestRemainder, scurveWeights, straightWeights, customWeights, levelPayment, sumChildren } from '../src/math';
+import {
+  growth,
+  largestRemainder,
+  scurveWeights,
+  straightWeights,
+  customWeights,
+  levelPayment,
+  sumChildren,
+} from '../src/math';
 import { EngineError } from '../src/errors';
 
 describe('7.1 growth', () => {
@@ -44,7 +52,8 @@ describe('7.4 S-curve weights', () => {
       const peakIdx = w.indexOf(max);
       expect(Math.abs(peakIdx - (C - 1) / 2)).toBeLessThanOrEqual(0.5);
       // Monotone up to the peak and down after it.
-      for (let k = 1; k <= Math.floor((C - 1) / 2); k++) expect(w[k]!).toBeGreaterThanOrEqual(w[k - 1]!);
+      for (let k = 1; k <= Math.floor((C - 1) / 2); k++)
+        expect(w[k]!).toBeGreaterThanOrEqual(w[k - 1]!);
     }
   });
   it('C = 1 yields [1] and C = 0 yields []', () => {

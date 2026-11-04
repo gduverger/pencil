@@ -4,12 +4,27 @@
  * keep their CSV-derived ids.
  */
 import { sql } from 'drizzle-orm';
-import { boolean, doublePrecision, integer, jsonb, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid, index } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  doublePrecision,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  index,
+} from 'drizzle-orm/pg-core';
 
-const createdAt = () => timestamp('created_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow();
+const createdAt = () =>
+  timestamp('created_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow();
 
 export const organizations = pgTable('organizations', {
-  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  id: uuid('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   name: text('name').notNull(),
   letterheadKey: text('letterhead_key'),
   settings: jsonb('settings').notNull().default({}),
@@ -74,7 +89,9 @@ export const verificationTokens = pgTable(
 export const memberships = pgTable(
   'memberships',
   {
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
@@ -90,7 +107,9 @@ export const memberships = pgTable(
 export const deals = pgTable(
   'deals',
   {
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
@@ -101,7 +120,9 @@ export const deals = pgTable(
     clonedFrom: uuid('cloned_from'),
     createdBy: text('created_by').notNull(),
     createdAt: createdAt(),
-    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' })
+      .notNull()
+      .defaultNow(),
     rev: integer('rev').notNull().default(1),
   },
   (t) => [index('deals_org').on(t.orgId)],
@@ -126,7 +147,9 @@ export const dealState = pgTable('deal_state', {
 export const inputHistory = pgTable(
   'input_history',
   {
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     dealId: uuid('deal_id')
       .notNull()
       .references(() => deals.id, { onDelete: 'cascade' }),
@@ -145,7 +168,9 @@ export const inputHistory = pgTable(
 export const versions = pgTable(
   'versions',
   {
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     dealId: uuid('deal_id')
       .notNull()
       .references(() => deals.id, { onDelete: 'cascade' }),
@@ -162,7 +187,9 @@ export const versions = pgTable(
 );
 
 export const files = pgTable('files', {
-  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  id: uuid('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   versionId: uuid('version_id')
     .notNull()
     .references(() => versions.id, { onDelete: 'cascade' }),
@@ -173,7 +200,9 @@ export const files = pgTable('files', {
 });
 
 export const shares = pgTable('shares', {
-  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  id: uuid('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   versionId: uuid('version_id')
     .notNull()
     .references(() => versions.id, { onDelete: 'cascade' }),
@@ -215,7 +244,9 @@ export const towns = pgTable('towns', {
 export const contributions = pgTable(
   'contributions',
   {
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
     orgId: uuid('org_id')
       .notNull()
       .references(() => organizations.id, { onDelete: 'cascade' }),
@@ -229,7 +260,9 @@ export const contributions = pgTable(
 );
 
 export const entitlements = pgTable('entitlements', {
-  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  id: uuid('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   orgId: uuid('org_id')
     .notNull()
     .references(() => organizations.id, { onDelete: 'cascade' }),
@@ -241,7 +274,9 @@ export const entitlements = pgTable('entitlements', {
 });
 
 export const assistantUsage = pgTable('assistant_usage', {
-  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  id: uuid('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   orgId: uuid('org_id')
     .notNull()
     .references(() => organizations.id, { onDelete: 'cascade' }),

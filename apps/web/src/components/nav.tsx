@@ -7,7 +7,10 @@ export function TopNav({ user }: { user: CurrentUser | null }) {
     <header className="border-b border-neutral-200 bg-white">
       <div className="mx-auto flex h-12 max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-5">
-          <Link href={user ? '/deals' : '/'} className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+          <Link
+            href={user ? '/deals' : '/'}
+            className="flex items-center gap-2 text-sm font-semibold text-neutral-900"
+          >
             <span className="inline-block h-5 w-5 rounded bg-blue-600" aria-hidden />
             Pencil
           </Link>
@@ -33,7 +36,10 @@ export function TopNav({ user }: { user: CurrentUser | null }) {
                 await signOut({ redirectTo: '/' });
               }}
             >
-              <button type="submit" className="rounded border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-50">
+              <button
+                type="submit"
+                className="rounded border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-50"
+              >
                 Sign out
               </button>
             </form>

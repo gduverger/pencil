@@ -41,8 +41,15 @@ export function runWaterfall(input: WaterfallInput): WaterfallResult {
   const n = input.distributions.length;
   const hbLp = new Array<number>(K).fill(0);
   const hbGp = new Array<number>(K).fill(0);
-  const monthlyFactor = tiers.map((t) => (t.hurdleIrrPct === null ? 1 : Math.pow(1 + t.hurdleIrrPct, 1 / 12)));
-  const tierTotals = tiers.map(() => ({ total: 0, lp: 0, gp: 0, atSale: { total: 0, lp: 0, gp: 0 } }));
+  const monthlyFactor = tiers.map((t) =>
+    t.hurdleIrrPct === null ? 1 : Math.pow(1 + t.hurdleIrrPct, 1 / 12),
+  );
+  const tierTotals = tiers.map(() => ({
+    total: 0,
+    lp: 0,
+    gp: 0,
+    atSale: { total: 0, lp: 0, gp: 0 },
+  }));
   const lpBalanceAtCompletion: Array<number | null> = tiers.map(() => null);
   const byMonth: WaterfallMonth[] = [];
 

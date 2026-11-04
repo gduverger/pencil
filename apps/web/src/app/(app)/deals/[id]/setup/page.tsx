@@ -18,7 +18,9 @@ export default async function SetupPage({ params }: { params: Promise<{ id: stri
       <span className="text-neutral-600">{label}</span>
       <span className="flex items-center gap-2">
         <span className="tabular">{value ?? '—'}</span>
-        <Badge tone={source === 'parcel-data' ? 'good' : 'neutral'}>{source === 'parcel-data' ? 'parcel data' : 'unknown'}</Badge>
+        <Badge tone={source === 'parcel-data' ? 'good' : 'neutral'}>
+          {source === 'parcel-data' ? 'parcel data' : 'unknown'}
+        </Badge>
       </span>
     </div>
   );
@@ -28,21 +30,55 @@ export default async function SetupPage({ params }: { params: Promise<{ id: stri
         <p className="mb-2 text-sm">{s.address || deal.name}</p>
         {fact('Town', s.town, s.town ? 'parcel-data' : 'unknown')}
         {fact('Benchmark cluster', s.townCluster, s.townCluster ? 'parcel-data' : 'unknown')}
-        {fact('Lot area', s.parcel.lotSF === null ? null : `${formatInteger(s.parcel.lotSF)} SF`, s.parcel.lotSF === null ? 'unknown' : 'parcel-data')}
-        {fact('Zoning district', s.parcel.zoningDistrict, s.parcel.zoningDistrict === null ? 'unknown' : 'parcel-data')}
-        {fact('MBTA Communities district', s.parcel.mbtaCommunitiesDistrict === null ? null : s.parcel.mbtaCommunitiesDistrict ? 'Yes' : 'No', s.parcel.mbtaCommunitiesDistrict === null ? 'unknown' : 'parcel-data')}
-        {fact('Assessed value', s.parcel.assessedValue === null ? null : formatUsd(s.parcel.assessedValue), s.parcel.assessedValue === null ? 'unknown' : 'parcel-data')}
-        {fact('Current annual tax', s.parcel.annualTax === null ? null : formatUsd(s.parcel.annualTax), s.parcel.annualTax === null ? 'unknown' : 'parcel-data')}
-        {fact('By-right envelope', s.parcel.unitsByRight === null ? null : `${s.parcel.unitsByRight} units`, s.parcel.unitsByRight === null ? 'unknown' : 'parcel-data')}
+        {fact(
+          'Lot area',
+          s.parcel.lotSF === null ? null : `${formatInteger(s.parcel.lotSF)} SF`,
+          s.parcel.lotSF === null ? 'unknown' : 'parcel-data',
+        )}
+        {fact(
+          'Zoning district',
+          s.parcel.zoningDistrict,
+          s.parcel.zoningDistrict === null ? 'unknown' : 'parcel-data',
+        )}
+        {fact(
+          'MBTA Communities district',
+          s.parcel.mbtaCommunitiesDistrict === null
+            ? null
+            : s.parcel.mbtaCommunitiesDistrict
+              ? 'Yes'
+              : 'No',
+          s.parcel.mbtaCommunitiesDistrict === null ? 'unknown' : 'parcel-data',
+        )}
+        {fact(
+          'Assessed value',
+          s.parcel.assessedValue === null ? null : formatUsd(s.parcel.assessedValue),
+          s.parcel.assessedValue === null ? 'unknown' : 'parcel-data',
+        )}
+        {fact(
+          'Current annual tax',
+          s.parcel.annualTax === null ? null : formatUsd(s.parcel.annualTax),
+          s.parcel.annualTax === null ? 'unknown' : 'parcel-data',
+        )}
+        {fact(
+          'By-right envelope',
+          s.parcel.unitsByRight === null ? null : `${s.parcel.unitsByRight} units`,
+          s.parcel.unitsByRight === null ? 'unknown' : 'parcel-data',
+        )}
         {fact('Construction type', s.constructionType, 'parcel-data')}
         {s.parcel.notes.length > 0 ? (
-          <ul className="mt-3 list-disc space-y-1 pl-5 text-xs text-neutral-600" data-testid="lookup-notes">
+          <ul
+            className="mt-3 list-disc space-y-1 pl-5 text-xs text-neutral-600"
+            data-testid="lookup-notes"
+          >
             {s.parcel.notes.map((n, i) => (
               <li key={i}>{n}</li>
             ))}
           </ul>
         ) : null}
-        <p className="mt-3 text-xs text-neutral-500">Looked up {s.parcel.lookupDate ?? '—'}. Lot area, zoning, assessed value and tax are editable on the Inputs screen; their source stays with the value.</p>
+        <p className="mt-3 text-xs text-neutral-500">
+          Looked up {s.parcel.lookupDate ?? '—'}. Lot area, zoning, assessed value and tax are
+          editable on the Inputs screen; their source stays with the value.
+        </p>
       </Card>
       <div className="space-y-4">
         <Card title="Deal">
@@ -90,7 +126,12 @@ export default async function SetupPage({ params }: { params: Promise<{ id: stri
             {deal.clonedFrom ? ' · cloned' : ''}
           </p>
         </Card>
-        <AssistantPanel dealId={deal.id} rev={deal.rev} transcript={state.assistantTranscript} available={await assistantAvailable()} />
+        <AssistantPanel
+          dealId={deal.id}
+          rev={deal.rev}
+          transcript={state.assistantTranscript}
+          available={await assistantAvailable()}
+        />
       </div>
     </div>
   );

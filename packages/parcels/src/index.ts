@@ -12,7 +12,13 @@ import { parseCsvObjects } from './csv';
 
 export { parseCsv, parseCsvObjects } from './csv';
 
-export const TOWN_CLUSTERS = ['boston-core', 'inner-suburbs', 'outer-suburbs', 'gateway-cities', 'other-ma'] as const;
+export const TOWN_CLUSTERS = [
+  'boston-core',
+  'inner-suburbs',
+  'outer-suburbs',
+  'gateway-cities',
+  'other-ma',
+] as const;
 export type TownCluster = (typeof TOWN_CLUSTERS)[number];
 
 export const TownSchema = z.object({
@@ -125,7 +131,14 @@ export interface ParcelLookup {
 }
 
 export interface ParcelDataset {
-  find(address: ParsedAddress): Partial<Pick<ParcelLookup, 'lotSF' | 'zoningDistrict' | 'mbtaCommunitiesDistrict' | 'assessedValue' | 'annualTax'>> & { envelope?: ParcelLookup['envelope'] };
+  find(
+    address: ParsedAddress,
+  ): Partial<
+    Pick<
+      ParcelLookup,
+      'lotSF' | 'zoningDistrict' | 'mbtaCommunitiesDistrict' | 'assessedValue' | 'annualTax'
+    >
+  > & { envelope?: ParcelLookup['envelope'] };
 }
 
 /**
@@ -133,10 +146,16 @@ export interface ParcelDataset {
  * left empty with source `unknown` and the deal still proceeds (spec 5 step 1, 9.5). The town
  * table still supplies the cluster, the tax rate and the MBTA Communities status.
  */
-export function lookupParcel(raw: string, opts: { dataset?: ParcelDataset; today?: string } = {}): ParcelLookup {
+export function lookupParcel(
+  raw: string,
+  opts: { dataset?: ParcelDataset; today?: string } = {},
+): ParcelLookup {
   const address = parseAddress(raw);
   const town = address.town ? lookupTown(address.town) : undefined;
-  const unknown = <T>(): { value: T | null; source: LookupSource } => ({ value: null, source: 'unknown' });
+  const unknown = <T>(): { value: T | null; source: LookupSource } => ({
+    value: null,
+    source: 'unknown',
+  });
   const result: ParcelLookup = {
     address,
     ...(town ? { town } : {}),
@@ -149,16 +168,30 @@ export function lookupParcel(raw: string, opts: { dataset?: ParcelDataset; today
     lookupDate: opts.today ?? new Date().toISOString().slice(0, 10),
     notes: [],
   };
-  if (!town) result.notes.push(address.town ? `Town "${address.town}" is not in the Massachusetts town table.` : 'No town could be read from the address.');
+  if (!town)
+    result.notes.push(
+      address.town
+        ? `Town "${address.town}" is not in the Massachusetts town table.`
+        : 'No town could be read from the address.',
+    );
   if (opts.dataset) {
     const found = opts.dataset.find(address);
     Object.assign(result, found);
   } else {
-    result.notes.push('Statewide parcel data is not loaded in this environment; lot area, zoning, assessed value and current tax are left empty with source "unknown".');
+    result.notes.push(
+      'Statewide parcel data is not loaded in this environment; lot area, zoning, assessed value and current tax are left empty with source "unknown".',
+    );
   }
-  if (town && result.mbtaCommunitiesDistrict.value === null && town.mbtaStatus && !/not an MBTA|n\/a/i.test(town.mbtaStatus)) {
+  if (
+    town &&
+    result.mbtaCommunitiesDistrict.value === null &&
+    town.mbtaStatus &&
+    !/not an MBTA|n\/a/i.test(town.mbtaStatus)
+  ) {
     // The town is an MBTA community; whether the parcel lies in the designated district is unknown.
-    result.notes.push(`${town.town} is an MBTA community (${town.mbtaStatus}); whether this parcel sits in the designated multifamily district is not known without parcel data.`);
+    result.notes.push(
+      `${town.town} is an MBTA community (${town.mbtaStatus}); whether this parcel sits in the designated multifamily district is not known without parcel data.`,
+    );
   }
   return result;
 }
@@ -167,7 +200,11 @@ export function lookupParcel(raw: string, opts: { dataset?: ParcelDataset; today
  * Default stabilized property tax: town rate per $1,000 × assessment ratio × stabilized value
  * (14.2 default: 85% of value). Returns null when the town rate is unknown.
  */
-export function defaultStabilizedTax(town: Town | undefined, stabilizedValue: number, assessmentRatio = 0.85): number | null {
+export function defaultStabilizedTax(
+  town: Town | undefined,
+  stabilizedValue: number,
+  assessmentRatio = 0.85,
+): number | null {
   if (!town || town.residentialTaxRate === null) return null;
   return (town.residentialTaxRate / 1000) * assessmentRatio * stabilizedValue;
 }

@@ -27,10 +27,14 @@ export function AssumptionsPage({ register }: { register: RegisterEntry[] }) {
             <thead>
               <tr>
                 <th style={{ width: '26%' }}>Input</th>
-                <th className="num" style={{ width: '13%' }}>Value</th>
+                <th className="num" style={{ width: '13%' }}>
+                  Value
+                </th>
                 <th style={{ width: '10%' }}>Source</th>
                 <th style={{ width: '21%' }}>Note</th>
-                <th className="nowrap" style={{ width: '11%' }}>Date</th>
+                <th className="nowrap" style={{ width: '11%' }}>
+                  Date
+                </th>
                 <th style={{ width: '19%' }}>Benchmark</th>
               </tr>
             </thead>
@@ -42,20 +46,30 @@ export function AssumptionsPage({ register }: { register: RegisterEntry[] }) {
           </table>
         </div>
       ))}
-      <p className="footnote">Figures rounded; totals may not foot. Scenario overrides are listed under the base value; flags mark values outside their benchmark range.</p>
+      <p className="footnote">
+        Figures rounded; totals may not foot. Scenario overrides are listed under the base value;
+        flags mark values outside their benchmark range.
+      </p>
     </>
   );
 }
 
 function RegisterRow({ e }: { e: RegisterEntry }) {
   const overrides = e.overrides
-    ? [e.overrides.best !== undefined ? `Best: ${formatByUnit(e.overrides.best, e.unit)}` : null, e.overrides.worst !== undefined ? `Worst: ${formatByUnit(e.overrides.worst, e.unit)}` : null].filter(Boolean)
+    ? [
+        e.overrides.best !== undefined ? `Best: ${formatByUnit(e.overrides.best, e.unit)}` : null,
+        e.overrides.worst !== undefined
+          ? `Worst: ${formatByUnit(e.overrides.worst, e.unit)}`
+          : null,
+      ].filter(Boolean)
     : [];
   return (
     <tr>
       <td>
         {e.label}
-        <div className="muted" style={{ fontSize: '6.5pt' }}>{e.path}</div>
+        <div className="muted" style={{ fontSize: '6.5pt' }}>
+          {e.path}
+        </div>
       </td>
       <td className="num">
         {formatByUnit(e.value, e.unit)}

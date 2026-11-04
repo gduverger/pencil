@@ -19,12 +19,15 @@ export function metricSeries(months: MonthRow[], sale: SaleResult, tl: Timeline)
   const gp: number[] = [];
   for (const m of months) {
     // Capitalized costs excluding loan fees and interest; deficits are already in NOI.
-    const capitalized = m.costTotal - m.costs.financingFees - m.costs.capitalizedInterest - m.costs.operatingDeficit;
+    const capitalized =
+      m.costTotal - m.costs.financingFees - m.costs.capitalizedInterest - m.costs.operatingDeficit;
     let u = -capitalized + m.inflows;
     if (m.t >= tl.O) u += m.noi;
     if (m.t === tl.S) u += sale.value - sale.sellingCosts;
     unlevered.push(u);
-    project.push(-(m.contributions.gp + m.contributions.lp) + m.distributions.gp + m.distributions.lp);
+    project.push(
+      -(m.contributions.gp + m.contributions.lp) + m.distributions.gp + m.distributions.lp,
+    );
     lp.push(-m.contributions.lp + m.distributions.lp);
     gp.push(-m.contributions.gp + m.distributions.gp);
   }
@@ -38,7 +41,11 @@ export function computeMetrics(
   tl: Timeline,
   program: ProgramSummary,
   exitCapRatePct: number,
-): { metrics: Record<MetricKey, number | null>; series: MetricSeries; byPartner: DealOutputs['waterfall']['byPartner'] } {
+): {
+  metrics: Record<MetricKey, number | null>;
+  series: MetricSeries;
+  byPartner: DealOutputs['waterfall']['byPartner'];
+} {
   const series = metricSeries(months, sale, tl);
   const metrics = {} as Record<MetricKey, number | null>;
   for (const k of METRIC_KEYS) metrics[k] = null;
@@ -65,7 +72,8 @@ export function computeMetrics(
   );
   metrics.stabilizedNoi = noiStabilized;
   metrics.yieldOnCost = totals.tpc > 0 ? noiStabilized / totals.tpc : null;
-  metrics.developmentSpread = metrics.yieldOnCost === null ? null : metrics.yieldOnCost - exitCapRatePct;
+  metrics.developmentSpread =
+    metrics.yieldOnCost === null ? null : metrics.yieldOnCost - exitCapRatePct;
 
   let cumulative = 0;
   let peak = 0;
@@ -86,8 +94,20 @@ export function computeMetrics(
   metrics.capitalizedInterest = totals.capitalizedInterest;
 
   const byPartner = {
-    gp: { contributions: contribGp, distributions: distGp, irr: metrics.gpIrr, multiple: metrics.gpMultiple, profit: distGp - contribGp },
-    lp: { contributions: contribLp, distributions: distLp, irr: metrics.lpIrr, multiple: metrics.lpMultiple, profit: distLp - contribLp },
+    gp: {
+      contributions: contribGp,
+      distributions: distGp,
+      irr: metrics.gpIrr,
+      multiple: metrics.gpMultiple,
+      profit: distGp - contribGp,
+    },
+    lp: {
+      contributions: contribLp,
+      distributions: distLp,
+      irr: metrics.lpIrr,
+      multiple: metrics.lpMultiple,
+      profit: distLp - contribLp,
+    },
   };
   return { metrics, series, byPartner };
 }

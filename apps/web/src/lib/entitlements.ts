@@ -12,11 +12,17 @@ export interface EntitlementRow {
 
 export function effectiveTier(tier: string): string {
   if (tier !== 'free') return tier;
-  const dev = process.env.PENCIL_DEFAULT_TIER ?? (process.env.NODE_ENV === 'production' ? 'free' : 'pro');
+  const dev =
+    process.env.PENCIL_DEFAULT_TIER ?? (process.env.NODE_ENV === 'production' ? 'free' : 'pro');
   return dev;
 }
 
-export function hasEntitlement(tier: string, rows: EntitlementRow[], dealId: string, now = new Date()): boolean {
+export function hasEntitlement(
+  tier: string,
+  rows: EntitlementRow[],
+  dealId: string,
+  now = new Date(),
+): boolean {
   if (effectiveTier(tier) === 'pro') return true;
   return rows.some((r) => {
     if (r.validUntil && new Date(r.validUntil).getTime() < now.getTime()) return false;

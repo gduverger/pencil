@@ -1,6 +1,13 @@
 import type { DealOutputs, ScenarioKey } from '@pencil/engine';
 import { EquityBars } from '../charts';
-import { formatIrr, formatMultiple, formatPct, formatUsd, formatUsdPerSF, formatUsdWhole } from '../format';
+import {
+  formatIrr,
+  formatMultiple,
+  formatPct,
+  formatUsd,
+  formatUsdPerSF,
+  formatUsdWhole,
+} from '../format';
 import type { PackageProps } from '../types';
 
 const KEYS: ScenarioKey[] = ['likely', 'best', 'worst'];
@@ -76,7 +83,10 @@ export function ReturnsPage({ props }: { props: PackageProps }) {
         </div>
         <div style={{ flex: '1 1 40%' }}>
           <h3 style={{ marginTop: 0 }}>Peak equity vs total equity (Likely)</h3>
-          <EquityBars peak={likely.metrics.peakEquity ?? 0} total={likely.metrics.totalEquity ?? 0} />
+          <EquityBars
+            peak={likely.metrics.peakEquity ?? 0}
+            total={likely.metrics.totalEquity ?? 0}
+          />
           <h3>DSCR and cash-on-cash by year (Likely)</h3>
           <table className="t compact">
             <thead>

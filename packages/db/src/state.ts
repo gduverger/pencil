@@ -56,7 +56,15 @@ export interface DealEventRecord extends InputMeta {
   category: 'land' | 'hard' | 'soft' | 'other' | 'inflow';
 }
 
-export const SWITCH_KEYS = ['commercial', 'landLoan', 'constructionInterestOnly', 'permanent', 'mezz', 'operatingDeficitReserve', 'affordable'] as const;
+export const SWITCH_KEYS = [
+  'commercial',
+  'landLoan',
+  'constructionInterestOnly',
+  'permanent',
+  'mezz',
+  'operatingDeficitReserve',
+  'affordable',
+] as const;
 export type SwitchKey = (typeof SWITCH_KEYS)[number];
 
 export interface SwitchDefinition {
@@ -77,7 +85,14 @@ export const SWITCHES: SwitchDefinition[] = [
     label: 'Commercial space',
     description: 'Ground-floor commercial space (simple, single tenant).',
     enabledPath: 'program.commercial.enabled',
-    inputs: ['program.commercial.grossSF', 'program.commercial.rentPerSFYear', 'program.commercial.vacancyPct', 'program.commercial.tiPerSF', 'program.commercial.leaseUpMonths', 'program.commercial.opexPerSFYear'],
+    inputs: [
+      'program.commercial.grossSF',
+      'program.commercial.rentPerSFYear',
+      'program.commercial.vacancyPct',
+      'program.commercial.tiPerSF',
+      'program.commercial.leaseUpMonths',
+      'program.commercial.opexPerSFYear',
+    ],
     default: false,
     fixed: false,
   },
@@ -104,7 +119,16 @@ export const SWITCHES: SwitchDefinition[] = [
     label: 'Permanent refinance',
     description: 'Refinance the construction loan with a permanent loan at stabilization.',
     enabledPath: 'financing.permanent.enabled',
-    inputs: ['financing.permanent.monthsAfterStabilization', 'financing.permanent.maxLTV', 'financing.permanent.minDSCR', 'financing.permanent.ratePct', 'financing.permanent.amortYears', 'financing.permanent.ioMonths', 'financing.permanent.feePct', 'financing.permanent.refiCapRatePct'],
+    inputs: [
+      'financing.permanent.monthsAfterStabilization',
+      'financing.permanent.maxLTV',
+      'financing.permanent.minDSCR',
+      'financing.permanent.ratePct',
+      'financing.permanent.amortYears',
+      'financing.permanent.ioMonths',
+      'financing.permanent.feePct',
+      'financing.permanent.refiCapRatePct',
+    ],
     default: true,
     fixed: false,
   },
@@ -113,14 +137,20 @@ export const SWITCHES: SwitchDefinition[] = [
     label: 'Mezzanine tranche',
     description: 'A mezzanine tranche funded after equity and before the construction loan.',
     enabledPath: 'financing.mezz.enabled',
-    inputs: ['financing.mezz.pctOfCost', 'financing.mezz.ratePct', 'financing.mezz.feePct', 'financing.mezz.repaidAt'],
+    inputs: [
+      'financing.mezz.pctOfCost',
+      'financing.mezz.ratePct',
+      'financing.mezz.feePct',
+      'financing.mezz.repaidAt',
+    ],
     default: false,
     fixed: false,
   },
   {
     key: 'operatingDeficitReserve',
     label: 'Operating deficit reserve',
-    description: 'Lease-up deficits are capitalized into the budget and funded in order (off: equity funds them as they occur).',
+    description:
+      'Lease-up deficits are capitalized into the budget and funded in order (off: equity funds them as they occur).',
     enabledPath: 'financing.capitalizeOperatingDeficits',
     inputs: [],
     default: true,
@@ -166,7 +196,8 @@ export interface TranscriptMessage {
 
 export interface DealSetup {
   constructionType: 'wood-frame' | 'podium' | 'steel-concrete' | 'modular';
-  townCluster: 'boston-core' | 'inner-suburbs' | 'outer-suburbs' | 'gateway-cities' | 'other-ma' | null;
+  townCluster:
+    'boston-core' | 'inner-suburbs' | 'outer-suburbs' | 'gateway-cities' | 'other-ma' | null;
   town: string | null;
   address: string;
   parcel: {
@@ -223,7 +254,9 @@ export class StateError extends Error {
 }
 
 /** Paths whose values live in `switches` rather than `inputs`. */
-const SWITCH_PATHS = new Set(SWITCHES.map((s) => s.enabledPath).filter((p): p is string => p !== null));
+const SWITCH_PATHS = new Set(
+  SWITCHES.map((s) => s.enabledPath).filter((p): p is string => p !== null),
+);
 
 export function defaultSwitches(): Record<SwitchKey, boolean> {
   const out = {} as Record<SwitchKey, boolean>;
@@ -240,16 +273,36 @@ export interface DefaultedInput {
 }
 
 /** A fresh deal state from resolved defaults (every catalogued path except switch flags). */
-export function newDealState(defaults: DefaultedInput[], setup: DealSetup, actor: string, now: string, overrides: Partial<Record<string, DefaultedInput>> = {}): DealState {
+export function newDealState(
+  defaults: DefaultedInput[],
+  setup: DealSetup,
+  actor: string,
+  now: string,
+  overrides: Partial<Record<string, DefaultedInput>> = {},
+): DealState {
   const inputs: Record<string, InputRecord> = {};
   for (const d of defaults) {
     if (SWITCH_PATHS.has(d.path)) continue;
     const o = overrides[d.path] ?? d;
-    inputs[d.path] = { value: o.value, source: o.source, note: o.note, updatedAt: now, updatedBy: actor, benchmarkId: o.benchmarkId };
+    inputs[d.path] = {
+      value: o.value,
+      source: o.source,
+      note: o.note,
+      updatedAt: now,
+      updatedBy: actor,
+      benchmarkId: o.benchmarkId,
+    };
   }
   for (const [path, o] of Object.entries(overrides)) {
     if (!o || inputs[path] || SWITCH_PATHS.has(path)) continue;
-    inputs[path] = { value: o.value, source: o.source, note: o.note, updatedAt: now, updatedBy: actor, benchmarkId: o.benchmarkId };
+    inputs[path] = {
+      value: o.value,
+      source: o.source,
+      note: o.note,
+      updatedAt: now,
+      updatedBy: actor,
+      benchmarkId: o.benchmarkId,
+    };
   }
   return {
     inputs,
@@ -271,18 +324,45 @@ export function toDealInputs(state: DealState, scenario: Scenario = 'likely'): D
     if (rec.value === undefined || rec.value === null || rec.value === '') continue;
     doc = setPath(doc, path, rec.value);
   }
-  for (const s of SWITCHES) if (s.enabledPath) doc = setPath(doc, s.enabledPath, state.switches[s.key]);
+  for (const s of SWITCHES)
+    if (s.enabledPath) doc = setPath(doc, s.enabledPath, state.switches[s.key]);
   // Elaboration: hard and soft become line items; other elaborable lines are replaced by the sum.
   for (const [path, children] of Object.entries(state.elaboration)) {
     if (children.length === 0) continue;
-    if (path === 'costs.hard.perGrossSF') doc = setPath(doc, 'costs.hard.lines', children.map((c) => ({ label: c.label, amount: c.amount, ...(c.distribution ? { distribution: c.distribution } : {}) })));
-    else if (path === 'costs.soft.pctOfHard') doc = setPath(doc, 'costs.soft.lines', children.map((c) => ({ label: c.label, amount: c.amount, ...(c.distribution ? { distribution: c.distribution } : {}) })));
+    if (path === 'costs.hard.perGrossSF')
+      doc = setPath(
+        doc,
+        'costs.hard.lines',
+        children.map((c) => ({
+          label: c.label,
+          amount: c.amount,
+          ...(c.distribution ? { distribution: c.distribution } : {}),
+        })),
+      );
+    else if (path === 'costs.soft.pctOfHard')
+      doc = setPath(
+        doc,
+        'costs.soft.lines',
+        children.map((c) => ({
+          label: c.label,
+          amount: c.amount,
+          ...(c.distribution ? { distribution: c.distribution } : {}),
+        })),
+      );
     else doc = setPath(doc, path, sumChildren(children));
   }
   doc = setPath(
     doc,
     'events',
-    state.events.map((e) => ({ id: e.id, label: e.label, month: e.month, amount: e.amount, kind: e.kind, category: e.category, ...(e.note ? { note: e.note } : {}) })),
+    state.events.map((e) => ({
+      id: e.id,
+      label: e.label,
+      month: e.month,
+      amount: e.amount,
+      kind: e.kind,
+      category: e.category,
+      ...(e.note ? { note: e.note } : {}),
+    })),
   );
   const base = parseInputs(doc);
   if (scenario === 'likely') return base;
@@ -292,8 +372,12 @@ export function toDealInputs(state: DealState, scenario: Scenario = 'likely'): D
 }
 
 /** Scenario override maps in engine form (FR-5.1). */
-export function scenarioOverrides(state: DealState): { best: Record<string, unknown>; worst: Record<string, unknown> } {
-  const map = (recs: Record<string, InputRecord>) => Object.fromEntries(Object.entries(recs).map(([p, r]) => [p, r.value]));
+export function scenarioOverrides(state: DealState): {
+  best: Record<string, unknown>;
+  worst: Record<string, unknown>;
+} {
+  const map = (recs: Record<string, InputRecord>) =>
+    Object.fromEntries(Object.entries(recs).map(([p, r]) => [p, r.value]));
   return { best: map(state.scenarios.best), worst: map(state.scenarios.worst) };
 }
 
@@ -304,37 +388,88 @@ function unitOf(path: string): Unit {
 function coerce(path: string, value: unknown): unknown {
   const unit = unitOf(path);
   if (unit === 'text' || unit === 'flag') return value;
-  if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))) return Number(value);
+  if (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value)))
+    return Number(value);
   return value;
 }
 
 /** Apply input patches (FR-1.1, FR-1.2); returns the new state and the history rows to append. */
-export function applyPatches(state: DealState, patches: InputPatch[], actor: string, now: string): { state: DealState; history: HistoryRow[] } {
-  const next: DealState = { ...state, inputs: { ...state.inputs }, scenarios: { best: { ...state.scenarios.best }, worst: { ...state.scenarios.worst } } };
+export function applyPatches(
+  state: DealState,
+  patches: InputPatch[],
+  actor: string,
+  now: string,
+): { state: DealState; history: HistoryRow[] } {
+  const next: DealState = {
+    ...state,
+    inputs: { ...state.inputs },
+    scenarios: { best: { ...state.scenarios.best }, worst: { ...state.scenarios.worst } },
+  };
   const history: HistoryRow[] = [];
   let changed = false;
   for (const p of patches) {
-    if (SWITCH_PATHS.has(p.path)) throw new StateError('switch-path', `${p.path} is a switch; use setSwitch`);
-    if (state.elaboration[p.path]?.length && p.value !== undefined) throw new StateError('elaborated-parent', `${p.path} is elaborated; edit its children`);
+    if (SWITCH_PATHS.has(p.path))
+      throw new StateError('switch-path', `${p.path} is a switch; use setSwitch`);
+    if (state.elaboration[p.path]?.length && p.value !== undefined)
+      throw new StateError('elaborated-parent', `${p.path} is elaborated; edit its children`);
     const target = p.scenario === 'likely' ? next.inputs : next.scenarios[p.scenario];
     const prior = target[p.path];
     if (p.scenario !== 'likely' && p.clear) {
       if (prior) {
-        history.push({ scenario: p.scenario, path: p.path, priorValue: prior.value, priorSource: prior.source, priorNote: prior.note, changedBy: actor, changedAt: now });
+        history.push({
+          scenario: p.scenario,
+          path: p.path,
+          priorValue: prior.value,
+          priorSource: prior.source,
+          priorNote: prior.note,
+          changedBy: actor,
+          changedAt: now,
+        });
         delete target[p.path];
         changed = true;
       }
       continue;
     }
     const value = p.value === undefined ? prior?.value : coerce(p.path, p.value);
-    if (value === undefined && p.scenario !== 'likely') throw new StateError('override-needs-value', `an override for ${p.path} needs a value`);
+    if (value === undefined && p.scenario !== 'likely')
+      throw new StateError('override-needs-value', `an override for ${p.path} needs a value`);
     const source: Source = p.source ?? prior?.source ?? 'my-number';
     const note = p.note ?? prior?.note ?? '';
-    const same = prior !== undefined && JSON.stringify(prior.value) === JSON.stringify(value) && prior.source === source && prior.note === note;
+    const same =
+      prior !== undefined &&
+      JSON.stringify(prior.value) === JSON.stringify(value) &&
+      prior.source === source &&
+      prior.note === note;
     if (same) continue;
-    if (prior) history.push({ scenario: p.scenario, path: p.path, priorValue: prior.value, priorSource: prior.source, priorNote: prior.note, changedBy: actor, changedAt: now });
-    else history.push({ scenario: p.scenario, path: p.path, priorValue: null, priorSource: null, priorNote: null, changedBy: actor, changedAt: now });
-    target[p.path] = { value, source, note, updatedAt: now, updatedBy: actor, benchmarkId: p.value === undefined ? (prior?.benchmarkId ?? null) : (prior?.benchmarkId ?? null) };
+    if (prior)
+      history.push({
+        scenario: p.scenario,
+        path: p.path,
+        priorValue: prior.value,
+        priorSource: prior.source,
+        priorNote: prior.note,
+        changedBy: actor,
+        changedAt: now,
+      });
+    else
+      history.push({
+        scenario: p.scenario,
+        path: p.path,
+        priorValue: null,
+        priorSource: null,
+        priorNote: null,
+        changedBy: actor,
+        changedAt: now,
+      });
+    target[p.path] = {
+      value,
+      source,
+      note,
+      updatedAt: now,
+      updatedBy: actor,
+      benchmarkId:
+        p.value === undefined ? (prior?.benchmarkId ?? null) : (prior?.benchmarkId ?? null),
+    };
     changed = true;
   }
   return { state: changed ? markStale(next) : state, history };
@@ -343,22 +478,41 @@ export function applyPatches(state: DealState, patches: InputPatch[], actor: str
 /** Any input change marks saved sensitivities stale (FR-6.2). */
 export function markStale(state: DealState): DealState {
   if (state.sensitivities.every((s) => s.stale)) return state;
-  return { ...state, sensitivities: state.sensitivities.map((s) => (s.stale ? s : { ...s, stale: true })) };
+  return {
+    ...state,
+    sensitivities: state.sensitivities.map((s) => (s.stale ? s : { ...s, stale: true })),
+  };
 }
 
-export function setSwitch(state: DealState, key: SwitchKey, on: boolean, actor: string, now: string, values?: Record<string, { value: unknown; source?: Source; note?: string }>): { state: DealState; history: HistoryRow[] } {
+export function setSwitch(
+  state: DealState,
+  key: SwitchKey,
+  on: boolean,
+  actor: string,
+  now: string,
+  values?: Record<string, { value: unknown; source?: Source; note?: string }>,
+): { state: DealState; history: HistoryRow[] } {
   const def = SWITCHES.find((s) => s.key === key);
   if (!def) throw new StateError('unknown-switch', `unknown switch ${key}`);
   if (def.fixed) throw new StateError('fixed-switch', `${def.label} is always on in V1`);
   let next: DealState = { ...state, switches: { ...state.switches, [key]: on } };
   let history: HistoryRow[] = [];
   if (values) {
-    const patches: InputPatch[] = Object.entries(values).map(([path, v]) => ({ scenario: 'likely', path, value: v.value, ...(v.source ? { source: v.source } : {}), ...(v.note !== undefined ? { note: v.note } : {}) }));
+    const patches: InputPatch[] = Object.entries(values).map(([path, v]) => ({
+      scenario: 'likely',
+      path,
+      value: v.value,
+      ...(v.source ? { source: v.source } : {}),
+      ...(v.note !== undefined ? { note: v.note } : {}),
+    }));
     const r = applyPatches(next, patches, actor, now);
     next = r.state;
     history = r.history;
   }
-  return { state: state.switches[key] === on && history.length === 0 ? state : markStale(next), history };
+  return {
+    state: state.switches[key] === on && history.length === 0 ? state : markStale(next),
+    history,
+  };
 }
 
 let counter = 0;
@@ -369,16 +523,23 @@ export function newId(prefix: string, now: string): string {
 
 /** Parent amount of an elaborable line in dollars (hard/soft lines are dollars; per-unit lines are $/unit/yr; carry lines are $/yr). */
 export function elaborationParentAmount(state: DealState, path: string): number {
-  if (!ELABORABLE_PATHS.includes(path)) throw new StateError('not-elaborable', `${path} cannot be elaborated`);
+  if (!ELABORABLE_PATHS.includes(path))
+    throw new StateError('not-elaborable', `${path} cannot be elaborated`);
   const inputs = toDealInputs(state, 'likely');
   if (path === 'costs.hard.perGrossSF') {
     const program = computeProgram(inputs);
-    return state.elaboration[path]?.length ? sumChildren(state.elaboration[path]!) : inputs.costs.hard.perGrossSF * program.gsfTotal;
+    return state.elaboration[path]?.length
+      ? sumChildren(state.elaboration[path]!)
+      : inputs.costs.hard.perGrossSF * program.gsfTotal;
   }
   if (path === 'costs.soft.pctOfHard') {
     const program = computeProgram(inputs);
-    const hard = state.elaboration['costs.hard.perGrossSF']?.length ? sumChildren(state.elaboration['costs.hard.perGrossSF']!) : inputs.costs.hard.perGrossSF * program.gsfTotal;
-    return state.elaboration[path]?.length ? sumChildren(state.elaboration[path]!) : inputs.costs.soft.pctOfHard * hard;
+    const hard = state.elaboration['costs.hard.perGrossSF']?.length
+      ? sumChildren(state.elaboration['costs.hard.perGrossSF']!)
+      : inputs.costs.hard.perGrossSF * program.gsfTotal;
+    return state.elaboration[path]?.length
+      ? sumChildren(state.elaboration[path]!)
+      : inputs.costs.soft.pctOfHard * hard;
   }
   const rec = state.inputs[path];
   return typeof rec?.value === 'number' ? rec.value : 0;
@@ -391,17 +552,69 @@ export function childUnit(path: string): Unit {
 }
 
 /** Add the first (or another) child; the first child creates an auto-balancing remainder (FR-2.2). */
-export function addChild(state: DealState, path: string, child: { label: string; amount: number; source?: Source; note?: string; distribution?: Distribution }, actor: string, now: string): { state: DealState; history: HistoryRow[] } {
+export function addChild(
+  state: DealState,
+  path: string,
+  child: {
+    label: string;
+    amount: number;
+    source?: Source;
+    note?: string;
+    distribution?: Distribution;
+  },
+  actor: string,
+  now: string,
+): { state: DealState; history: HistoryRow[] } {
   const existing = state.elaboration[path] ?? [];
-  const meta: InputMeta = { source: child.source ?? 'my-number', note: child.note ?? '', updatedAt: now, updatedBy: actor, benchmarkId: null };
-  const newChild: ChildLine = { id: newId('line', now), label: child.label, amount: child.amount, ...meta, ...(child.distribution ? { distribution: child.distribution } : {}) };
-  const history: HistoryRow[] = [{ scenario: 'likely', path: `${path}[${newChild.id}]`, priorValue: null, priorSource: null, priorNote: null, changedBy: actor, changedAt: now }];
+  const meta: InputMeta = {
+    source: child.source ?? 'my-number',
+    note: child.note ?? '',
+    updatedAt: now,
+    updatedBy: actor,
+    benchmarkId: null,
+  };
+  const newChild: ChildLine = {
+    id: newId('line', now),
+    label: child.label,
+    amount: child.amount,
+    ...meta,
+    ...(child.distribution ? { distribution: child.distribution } : {}),
+  };
+  const history: HistoryRow[] = [
+    {
+      scenario: 'likely',
+      path: `${path}[${newChild.id}]`,
+      priorValue: null,
+      priorSource: null,
+      priorNote: null,
+      changedBy: actor,
+      changedAt: now,
+    },
+  ];
   let children: ChildLine[];
   if (existing.length === 0) {
     const parentAmount = elaborationParentAmount(state, path);
-    const remainder: ChildLine = { id: newId('line', now), label: 'Remainder', amount: parentAmount - child.amount, source: 'calculated', note: 'Auto-balancing remainder so the total does not jump; rename, edit or delete it.', updatedAt: now, updatedBy: actor, benchmarkId: null, remainder: true };
+    const remainder: ChildLine = {
+      id: newId('line', now),
+      label: 'Remainder',
+      amount: parentAmount - child.amount,
+      source: 'calculated',
+      note: 'Auto-balancing remainder so the total does not jump; rename, edit or delete it.',
+      updatedAt: now,
+      updatedBy: actor,
+      benchmarkId: null,
+      remainder: true,
+    };
     children = [newChild, remainder];
-    history.push({ scenario: 'likely', path: `${path}[${remainder.id}]`, priorValue: null, priorSource: null, priorNote: null, changedBy: actor, changedAt: now });
+    history.push({
+      scenario: 'likely',
+      path: `${path}[${remainder.id}]`,
+      priorValue: null,
+      priorSource: null,
+      priorNote: null,
+      changedBy: actor,
+      changedAt: now,
+    });
   } else {
     children = [...existing, newChild];
     // Keep an existing remainder balancing while it exists.
@@ -409,20 +622,51 @@ export function addChild(state: DealState, path: string, child: { label: string;
     if (rIdx >= 0) {
       const parentAmount = sumChildren(existing);
       const others = children.filter((c, i) => i !== rIdx).reduce((s, c) => s + c.amount, 0);
-      children[rIdx] = { ...children[rIdx]!, amount: parentAmount - others, updatedAt: now, updatedBy: actor };
+      children[rIdx] = {
+        ...children[rIdx]!,
+        amount: parentAmount - others,
+        updatedAt: now,
+        updatedBy: actor,
+      };
     }
   }
-  return { state: markStale({ ...state, elaboration: { ...state.elaboration, [path]: children } }), history };
+  return {
+    state: markStale({ ...state, elaboration: { ...state.elaboration, [path]: children } }),
+    history,
+  };
 }
 
 /** Replace a child's fields; the remainder (if any) rebalances; deleting the last child restores the parent (FR-2.4). */
-export function updateChild(state: DealState, path: string, id: string, changes: Partial<Pick<ChildLine, 'label' | 'amount' | 'source' | 'note' | 'distribution'>>, actor: string, now: string): { state: DealState; history: HistoryRow[] } {
+export function updateChild(
+  state: DealState,
+  path: string,
+  id: string,
+  changes: Partial<Pick<ChildLine, 'label' | 'amount' | 'source' | 'note' | 'distribution'>>,
+  actor: string,
+  now: string,
+): { state: DealState; history: HistoryRow[] } {
   const children = state.elaboration[path] ?? [];
   const idx = children.findIndex((c) => c.id === id);
   if (idx < 0) throw new StateError('no-child', `no child ${id} under ${path}`);
   const prior = children[idx]!;
-  const history: HistoryRow[] = [{ scenario: 'likely', path: `${path}[${id}]`, priorValue: prior.amount, priorSource: prior.source, priorNote: prior.note, changedBy: actor, changedAt: now }];
-  const updated: ChildLine = { ...prior, ...changes, updatedAt: now, updatedBy: actor, remainder: changes.amount !== undefined && prior.remainder ? false : prior.remainder };
+  const history: HistoryRow[] = [
+    {
+      scenario: 'likely',
+      path: `${path}[${id}]`,
+      priorValue: prior.amount,
+      priorSource: prior.source,
+      priorNote: prior.note,
+      changedBy: actor,
+      changedAt: now,
+    },
+  ];
+  const updated: ChildLine = {
+    ...prior,
+    ...changes,
+    updatedAt: now,
+    updatedBy: actor,
+    remainder: changes.amount !== undefined && prior.remainder ? false : prior.remainder,
+  };
   const next = [...children];
   next[idx] = updated;
   // Rebalance a remaining remainder child so the parent total holds.
@@ -432,15 +676,34 @@ export function updateChild(state: DealState, path: string, id: string, changes:
     const others = next.filter((_, i) => i !== rIdx).reduce((s, c) => s + c.amount, 0);
     next[rIdx] = { ...next[rIdx]!, amount: total - others, updatedAt: now, updatedBy: actor };
   }
-  return { state: markStale({ ...state, elaboration: { ...state.elaboration, [path]: next } }), history };
+  return {
+    state: markStale({ ...state, elaboration: { ...state.elaboration, [path]: next } }),
+    history,
+  };
 }
 
-export function deleteChild(state: DealState, path: string, id: string, actor: string, now: string): { state: DealState; history: HistoryRow[] } {
+export function deleteChild(
+  state: DealState,
+  path: string,
+  id: string,
+  actor: string,
+  now: string,
+): { state: DealState; history: HistoryRow[] } {
   const children = state.elaboration[path] ?? [];
   const prior = children.find((c) => c.id === id);
   if (!prior) throw new StateError('no-child', `no child ${id} under ${path}`);
   const next = children.filter((c) => c.id !== id);
-  const history: HistoryRow[] = [{ scenario: 'likely', path: `${path}[${id}]`, priorValue: prior.amount, priorSource: prior.source, priorNote: prior.note, changedBy: actor, changedAt: now }];
+  const history: HistoryRow[] = [
+    {
+      scenario: 'likely',
+      path: `${path}[${id}]`,
+      priorValue: prior.amount,
+      priorSource: prior.source,
+      priorNote: prior.note,
+      changedBy: actor,
+      changedAt: now,
+    },
+  ];
   const elaboration = { ...state.elaboration };
   let inputs = state.inputs;
   if (next.length === 0) {
@@ -449,8 +712,27 @@ export function deleteChild(state: DealState, path: string, id: string, actor: s
     const total = sumChildren(children);
     const value = parentValueFromAmount(state, path, total);
     const priorRec = state.inputs[path];
-    if (priorRec) history.push({ scenario: 'likely', path, priorValue: priorRec.value, priorSource: priorRec.source, priorNote: priorRec.note, changedBy: actor, changedAt: now });
-    inputs = { ...state.inputs, [path]: { value, source: 'calculated', note: 'Collapsed from elaborated children', updatedAt: now, updatedBy: actor, benchmarkId: priorRec?.benchmarkId ?? null } };
+    if (priorRec)
+      history.push({
+        scenario: 'likely',
+        path,
+        priorValue: priorRec.value,
+        priorSource: priorRec.source,
+        priorNote: priorRec.note,
+        changedBy: actor,
+        changedAt: now,
+      });
+    inputs = {
+      ...state.inputs,
+      [path]: {
+        value,
+        source: 'calculated',
+        note: 'Collapsed from elaborated children',
+        updatedAt: now,
+        updatedBy: actor,
+        benchmarkId: priorRec?.benchmarkId ?? null,
+      },
+    };
   } else elaboration[path] = next;
   return { state: markStale({ ...state, elaboration, inputs }), history };
 }
@@ -463,7 +745,10 @@ function parentValueFromAmount(state: DealState, path: string, amount: number): 
     return gsf > 0 ? amount / gsf : 0;
   }
   if (path === 'costs.soft.pctOfHard') {
-    const hard = elaborationParentAmount({ ...state, elaboration: { ...state.elaboration, [path]: [] } }, 'costs.hard.perGrossSF');
+    const hard = elaborationParentAmount(
+      { ...state, elaboration: { ...state.elaboration, [path]: [] } },
+      'costs.hard.perGrossSF',
+    );
     return hard > 0 ? amount / hard : 0;
   }
   return amount;
@@ -476,7 +761,16 @@ export function elaboratedParentDisplayValue(state: DealState, path: string): nu
   return parentValueFromAmount(state, path, sumChildren(children));
 }
 
-export function upsertEvent(state: DealState, event: Omit<DealEventRecord, keyof InputMeta | 'id'> & { id?: string; source?: Source; note?: string }, actor: string, now: string): { state: DealState; history: HistoryRow[] } {
+export function upsertEvent(
+  state: DealState,
+  event: Omit<DealEventRecord, keyof InputMeta | 'id'> & {
+    id?: string;
+    source?: Source;
+    note?: string;
+  },
+  actor: string,
+  now: string,
+): { state: DealState; history: HistoryRow[] } {
   const id = event.id ?? newId('event', now);
   const prior = state.events.find((e) => e.id === id);
   const record: DealEventRecord = {
@@ -492,21 +786,65 @@ export function upsertEvent(state: DealState, event: Omit<DealEventRecord, keyof
     updatedBy: actor,
     benchmarkId: null,
   };
-  const history: HistoryRow[] = [{ scenario: 'likely', path: `events[${id}]`, priorValue: prior ? { label: prior.label, month: prior.month, amount: prior.amount, kind: prior.kind, category: prior.category } : null, priorSource: prior?.source ?? null, priorNote: prior?.note ?? null, changedBy: actor, changedAt: now }];
-  const events = prior ? state.events.map((e) => (e.id === id ? record : e)) : [...state.events, record];
+  const history: HistoryRow[] = [
+    {
+      scenario: 'likely',
+      path: `events[${id}]`,
+      priorValue: prior
+        ? {
+            label: prior.label,
+            month: prior.month,
+            amount: prior.amount,
+            kind: prior.kind,
+            category: prior.category,
+          }
+        : null,
+      priorSource: prior?.source ?? null,
+      priorNote: prior?.note ?? null,
+      changedBy: actor,
+      changedAt: now,
+    },
+  ];
+  const events = prior
+    ? state.events.map((e) => (e.id === id ? record : e))
+    : [...state.events, record];
   return { state: markStale({ ...state, events }), history };
 }
 
-export function deleteEvent(state: DealState, id: string, actor: string, now: string): { state: DealState; history: HistoryRow[] } {
+export function deleteEvent(
+  state: DealState,
+  id: string,
+  actor: string,
+  now: string,
+): { state: DealState; history: HistoryRow[] } {
   const prior = state.events.find((e) => e.id === id);
   if (!prior) throw new StateError('no-event', `no event ${id}`);
   return {
     state: markStale({ ...state, events: state.events.filter((e) => e.id !== id) }),
-    history: [{ scenario: 'likely', path: `events[${id}]`, priorValue: { label: prior.label, month: prior.month, amount: prior.amount, kind: prior.kind, category: prior.category }, priorSource: prior.source, priorNote: prior.note, changedBy: actor, changedAt: now }],
+    history: [
+      {
+        scenario: 'likely',
+        path: `events[${id}]`,
+        priorValue: {
+          label: prior.label,
+          month: prior.month,
+          amount: prior.amount,
+          kind: prior.kind,
+          category: prior.category,
+        },
+        priorSource: prior.source,
+        priorNote: prior.note,
+        changedBy: actor,
+        changedAt: now,
+      },
+    ],
   };
 }
 
-export function saveSensitivity(state: DealState, entry: Omit<SavedSensitivity, 'id' | 'stale'> & { id?: string }): DealState {
+export function saveSensitivity(
+  state: DealState,
+  entry: Omit<SavedSensitivity, 'id' | 'stale'> & { id?: string },
+): DealState {
   const id = entry.id ?? newId('sens', entry.ranAt);
   const saved: SavedSensitivity = { ...entry, id, stale: false };
   const others = state.sensitivities.filter((s) => s.id !== id);
@@ -518,13 +856,24 @@ export function deleteSensitivity(state: DealState, id: string): DealState {
 }
 
 /** A clone keeps inputs, elaboration, events, switches and scenarios; history is reset by the caller (FR: "cloned from"). */
-export function cloneState(state: DealState, fromDealName: string, actor: string, now: string): DealState {
-  const restamp = <T extends InputMeta>(rec: T): T => ({ ...rec, updatedAt: now, updatedBy: actor, note: rec.note ? `${rec.note} (cloned from ${fromDealName})` : `Cloned from ${fromDealName}` });
+export function cloneState(
+  state: DealState,
+  fromDealName: string,
+  actor: string,
+  now: string,
+): DealState {
+  const restamp = <T extends InputMeta>(rec: T): T => ({
+    ...rec,
+    updatedAt: now,
+    updatedBy: actor,
+    note: rec.note ? `${rec.note} (cloned from ${fromDealName})` : `Cloned from ${fromDealName}`,
+  });
   const inputs: Record<string, InputRecord> = {};
   for (const [p, r] of Object.entries(state.inputs)) inputs[p] = restamp(r);
   const elaboration: Record<string, ChildLine[]> = {};
   for (const [p, cs] of Object.entries(state.elaboration)) elaboration[p] = cs.map(restamp);
-  const scen = (recs: Record<string, InputRecord>) => Object.fromEntries(Object.entries(recs).map(([p, r]) => [p, restamp(r)]));
+  const scen = (recs: Record<string, InputRecord>) =>
+    Object.fromEntries(Object.entries(recs).map(([p, r]) => [p, restamp(r)]));
   return {
     ...state,
     inputs,
@@ -537,9 +886,23 @@ export function cloneState(state: DealState, fromDealName: string, actor: string
 }
 
 /** History rows that record a clone: one per input, "cloned from <deal>" (spec 5). */
-export function cloneHistory(state: DealState, fromDealName: string, actor: string, now: string): HistoryRow[] {
+export function cloneHistory(
+  state: DealState,
+  fromDealName: string,
+  actor: string,
+  now: string,
+): HistoryRow[] {
   const rows: HistoryRow[] = [];
-  for (const [path, rec] of Object.entries(state.inputs)) rows.push({ scenario: 'likely', path, priorValue: rec.value, priorSource: rec.source, priorNote: `cloned from ${fromDealName}`, changedBy: actor, changedAt: now });
+  for (const [path, rec] of Object.entries(state.inputs))
+    rows.push({
+      scenario: 'likely',
+      path,
+      priorValue: rec.value,
+      priorSource: rec.source,
+      priorNote: `cloned from ${fromDealName}`,
+      changedBy: actor,
+      changedAt: now,
+    });
   return rows;
 }
 
@@ -568,8 +931,27 @@ export function parseDealState(raw: unknown): DealState {
     events: s.events ?? [],
     scenarios: { best: s.scenarios?.best ?? {}, worst: s.scenarios?.worst ?? {} },
     sensitivities: s.sensitivities ?? [],
-    packageSettings: { ...DEFAULT_PACKAGE_SETTINGS, ...(s.packageSettings ?? {}), pages: { ...DEFAULT_PACKAGE_SETTINGS.pages, ...(s.packageSettings?.pages ?? {}) } },
+    packageSettings: {
+      ...DEFAULT_PACKAGE_SETTINGS,
+      ...(s.packageSettings ?? {}),
+      pages: { ...DEFAULT_PACKAGE_SETTINGS.pages, ...(s.packageSettings?.pages ?? {}) },
+    },
     assistantTranscript: s.assistantTranscript ?? [],
-    setup: s.setup ?? { constructionType: 'wood-frame', townCluster: null, town: null, address: '', parcel: { lotSF: null, zoningDistrict: null, mbtaCommunitiesDistrict: null, assessedValue: null, annualTax: null, unitsByRight: null, lookupDate: null, notes: [] } },
+    setup: s.setup ?? {
+      constructionType: 'wood-frame',
+      townCluster: null,
+      town: null,
+      address: '',
+      parcel: {
+        lotSF: null,
+        zoningDistrict: null,
+        mbtaCommunitiesDistrict: null,
+        assessedValue: null,
+        annualTax: null,
+        unitsByRight: null,
+        lookupDate: null,
+        notes: [],
+      },
+    },
   };
 }

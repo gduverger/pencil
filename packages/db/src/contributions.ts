@@ -8,7 +8,13 @@
  * seed ranges remain until then.
  */
 import { and, eq, like, sql } from 'drizzle-orm';
-import { contributionMetrics, percentiles, projectSizeOf, segmentForPath, type Segment } from '@pencil/benchmarks';
+import {
+  contributionMetrics,
+  percentiles,
+  projectSizeOf,
+  segmentForPath,
+  type Segment,
+} from '@pencil/benchmarks';
 import { catalogEntry } from '@pencil/engine';
 import type { Db } from './client';
 import * as t from './schema';
@@ -26,15 +32,29 @@ export const MIN_CONTRIBUTIONS = 5;
 export const MIN_ORGANIZATIONS = 3;
 
 /** The anonymized rows for one deal state. Only numeric seed-list metrics with a value are included. */
-export function buildContributions(state: DealState, orgId: string, exportedMonth: string): ContributionRow[] {
+export function buildContributions(
+  state: DealState,
+  orgId: string,
+  exportedMonth: string,
+): ContributionRow[] {
   const units = state.inputs['program.totalUnits']?.value;
-  const base: Segment = { constructionType: state.setup.constructionType, projectSize: projectSizeOf(typeof units === 'number' ? units : 60), ...(state.setup.townCluster ? { townCluster: state.setup.townCluster } : {}) };
+  const base: Segment = {
+    constructionType: state.setup.constructionType,
+    projectSize: projectSizeOf(typeof units === 'number' ? units : 60),
+    ...(state.setup.townCluster ? { townCluster: state.setup.townCluster } : {}),
+  };
   const rows: ContributionRow[] = [];
   for (const metric of contributionMetrics()) {
     const rec = state.inputs[metric];
     const children = state.elaboration[metric];
     let value: unknown = rec?.value;
-    if (children && children.length > 0 && metric !== 'costs.hard.perGrossSF' && metric !== 'costs.soft.pctOfHard') value = children.reduce((s, c) => s + c.amount, 0);
+    if (
+      children &&
+      children.length > 0 &&
+      metric !== 'costs.hard.perGrossSF' &&
+      metric !== 'costs.soft.pctOfHard'
+    )
+      value = children.reduce((s, c) => s + c.amount, 0);
     if (typeof value !== 'number' || !Number.isFinite(value)) continue;
     // Switch-hidden inputs are not contributed.
     if (metric.startsWith('financing.permanent.') && !state.switches.permanent) continue;
@@ -46,7 +66,15 @@ export function buildContributions(state: DealState, orgId: string, exportedMont
 
 export async function recordContributions(db: Db, rows: ContributionRow[]): Promise<number> {
   if (rows.length === 0) return 0;
-  await db.insert(t.contributions).values(rows.map((r) => ({ orgId: r.orgId, metric: r.metric, segment: r.segment, value: r.value, exportedMonth: r.exportedMonth })));
+  await db.insert(t.contributions).values(
+    rows.map((r) => ({
+      orgId: r.orgId,
+      metric: r.metric,
+      segment: r.segment,
+      value: r.value,
+      exportedMonth: r.exportedMonth,
+    })),
+  );
   return rows.length;
 }
 
@@ -59,13 +87,28 @@ function segmentKey(segment: Segment): string {
 export interface RecomputeResult {
   segmentsSeen: number;
   rangesWritten: number;
-  written: Array<{ id: string; metric: string; segment: Segment; low: number; mid: number; high: number; sampleSize: number; organizations: number }>;
+  written: Array<{
+    id: string;
+    metric: string;
+    segment: Segment;
+    low: number;
+    mid: number;
+    high: number;
+    sampleSize: number;
+    organizations: number;
+  }>;
 }
 
 /** The nightly job: aggregate contributions into benchmark rows (`contrib:` ids) per metric and segment. */
-export async function recomputeContributedBenchmarks(db: Db, asOf: string): Promise<RecomputeResult> {
+export async function recomputeContributedBenchmarks(
+  db: Db,
+  asOf: string,
+): Promise<RecomputeResult> {
   const all = await db.select().from(t.contributions);
-  const groups = new Map<string, { metric: string; segment: Segment; values: number[]; orgs: Set<string> }>();
+  const groups = new Map<
+    string,
+    { metric: string; segment: Segment; values: number[]; orgs: Set<string> }
+  >();
   for (const c of all) {
     const segment = (c.segment ?? {}) as Segment;
     const key = `${c.metric}|${segmentKey(segment)}`;
@@ -81,13 +124,45 @@ export async function recomputeContributedBenchmarks(db: Db, asOf: string): Prom
     if (!p) continue;
     const id = `contrib:${key}`;
     const unit = catalogEntry(g.metric)?.unit ?? 'usd';
-    const row = { id, metric: g.metric, segment: g.segment, low: p.p25, mid: p.p50, high: p.p75, unit, asOf, source: `Contributed — ${g.values.length} deals from ${g.orgs.size} organizations`, contributorOrgId: null, sampleSize: g.values.length };
+    const row = {
+      id,
+      metric: g.metric,
+      segment: g.segment,
+      low: p.p25,
+      mid: p.p50,
+      high: p.p75,
+      unit,
+      asOf,
+      source: `Contributed — ${g.values.length} deals from ${g.orgs.size} organizations`,
+      contributorOrgId: null,
+      sampleSize: g.values.length,
+    };
     await db
       .insert(t.benchmarks)
       .values(row)
-      .onConflictDoUpdate({ target: t.benchmarks.id, set: { low: row.low, mid: row.mid, high: row.high, asOf: row.asOf, source: row.source, sampleSize: row.sampleSize, segment: row.segment } });
+      .onConflictDoUpdate({
+        target: t.benchmarks.id,
+        set: {
+          low: row.low,
+          mid: row.mid,
+          high: row.high,
+          asOf: row.asOf,
+          source: row.source,
+          sampleSize: row.sampleSize,
+          segment: row.segment,
+        },
+      });
     result.rangesWritten += 1;
-    result.written.push({ id, metric: g.metric, segment: g.segment, low: p.p25, mid: p.p50, high: p.p75, sampleSize: g.values.length, organizations: g.orgs.size });
+    result.written.push({
+      id,
+      metric: g.metric,
+      segment: g.segment,
+      low: p.p25,
+      mid: p.p50,
+      high: p.p75,
+      sampleSize: g.values.length,
+      organizations: g.orgs.size,
+    });
   }
   return result;
 }

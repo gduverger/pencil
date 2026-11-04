@@ -29,7 +29,11 @@ export function run(raw: unknown): DealOutputs {
       issues,
     );
   }
-  const flags: Flag[] = issues.map((i) => ({ code: i.code, message: i.message, ...(i.path ? { path: i.path } : {}) }));
+  const flags: Flag[] = issues.map((i) => ({
+    code: i.code,
+    message: i.message,
+    ...(i.path ? { path: i.path } : {}),
+  }));
 
   const tl = buildTimeline(inputs);
   const program = computeProgram(inputs);
@@ -50,7 +54,9 @@ export function run(raw: unknown): DealOutputs {
     const f = funding.months[t]!;
     const flow = capital.flow[t]!;
     const shortfall = flow < 0 ? -flow : 0;
-    contributionsGp.push(f.equityCashGp + f.equityInKind + f.deficitContributionGp + shortfall * gpPct);
+    contributionsGp.push(
+      f.equityCashGp + f.equityInKind + f.deficitContributionGp + shortfall * gpPct,
+    );
     contributionsLp.push(f.equityCashLp + f.deficitContributionLp + shortfall * lpPct);
     distributionsPre.push(flow > 0 ? flow : 0);
   }
@@ -81,7 +87,11 @@ export function run(raw: unknown): DealOutputs {
       loanDraw: f.loanDraw,
       landLoanDraw: f.landLoanDraw,
       interest: f.interestConstruction + f.interestLand + f.interestMezz,
-      interestBreakdown: { construction: f.interestConstruction, land: f.interestLand, mezz: f.interestMezz },
+      interestBreakdown: {
+        construction: f.interestConstruction,
+        land: f.interestLand,
+        mezz: f.interestMezz,
+      },
       loanBalance: capital.loanBalance[t]!,
       landLoanBalance: f.landLoanBalance,
       mezzBalance: capital.mezzBalance[t]!,
@@ -94,7 +104,10 @@ export function run(raw: unknown): DealOutputs {
       opex,
       opexTotal: ops.opexTotal[t] ?? 0,
       noi: ops.noi[t] ?? 0,
-      debtService: { interest: capital.debtServiceInterest[t]!, principal: capital.debtServicePrincipal[t]! },
+      debtService: {
+        interest: capital.debtServiceInterest[t]!,
+        principal: capital.debtServicePrincipal[t]!,
+      },
       permBalance: capital.permBalance[t]!,
       refinance: capital.refinanceFlow[t]!,
       saleProceeds: capital.saleFlow[t]!,
@@ -103,30 +116,68 @@ export function run(raw: unknown): DealOutputs {
     });
   }
 
-  const totalContributions = contributionsGp.reduce((a, b) => a + b, 0) + contributionsLp.reduce((a, b) => a + b, 0);
+  const totalContributions =
+    contributionsGp.reduce((a, b) => a + b, 0) + contributionsLp.reduce((a, b) => a + b, 0);
   const totalDistributions = distributionsPre.reduce((a, b) => a + b, 0);
-  const totals = buildTotals(funding, capital.permanentLoan, totalContributions, totalDistributions);
-  const sourcesUses = buildSourcesUses(inputs, cost, funding, totals, program, capital.permanentLoan);
+  const totals = buildTotals(
+    funding,
+    capital.permanentLoan,
+    totalContributions,
+    totalDistributions,
+  );
+  const sourcesUses = buildSourcesUses(
+    inputs,
+    cost,
+    funding,
+    totals,
+    program,
+    capital.permanentLoan,
+  );
   const capitalBudget = buildCapitalBudget(inputs, cost, funding, totals, program);
   const annual = buildAnnual(months);
-  const { metrics, byPartner } = computeMetrics(months, totals, capital.sale, tl, program, inputs.exit.exitCapRatePct);
+  const { metrics, byPartner } = computeMetrics(
+    months,
+    totals,
+    capital.sale,
+    tl,
+    program,
+    inputs.exit.exitCapRatePct,
+  );
 
   if (funding.oscillation) {
-    flags.push({ code: 'fixed-point-oscillation', message: `total project cost settled to within ${Math.round(funding.residual).toLocaleString('en-US')} dollars between two funding schedules that differ by the month of the first mezzanine draw; the closer schedule is shown` });
+    flags.push({
+      code: 'fixed-point-oscillation',
+      message: `total project cost settled to within ${Math.round(funding.residual).toLocaleString('en-US')} dollars between two funding schedules that differ by the month of the first mezzanine draw; the closer schedule is shown`,
+    });
   }
   // Post-run flags (7.9: a negative net to equity is a flag, not an error).
   if (capital.sale.netToEquity < 0) {
-    flags.push({ code: 'negative-net-to-equity', message: `sale proceeds do not cover the debt payoff and selling costs (net ${Math.round(capital.sale.netToEquity).toLocaleString('en-US')})` });
+    flags.push({
+      code: 'negative-net-to-equity',
+      message: `sale proceeds do not cover the debt payoff and selling costs (net ${Math.round(capital.sale.netToEquity).toLocaleString('en-US')})`,
+    });
   }
   if (capital.refinance && capital.refinance.net < 0) {
-    flags.push({ code: 'refinance-shortfall', path: 'financing.permanent', message: `the permanent loan does not repay the construction loan at month ${tl.R}; equity contributes ${Math.round(-capital.refinance.net).toLocaleString('en-US')}` });
+    flags.push({
+      code: 'refinance-shortfall',
+      path: 'financing.permanent',
+      message: `the permanent loan does not repay the construction loan at month ${tl.R}; equity contributes ${Math.round(-capital.refinance.net).toLocaleString('en-US')}`,
+    });
   }
   if (capital.refinance && capital.refinance.loan === 0) {
-    flags.push({ code: 'no-permanent-loan', path: 'financing.permanent', message: 'forward NOI at the refinance month is not positive, so the permanent loan sizes to zero' });
+    flags.push({
+      code: 'no-permanent-loan',
+      path: 'financing.permanent',
+      message:
+        'forward NOI at the refinance month is not positive, so the permanent loan sizes to zero',
+    });
   }
   for (const [k, v] of Object.entries(metrics)) {
     if ((k === 'projectIrr' || k === 'unleveredIrr') && v === null) {
-      flags.push({ code: 'irr-undefined', message: `${k === 'projectIrr' ? 'project' : 'unlevered'} IRR is undefined: the cash-flow series has no sign change or no root` });
+      flags.push({
+        code: 'irr-undefined',
+        message: `${k === 'projectIrr' ? 'project' : 'unlevered'} IRR is undefined: the cash-flow series has no sign change or no root`,
+      });
     }
   }
 
@@ -149,6 +200,11 @@ export function run(raw: unknown): DealOutputs {
     },
     metrics,
     flags,
-    diagnostics: { iterations: funding.iterations, engineVersion: ENGINE_VERSION, residual: funding.residual, convergence: funding.oscillation ? 'oscillation' : 'exact' },
+    diagnostics: {
+      iterations: funding.iterations,
+      engineVersion: ENGINE_VERSION,
+      residual: funding.residual,
+      convergence: funding.oscillation ? 'oscillation' : 'exact',
+    },
   };
 }

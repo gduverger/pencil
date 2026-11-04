@@ -17,7 +17,9 @@ async function signInAndCreate(page: Page, email: string, name: string) {
 }
 
 test.describe('walkthrough steps 7–8', () => {
-  test('results update live, a Worst override shows beside Likely, and a preset sensitivity runs and goes stale', async ({ page }) => {
+  test('results update live, a Worst override shows beside Likely, and a preset sensitivity runs and goes stale', async ({
+    page,
+  }) => {
     await signInAndCreate(page, 'carol@example.com', 'Results e2e');
     await page.getByTestId('tab-results').click();
     await page.waitForURL(/\/results/);
@@ -67,7 +69,9 @@ test.describe('walkthrough steps 7–8', () => {
     await expect(grid).toHaveAttribute('data-stale', '1');
     await expect(page.getByTestId('stale-exitCapXRentGrowth')).toBeVisible();
     await page.getByTestId('rerun-exitCapXRentGrowth').click();
-    await expect(page.getByTestId('grid-exitCapXRentGrowth')).toHaveAttribute('data-stale', '0', { timeout: 30000 });
+    await expect(page.getByTestId('grid-exitCapXRentGrowth')).toHaveAttribute('data-stale', '0', {
+      timeout: 30000,
+    });
     await expect(page.getByTestId('fresh-exitCapXRentGrowth')).toBeVisible();
 
     // Explain-this-number shows the engine trace.

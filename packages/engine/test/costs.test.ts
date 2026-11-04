@@ -91,7 +91,10 @@ describe('7.4 capitalized costs and distributions', () => {
   });
 
   it('places commercial TI at month O when commercial is on', () => {
-    const inputs = fixtureInputs((d) => ({ ...d, program: { ...d.program!, commercial: { enabled: true, grossSF: 4000, tiPerSF: 60 } } }));
+    const inputs = fixtureInputs((d) => ({
+      ...d,
+      program: { ...d.program!, commercial: { enabled: true, grossSF: 4000, tiPerSF: 60 } },
+    }));
     const tl = buildTimeline(inputs);
     const cs = buildCostSchedule(inputs, computeProgram(inputs), tl);
     // 4,000 × 60 = 240,000 at month O = 30
@@ -110,7 +113,11 @@ describe('7.4 capitalized costs and distributions', () => {
           lines: [
             { label: 'Sitework', amount: 2_000_000, distribution: { kind: 'straight' } },
             { label: 'Structure', amount: 10_000_000 },
-            { label: 'Finishes', amount: 6_000_000, distribution: { kind: 'custom', weights: [...new Array(17).fill(0), 1] } },
+            {
+              label: 'Finishes',
+              amount: 6_000_000,
+              distribution: { kind: 'custom', weights: [...new Array(17).fill(0), 1] },
+            },
           ],
         },
       },
@@ -127,7 +134,10 @@ describe('7.4 capitalized costs and distributions', () => {
     expect(hard.children![2]!.monthly[28]).toBe(0);
     // Contingency 10% of 18,000,000 = 1,800,000 following the aggregate profile
     expect(sum(cs.byCategory.hardContingency)).toBeCloseTo(1_800_000, 3);
-    expect(cs.byCategory.hardContingency[29]! / 1_800_000).toBeCloseTo(cs.byCategory.hard[29]! / 18_000_000, 9);
+    expect(cs.byCategory.hardContingency[29]! / 1_800_000).toBeCloseTo(
+      cs.byCategory.hard[29]! / 18_000_000,
+      9,
+    );
   });
 });
 
@@ -136,8 +146,22 @@ describe('7.5 events', () => {
     const inputs = fixtureInputs((d) => ({
       ...d,
       events: [
-        { id: 'relocate', label: 'Relocate historic house', month: 14, amount: 150000, kind: 'cost', category: 'hard' },
-        { id: 'sell-house', label: 'Sell historic house', month: 20, amount: 400000, kind: 'inflow', category: 'inflow' },
+        {
+          id: 'relocate',
+          label: 'Relocate historic house',
+          month: 14,
+          amount: 150000,
+          kind: 'cost',
+          category: 'hard',
+        },
+        {
+          id: 'sell-house',
+          label: 'Sell historic house',
+          month: 20,
+          amount: 400000,
+          kind: 'inflow',
+          category: 'inflow',
+        },
       ],
     }));
     const tl = buildTimeline(inputs);
@@ -162,7 +186,11 @@ describe('7.4 elaborated soft-cost lines', () => {
           predevShare: 0.6,
           lines: [
             { label: 'Architecture', amount: 1_200_000 },
-            { label: 'Permits', amount: 300_000, distribution: { kind: 'custom', weights: [1, ...new Array(29).fill(0)] } },
+            {
+              label: 'Permits',
+              amount: 300_000,
+              distribution: { kind: 'custom', weights: [1, ...new Array(29).fill(0)] },
+            },
           ],
         },
       },
@@ -182,6 +210,11 @@ describe('7.4 elaborated soft-cost lines', () => {
   });
 
   it('rejects a construction window shorter than one month', () => {
-    expect(() => parseInputs({ ...simpleDeal(), timeline: { predevMonths: 6, constructionMonths: 0, leaseUpMonths: 0 } })).toThrow();
+    expect(() =>
+      parseInputs({
+        ...simpleDeal(),
+        timeline: { predevMonths: 6, constructionMonths: 0, leaseUpMonths: 0 },
+      }),
+    ).toThrow();
   });
 });

@@ -23,7 +23,8 @@ export default async function DealsPage() {
       />
       {deals.length === 0 ? (
         <EmptyState title="No deals yet">
-          Start from an address: Pencil looks up the town, fills the twelve inputs from benchmarks and shows a range of returns in under a minute.
+          Start from an address: Pencil looks up the town, fills the twelve inputs from benchmarks
+          and shows a range of returns in under a minute.
         </EmptyState>
       ) : (
         <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
@@ -40,7 +41,10 @@ export default async function DealsPage() {
               {deals.map((d) => (
                 <tr key={d.id} className="border-t border-neutral-100" data-testid="deal-row">
                   <td className="px-4 py-2">
-                    <Link href={`/deals/${d.id}/inputs`} className="font-medium text-neutral-900 hover:underline">
+                    <Link
+                      href={`/deals/${d.id}/inputs`}
+                      className="font-medium text-neutral-900 hover:underline"
+                    >
                       {d.name}
                     </Link>
                     {d.isTemplate ? (
@@ -50,7 +54,9 @@ export default async function DealsPage() {
                     ) : null}
                   </td>
                   <td className="px-4 py-2 text-neutral-600">{d.town ?? '—'}</td>
-                  <td className="px-4 py-2 text-neutral-600">{new Date(d.updatedAt).toLocaleDateString('en-US')}</td>
+                  <td className="px-4 py-2 text-neutral-600">
+                    {new Date(d.updatedAt).toLocaleDateString('en-US')}
+                  </td>
                   <td className="px-4 py-2 text-right">
                     <form
                       action={async () => {
@@ -84,7 +90,11 @@ export default async function DealsPage() {
                 className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white p-2"
               >
                 <span className="text-sm">{t.name}</span>
-                <input name="name" placeholder="New deal name" className="h-8 rounded border border-neutral-300 px-2 text-sm" />
+                <input
+                  name="name"
+                  placeholder="New deal name"
+                  className="h-8 rounded border border-neutral-300 px-2 text-sm"
+                />
                 <Button type="submit" size="sm" variant="secondary">
                   Create
                 </Button>

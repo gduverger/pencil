@@ -9,7 +9,10 @@ export interface ToolDefinition {
   inputSchema: Record<string, unknown>;
 }
 
-export type ContentBlock = { type: 'text'; text: string } | { type: 'tool_use'; id: string; name: string; input: unknown } | { type: 'tool_result'; toolUseId: string; content: string };
+export type ContentBlock =
+  | { type: 'text'; text: string }
+  | { type: 'tool_use'; id: string; name: string; input: unknown }
+  | { type: 'tool_result'; toolUseId: string; content: string };
 
 export interface ProviderMessage {
   role: 'user' | 'assistant';

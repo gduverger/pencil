@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_TIERS, catalogEntry, dealInputsJsonSchema, inputCatalog, parseInputs, starInputs } from '../src/schema';
+import {
+  DEFAULT_TIERS,
+  catalogEntry,
+  dealInputsJsonSchema,
+  inputCatalog,
+  parseInputs,
+  starInputs,
+} from '../src/schema';
 
 describe('7.2 input schema', () => {
   it('applies every default to an empty deal', () => {
@@ -27,7 +34,12 @@ describe('7.2 input schema', () => {
     expect(paths).toContain('costs.hard.perGrossSF');
     expect(paths).toContain('program.unitTypes[1BR].rentPerMonth');
     expect(paths).toContain('financing.permanent.ratePct');
-    expect(catalogEntry('costs.hard.perGrossSF')).toMatchObject({ unit: 'usd_per_sf', star: true, elaborable: true, default: 350 });
+    expect(catalogEntry('costs.hard.perGrossSF')).toMatchObject({
+      unit: 'usd_per_sf',
+      star: true,
+      elaborable: true,
+      default: 350,
+    });
     expect(catalogEntry('operations.opex.insurancePerUnit')?.elaborable).toBe(true);
     expect(catalogEntry('site.landOwned')?.unit).toBe('flag');
     expect(new Set(paths).size).toBe(paths.length);
@@ -57,8 +69,16 @@ describe('7.2 input schema', () => {
   });
 
   it('generates a JSON Schema carrying units, labels and elaborable flags', () => {
-    const js = dealInputsJsonSchema() as { properties: Record<string, { properties: Record<string, unknown> }> };
-    const hard = js.properties.costs!.properties.hard as { properties: Record<string, Record<string, unknown>> };
-    expect(hard.properties.perGrossSF).toMatchObject({ unit: 'usd_per_sf', elaborable: true, default: 350 });
+    const js = dealInputsJsonSchema() as {
+      properties: Record<string, { properties: Record<string, unknown> }>;
+    };
+    const hard = js.properties.costs!.properties.hard as {
+      properties: Record<string, Record<string, unknown>>;
+    };
+    expect(hard.properties.perGrossSF).toMatchObject({
+      unit: 'usd_per_sf',
+      elaborable: true,
+      default: 350,
+    });
   });
 });

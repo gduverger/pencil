@@ -3,7 +3,16 @@
  * engine outputs, sensitivities and package settings with the engine version; files are generated
  * from the Version, never from live state; shares reference one Version and are read-only.
  */
-import { createShare as createShareQuery, createVersion as createVersionQuery, getOrganization, getVersion, listFiles, recordFile, type Db, type DealState } from '@pencil/db';
+import {
+  createShare as createShareQuery,
+  createVersion as createVersionQuery,
+  getOrganization,
+  getVersion,
+  listFiles,
+  recordFile,
+  type Db,
+  type DealState,
+} from '@pencil/db';
 import { scenarioOverrides, toDealInputs } from '@pencil/db/state';
 import { log } from '@/lib/log';
 import { ENGINE_VERSION, runScenarios, type DealOutputs, type ScenarioKey } from '@pencil/engine';
@@ -19,12 +28,31 @@ export function runAllScenarios(state: DealState): Outputs {
   return runScenarios(toDealInputs(state, 'likely'), scenarioOverrides(state));
 }
 
-export async function createVersion(db: Db, args: { orgId: string; dealId: string; userId: string; state: DealState }) {
+export async function createVersion(
+  db: Db,
+  args: { orgId: string; dealId: string; userId: string; state: DealState },
+) {
   const outputs = runAllScenarios(args.state);
-  return createVersionQuery(db, { orgId: args.orgId, dealId: args.dealId, userId: args.userId, snapshot: args.state, outputs, engineVersion: ENGINE_VERSION });
+  return createVersionQuery(db, {
+    orgId: args.orgId,
+    dealId: args.dealId,
+    userId: args.userId,
+    snapshot: args.state,
+    outputs,
+    engineVersion: ENGINE_VERSION,
+  });
 }
 
-export async function versionPackageProps(db: Db, versionId: string): Promise<{ props: PackageProps; dealName: string; orgId: string; scenario: ScenarioKey; versionDate: string }> {
+export async function versionPackageProps(
+  db: Db,
+  versionId: string,
+): Promise<{
+  props: PackageProps;
+  dealName: string;
+  orgId: string;
+  scenario: ScenarioKey;
+  versionDate: string;
+}> {
   const { version, deal } = await getVersion(db, versionId);
   const org = await getOrganization(db, deal.orgId);
   const benchmarks = await loadBenchmarks(db);
@@ -33,11 +61,24 @@ export async function versionPackageProps(db: Db, versionId: string): Promise<{ 
   const props = buildPackageProps({
     state: version.snapshot,
     outputs,
-    version: { dealName: deal.name, versionNumber: version.number, versionDate, engineVersion: version.engineVersion, ...(version.reviewedBy ? { reviewedBy: version.reviewedBy } : {}), ...(org.settings.letterheadName ? { preparedBy: org.settings.letterheadName } : {}) },
+    version: {
+      dealName: deal.name,
+      versionNumber: version.number,
+      versionDate,
+      engineVersion: version.engineVersion,
+      ...(version.reviewedBy ? { reviewedBy: version.reviewedBy } : {}),
+      ...(org.settings.letterheadName ? { preparedBy: org.settings.letterheadName } : {}),
+    },
     org: { name: org.name, settings: org.settings },
     benchmarks,
   });
-  return { props, dealName: deal.name, orgId: deal.orgId, scenario: version.snapshot.packageSettings.scenario, versionDate };
+  return {
+    props,
+    dealName: deal.name,
+    orgId: deal.orgId,
+    scenario: version.snapshot.packageSettings.scenario,
+    versionDate,
+  };
 }
 
 /** The signed URL the renderer fetches (valid for 10 minutes). */
@@ -50,7 +91,10 @@ async function renderPdf(url: string, footerText: string, versionId: string): Pr
   const service = process.env.PENCIL_RENDER_URL;
   if (service) {
     const { renderPdf: viaService } = await import('@pencil/exports');
-    return viaService({ url, footerText, versionId }, { url: service, token: process.env.RENDER_TOKEN });
+    return viaService(
+      { url, footerText, versionId },
+      { url: service, token: process.env.RENDER_TOKEN },
+    );
   }
   // No render service configured (local development, tests): drive Chromium in this process.
   const { urlToPdf } = await import('@pencil/render');
@@ -58,7 +102,10 @@ async function renderPdf(url: string, footerText: string, versionId: string): Pr
 }
 
 /** Generate (or reuse) a Version's file and record it. */
-export async function exportFile(db: Db, args: { versionId: string; kind: 'pdf' | 'xlsx'; baseUrl: string }): Promise<{ fileId: string; name: string; bytes: number; reused: boolean }> {
+export async function exportFile(
+  db: Db,
+  args: { versionId: string; kind: 'pdf' | 'xlsx'; baseUrl: string },
+): Promise<{ fileId: string; name: string; bytes: number; reused: boolean }> {
   const existing = (await listFiles(db, args.versionId)).find((f) => f.kind === args.kind);
   const { props, dealName, scenario, versionDate } = await versionPackageProps(db, args.versionId);
   const name = packageFileName(dealName, scenario, versionDate, args.kind);
@@ -66,14 +113,33 @@ export async function exportFile(db: Db, args: { versionId: string; kind: 'pdf' 
   const started = Date.now();
   let bytes: Buffer;
   if (args.kind === 'pdf') {
-    bytes = await renderPdf(renderUrl(args.baseUrl, args.versionId), `${dealName} · Version ${props.version.versionNumber} · ${versionDate}`, args.versionId);
+    bytes = await renderPdf(
+      renderUrl(args.baseUrl, args.versionId),
+      `${dealName} · Version ${props.version.versionNumber} · ${versionDate}`,
+      args.versionId,
+    );
   } else {
-    bytes = await buildWorkbookBuffer({ outputs: props.outputs, scenario, version: props.version, register: props.register });
+    bytes = await buildWorkbookBuffer({
+      outputs: props.outputs,
+      scenario,
+      version: props.version,
+      register: props.register,
+    });
   }
   const key = `versions/${args.versionId}/${name}`;
   await storage().put(key, bytes, CONTENT_TYPES[args.kind]);
-  const file = await recordFile(db, { versionId: args.versionId, kind: args.kind, storageKey: key, bytes: bytes.length });
-  log.info('export.file', { versionId: args.versionId, kind: args.kind, bytes: bytes.length, ms: Date.now() - started });
+  const file = await recordFile(db, {
+    versionId: args.versionId,
+    kind: args.kind,
+    storageKey: key,
+    bytes: bytes.length,
+  });
+  log.info('export.file', {
+    versionId: args.versionId,
+    kind: args.kind,
+    bytes: bytes.length,
+    ms: Date.now() - started,
+  });
   return { fileId: file.id, name, bytes: bytes.length, reused: false };
 }
 
@@ -83,6 +149,14 @@ export function fileDownloadUrl(fileId: string, name: string, ttlSeconds = 900):
   return `/api/files/${fileId}?t=${encodeURIComponent(token)}&name=${encodeURIComponent(name)}`;
 }
 
-export async function createShare(db: Db, args: { versionId: string; userId: string; expiresAt?: string | null }) {
-  return createShareQuery(db, { versionId: args.versionId, userId: args.userId, token: newShareToken(), expiresAt: args.expiresAt ?? null });
+export async function createShare(
+  db: Db,
+  args: { versionId: string; userId: string; expiresAt?: string | null },
+) {
+  return createShareQuery(db, {
+    versionId: args.versionId,
+    userId: args.userId,
+    token: newShareToken(),
+    expiresAt: args.expiresAt ?? null,
+  });
 }

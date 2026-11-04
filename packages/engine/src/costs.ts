@@ -51,7 +51,12 @@ function emptyByCategory(n: number): Record<CostCategory, number[]> {
 }
 
 /** Spread `amount` over months [start, start + weights.length) into a fresh schedule of length n. */
-export function spread(amount: number, start: number, weights: readonly number[], n: number): number[] {
+export function spread(
+  amount: number,
+  start: number,
+  weights: readonly number[],
+  n: number,
+): number[] {
   const out = zeros(n);
   for (let k = 0; k < weights.length; k++) {
     const t = start + k;
@@ -65,14 +70,24 @@ function addInto(target: number[], source: readonly number[]): void {
 }
 
 /** Normalized monthly profile of a schedule (sums to 1), or straight-line over `fallback` when empty. */
-function profileOf(schedule: readonly number[], fallbackStart: number, fallbackLen: number, n: number): number[] {
+function profileOf(
+  schedule: readonly number[],
+  fallbackStart: number,
+  fallbackLen: number,
+  n: number,
+): number[] {
   const total = schedule.reduce((a, b) => a + b, 0);
   if (total > 0) return schedule.map((x) => x / total);
   return spread(1, fallbackStart, straightWeights(fallbackLen), n);
 }
 
 /** Default soft-cost timing: predevShare straight-line over [0, P), remainder over [P, O). */
-export function softDefaultSchedule(amount: number, predevShare: number, tl: Timeline, n: number): number[] {
+export function softDefaultSchedule(
+  amount: number,
+  predevShare: number,
+  tl: Timeline,
+  n: number,
+): number[] {
   const out = zeros(n);
   const C = tl.O - tl.P;
   if (tl.P === 0) {
@@ -97,12 +112,17 @@ function lineSchedule(
   return fallback(line.amount);
 }
 
-export function buildCostSchedule(inputs: DealInputs, program: ProgramSummary, tl: Timeline): CostSchedule {
+export function buildCostSchedule(
+  inputs: DealInputs,
+  program: ProgramSummary,
+  tl: Timeline,
+): CostSchedule {
   const n = tl.S + 1;
   const byCategory = emptyByCategory(n);
   const lines: ScheduledLine[] = [];
   const C = tl.O - tl.P;
-  if (C < 1) throw new EngineError('bad-timeline', 'construction window must be at least one month');
+  if (C < 1)
+    throw new EngineError('bad-timeline', 'construction window must be at least one month');
 
   const push = (line: ScheduledLine) => {
     lines.push(line);
@@ -111,13 +131,26 @@ export function buildCostSchedule(inputs: DealInputs, program: ProgramSummary, t
 
   // Land and closing at month 0.
   const land = inputs.site.landCost;
-  push({ key: 'land', label: inputs.site.landOwned ? 'Land (owned, contributed in kind)' : 'Land', category: 'land', total: land, monthly: spread(land, 0, [1], n) });
+  push({
+    key: 'land',
+    label: inputs.site.landOwned ? 'Land (owned, contributed in kind)' : 'Land',
+    category: 'land',
+    total: land,
+    monthly: spread(land, 0, [1], n),
+  });
   const closing = land * inputs.site.closingCostPct;
-  push({ key: 'closing', label: 'Land closing costs', category: 'closing', total: closing, monthly: spread(closing, 0, [1], n) });
+  push({
+    key: 'closing',
+    label: 'Land closing costs',
+    category: 'closing',
+    total: closing,
+    monthly: spread(closing, 0, [1], n),
+  });
 
   // Hard cost: perGrossSF × GSF_total, or the sum of elaborated lines; S-curve over [P, O) by default.
   const hardDistribution: Distribution = inputs.costs.hard.distribution;
-  const hardFallback = (amount: number) => spread(amount, tl.P, distributionWeights(hardDistribution, C), n);
+  const hardFallback = (amount: number) =>
+    spread(amount, tl.P, distributionWeights(hardDistribution, C), n);
   let hardLine: ScheduledLine;
   if (inputs.costs.hard.lines && inputs.costs.hard.lines.length > 0) {
     const children = inputs.costs.hard.lines.map((l, i) => ({
@@ -129,10 +162,23 @@ export function buildCostSchedule(inputs: DealInputs, program: ProgramSummary, t
     }));
     const monthly = zeros(n);
     for (const c of children) addInto(monthly, c.monthly);
-    hardLine = { key: 'hard', label: 'Hard cost', category: 'hard', total: children.reduce((s, c) => s + c.total, 0), monthly, children };
+    hardLine = {
+      key: 'hard',
+      label: 'Hard cost',
+      category: 'hard',
+      total: children.reduce((s, c) => s + c.total, 0),
+      monthly,
+      children,
+    };
   } else {
     const H = inputs.costs.hard.perGrossSF * program.gsfTotal;
-    hardLine = { key: 'hard', label: 'Hard cost', category: 'hard', total: H, monthly: hardFallback(H) };
+    hardLine = {
+      key: 'hard',
+      label: 'Hard cost',
+      category: 'hard',
+      total: H,
+      monthly: hardFallback(H),
+    };
   }
   push(hardLine);
   const H = hardLine.total;
@@ -140,10 +186,17 @@ export function buildCostSchedule(inputs: DealInputs, program: ProgramSummary, t
   // Hard contingency follows the aggregate hard-cost curve.
   const hardContingency = H * inputs.costs.hard.contingencyPct;
   const hardProfile = profileOf(hardLine.monthly, tl.P, C, n);
-  push({ key: 'hardContingency', label: 'Hard cost contingency', category: 'hardContingency', total: hardContingency, monthly: hardProfile.map((w) => w * hardContingency) });
+  push({
+    key: 'hardContingency',
+    label: 'Hard cost contingency',
+    category: 'hardContingency',
+    total: hardContingency,
+    monthly: hardProfile.map((w) => w * hardContingency),
+  });
 
   // Soft cost: H × pctOfHard, or elaborated lines; predevShare over [0, P), remainder over [P, O).
-  const softFallback = (amount: number) => softDefaultSchedule(amount, inputs.costs.soft.predevShare, tl, n);
+  const softFallback = (amount: number) =>
+    softDefaultSchedule(amount, inputs.costs.soft.predevShare, tl, n);
   let softLine: ScheduledLine;
   if (inputs.costs.soft.lines && inputs.costs.soft.lines.length > 0) {
     const children = inputs.costs.soft.lines.map((l, i) => ({
@@ -156,36 +209,79 @@ export function buildCostSchedule(inputs: DealInputs, program: ProgramSummary, t
     }));
     const monthly = zeros(n);
     for (const c of children) addInto(monthly, c.monthly);
-    softLine = { key: 'soft', label: 'Soft cost', category: 'soft', total: children.reduce((s, c) => s + c.total, 0), monthly, children };
+    softLine = {
+      key: 'soft',
+      label: 'Soft cost',
+      category: 'soft',
+      total: children.reduce((s, c) => s + c.total, 0),
+      monthly,
+      children,
+    };
   } else {
     const SC = H * inputs.costs.soft.pctOfHard;
-    softLine = { key: 'soft', label: 'Soft cost', category: 'soft', total: SC, monthly: softFallback(SC) };
+    softLine = {
+      key: 'soft',
+      label: 'Soft cost',
+      category: 'soft',
+      total: SC,
+      monthly: softFallback(SC),
+    };
   }
   push(softLine);
   const SC = softLine.total;
 
   const softContingency = SC * inputs.costs.soft.contingencyPct;
   const softProfile = profileOf(softLine.monthly, 0, tl.O, n);
-  push({ key: 'softContingency', label: 'Soft cost contingency', category: 'softContingency', total: softContingency, monthly: softProfile.map((w) => w * softContingency) });
+  push({
+    key: 'softContingency',
+    label: 'Soft cost contingency',
+    category: 'softContingency',
+    total: softContingency,
+    monthly: softProfile.map((w) => w * softContingency),
+  });
 
   // Carry: taxes each month in [0, O); insurance each month in [P, O).
   const taxesMonthly = inputs.costs.carry.taxesDuringConstructionAnnual / 12;
   const taxes = zeros(n);
   for (let t = 0; t < tl.O && t < n; t++) taxes[t] = taxesMonthly;
-  push({ key: 'carryTaxes', label: 'Property taxes during development', category: 'carryTaxes', total: taxes.reduce((a, b) => a + b, 0), monthly: taxes });
+  push({
+    key: 'carryTaxes',
+    label: 'Property taxes during development',
+    category: 'carryTaxes',
+    total: taxes.reduce((a, b) => a + b, 0),
+    monthly: taxes,
+  });
   const insuranceMonthly = inputs.costs.carry.insuranceDuringConstructionAnnual / 12;
   const insurance = zeros(n);
   for (let t = tl.P; t < tl.O && t < n; t++) insurance[t] = insuranceMonthly;
-  push({ key: 'carryInsurance', label: "Builder's risk insurance", category: 'carryInsurance', total: insurance.reduce((a, b) => a + b, 0), monthly: insurance });
+  push({
+    key: 'carryInsurance',
+    label: "Builder's risk insurance",
+    category: 'carryInsurance',
+    total: insurance.reduce((a, b) => a + b, 0),
+    monthly: insurance,
+  });
 
   // Developer fee: (H + SC) × pct, straight-line over [0, O).
   const devFee = (H + SC) * inputs.costs.developerFeePct;
-  push({ key: 'developerFee', label: 'Developer fee', category: 'developerFee', total: devFee, monthly: spread(devFee, 0, straightWeights(tl.O), n) });
+  push({
+    key: 'developerFee',
+    label: 'Developer fee',
+    category: 'developerFee',
+    total: devFee,
+    monthly: spread(devFee, 0, straightWeights(tl.O), n),
+  });
 
   // Commercial tenant improvements at month O.
   if (inputs.program.commercial.enabled) {
     const ti = inputs.program.commercial.grossSF * inputs.program.commercial.tiPerSF;
-    push({ key: 'commercialTI', label: 'Commercial tenant improvements', category: 'commercialTI', total: ti, monthly: spread(ti, tl.O, [1], n) });
+    push({
+      key: 'commercialTI',
+      label: 'Commercial tenant improvements',
+      category: 'commercialTI',
+      total: ti,
+      monthly: spread(ti, tl.O, [1], n),
+    });
   }
 
   // Events.
@@ -193,11 +289,23 @@ export function buildCostSchedule(inputs: DealInputs, program: ProgramSummary, t
   const inflowLines: ScheduledLine[] = [];
   for (const ev of inputs.events) {
     if (ev.kind === 'cost') {
-      push({ key: `event:${ev.id}`, label: ev.label, category: 'events', total: ev.amount, monthly: spread(ev.amount, ev.month, [1], n) });
+      push({
+        key: `event:${ev.id}`,
+        label: ev.label,
+        category: 'events',
+        total: ev.amount,
+        monthly: spread(ev.amount, ev.month, [1], n),
+      });
     } else {
       const monthly = spread(ev.amount, ev.month, [1], n);
       addInto(inflows, monthly);
-      inflowLines.push({ key: `event:${ev.id}`, label: ev.label, category: 'events', total: ev.amount, monthly });
+      inflowLines.push({
+        key: `event:${ev.id}`,
+        label: ev.label,
+        category: 'events',
+        total: ev.amount,
+        monthly,
+      });
     }
   }
 

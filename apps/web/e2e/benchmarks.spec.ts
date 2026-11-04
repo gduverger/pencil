@@ -9,7 +9,9 @@ async function signIn(page: Page, email: string) {
   await page.waitForURL(/\/deals/);
 }
 
-test('a Needham deal resolves inner-suburbs, defaults from the seeded benchmark, and flags an out-of-range hard cost', async ({ page }) => {
+test('a Needham deal resolves inner-suburbs, defaults from the seeded benchmark, and flags an out-of-range hard cost', async ({
+  page,
+}) => {
   await signIn(page, 'erin@example.com');
   await page.getByTestId('new-deal').click();
   await page.getByTestId('address').fill('55 Chapel Street, Needham, MA');
@@ -22,8 +24,12 @@ test('a Needham deal resolves inner-suburbs, defaults from the seeded benchmark,
   await page.getByTestId('tab-setup').click();
   await expect(page.getByText('inner-suburbs')).toBeVisible();
   await page.getByTestId('tab-inputs').click();
-  await expect(page.getByTestId('source-operations.opex.taxesStabilizedAnnual')).toHaveValue('parcel-data');
-  await expect(page.getByTestId('note-operations.opex.taxesStabilizedAnnual')).toHaveValue(/Needham residential rate/);
+  await expect(page.getByTestId('source-operations.opex.taxesStabilizedAnnual')).toHaveValue(
+    'parcel-data',
+  );
+  await expect(page.getByTestId('note-operations.opex.taxesStabilizedAnnual')).toHaveValue(
+    /Needham residential rate/,
+  );
 
   // The seeded benchmark (inner-suburbs, wood-frame hard cost 280–360) defaulted the input to its mid with source benchmark.
   await expect(page.getByTestId('value-costs.hard.perGrossSF')).toHaveValue('320');
@@ -42,11 +48,17 @@ test('a Needham deal resolves inner-suburbs, defaults from the seeded benchmark,
   // The flag reaches the package: the register names the range and the returns page counts it.
   await page.getByTestId('tab-package').click();
   const preview = page.getByTestId('package-preview');
-  await expect(preview.locator('[data-page="assumptions"]')).toContainText('above the $280.00–$360.00 range');
-  await expect(preview.locator('[data-page="returns"]')).toContainText('Inputs outside their benchmark range: 1');
+  await expect(preview.locator('[data-page="assumptions"]')).toContainText(
+    'above the $280.00–$360.00 range',
+  );
+  await expect(preview.locator('[data-page="returns"]')).toContainText(
+    'Inputs outside their benchmark range: 1',
+  );
 });
 
-test('the nightly job endpoint requires the secret and reports what it wrote', async ({ request }) => {
+test('the nightly job endpoint requires the secret and reports what it wrote', async ({
+  request,
+}) => {
   const unauthorized = await request.post('/api/jobs/benchmarks');
   expect(unauthorized.status()).toBe(401);
   const ok = await request.post('/api/jobs/benchmarks?token=e2e-secret');

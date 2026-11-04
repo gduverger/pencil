@@ -57,7 +57,10 @@ const pct = (def: number, meta: Omit<InputMeta, 'unit'> & { unit?: Unit }) =>
     .default(def)
     .meta({ unit: 'pct', ...meta });
 const bool = (def: boolean, meta: Omit<InputMeta, 'unit'>) =>
-  z.boolean().default(def).meta({ unit: 'flag', ...meta });
+  z
+    .boolean()
+    .default(def)
+    .meta({ unit: 'flag', ...meta });
 
 export const DistributionSchema = z
   .discriminatedUnion('kind', [
@@ -134,12 +137,16 @@ export const DealInputsSchema = z
           .regex(/^\d{4}-\d{2}$/)
           .default('2026-01')
           .meta({ label: 'Analysis month (YYYY-MM)', unit: 'text' }),
-        holdMonths: num(120, {
-          label: 'Hold period',
-          unit: 'months',
-          star: true,
-          help: 'Months from the analysis month to the sale.',
-        }, (s) => s.int().min(1)),
+        holdMonths: num(
+          120,
+          {
+            label: 'Hold period',
+            unit: 'months',
+            star: true,
+            help: 'Months from the analysis month to the sale.',
+          },
+          (s) => s.int().min(1),
+        ),
       })
       .prefault({}),
     site: z
@@ -173,10 +180,8 @@ export const DealInputsSchema = z
           s.int().min(1),
         ),
         unitTypes: z.array(UnitTypeSchema).default(DEFAULT_UNIT_TYPES),
-        efficiency: num(
-          0.85,
-          { label: 'Efficiency (net rentable / gross)', unit: 'pct' },
-          (s) => s.gt(0).max(1),
+        efficiency: num(0.85, { label: 'Efficiency (net rentable / gross)', unit: 'pct' }, (s) =>
+          s.gt(0).max(1),
         ),
         otherIncomePerUnitMonth: num(
           75,
@@ -194,8 +199,10 @@ export const DealInputsSchema = z
           .object({
             enabled: bool(false, { label: 'Ground-floor commercial space' }),
             grossSF: num(0, { label: 'Commercial gross SF', unit: 'sf' }, (s) => s.min(0)),
-            rentPerSFYear: num(30, { label: 'Commercial rent ($/SF/yr)', unit: 'usd_per_sf' }, (s) =>
-              s.min(0),
+            rentPerSFYear: num(
+              30,
+              { label: 'Commercial rent ($/SF/yr)', unit: 'usd_per_sf' },
+              (s) => s.min(0),
             ),
             vacancyPct: pct(0.1, { label: 'Commercial vacancy' }),
             tiPerSF: num(50, { label: 'Tenant improvements ($/SF)', unit: 'usd_per_sf' }, (s) =>
@@ -254,7 +261,11 @@ export const DealInputsSchema = z
           .object({
             taxesDuringConstructionAnnual: num(
               0,
-              { label: 'Property taxes during development (annual)', unit: 'usd', elaborable: true },
+              {
+                label: 'Property taxes during development (annual)',
+                unit: 'usd',
+                elaborable: true,
+              },
               (s) => s.min(0),
             ),
             insuranceDuringConstructionAnnual: num(
@@ -273,8 +284,10 @@ export const DealInputsSchema = z
         constructionLoan: z
           .object({
             ltc: pct(0.65, { label: 'Construction loan-to-cost', star: true }),
-            ratePct: num(0.08, { label: 'Construction loan rate', unit: 'rate_pct', star: true }, (s) =>
-              s.min(0),
+            ratePct: num(
+              0.08,
+              { label: 'Construction loan rate', unit: 'rate_pct', star: true },
+              (s) => s.min(0),
             ),
             feePct: pct(0.01, { label: 'Construction loan fee' }),
           })
@@ -293,7 +306,10 @@ export const DealInputsSchema = z
             pctOfCost: pct(0.1, { label: 'Mezzanine (% of total cost)' }),
             ratePct: num(0.12, { label: 'Mezzanine rate', unit: 'rate_pct' }, (s) => s.min(0)),
             feePct: pct(0.01, { label: 'Mezzanine fee' }),
-            repaidAt: z.enum(['refi', 'sale']).default('refi').meta({ label: 'Mezzanine repaid at', unit: 'text' }),
+            repaidAt: z
+              .enum(['refi', 'sale'])
+              .default('refi')
+              .meta({ label: 'Mezzanine repaid at', unit: 'text' }),
           })
           .prefault({}),
         permanent: z
@@ -306,13 +322,17 @@ export const DealInputsSchema = z
             ),
             maxLTV: pct(0.65, { label: 'Maximum loan-to-value' }),
             minDSCR: num(1.25, { label: 'Minimum DSCR', unit: 'count' }, (s) => s.gt(0)),
-            ratePct: num(0.06, { label: 'Permanent loan rate', unit: 'rate_pct', star: true }, (s) =>
-              s.min(0),
+            ratePct: num(
+              0.06,
+              { label: 'Permanent loan rate', unit: 'rate_pct', star: true },
+              (s) => s.min(0),
             ),
             amortYears: num(30, { label: 'Amortization (years)', unit: 'count', star: true }, (s) =>
               s.int().min(1),
             ),
-            ioMonths: num(0, { label: 'Interest-only months', unit: 'months' }, (s) => s.int().min(0)),
+            ioMonths: num(0, { label: 'Interest-only months', unit: 'months' }, (s) =>
+              s.int().min(0),
+            ),
             feePct: pct(0.01, { label: 'Permanent loan fee' }),
             refiCapRatePct: num(0.055, { label: 'Refinance cap rate', unit: 'rate_pct' }, (s) =>
               s.gt(0),
@@ -331,7 +351,10 @@ export const DealInputsSchema = z
         creditLossPct: pct(0.005, { label: 'Credit loss' }),
         rentGrowthPct: num(0.03, { label: 'Rent growth (annual)', unit: 'rate_pct' }),
         expenseGrowthPct: num(0.03, { label: 'Expense growth (annual)', unit: 'rate_pct' }),
-        otherIncomeGrowthPct: num(0.03, { label: 'Other income growth (annual)', unit: 'rate_pct' }),
+        otherIncomeGrowthPct: num(0.03, {
+          label: 'Other income growth (annual)',
+          unit: 'rate_pct',
+        }),
         absorption: z
           .discriminatedUnion('kind', [
             z.object({ kind: z.literal('linear') }),
@@ -342,16 +365,54 @@ export const DealInputsSchema = z
           .object({
             taxesStabilizedAnnual: num(
               180000,
-              { label: 'Property taxes, stabilized (annual)', unit: 'usd', star: true, elaborable: true },
+              {
+                label: 'Property taxes, stabilized (annual)',
+                unit: 'usd',
+                star: true,
+                elaborable: true,
+              },
               (s) => s.min(0),
             ),
-            insurancePerUnit: num(600, { label: 'Insurance', unit: 'usd_per_unit', star: true, elaborable: true }, (s) => s.min(0)),
-            repairsPerUnit: num(500, { label: 'Repairs and maintenance', unit: 'usd_per_unit', star: true, elaborable: true }, (s) => s.min(0)),
-            payrollPerUnit: num(1200, { label: 'Payroll', unit: 'usd_per_unit', star: true, elaborable: true }, (s) => s.min(0)),
-            utilitiesPerUnit: num(500, { label: 'Utilities', unit: 'usd_per_unit', star: true, elaborable: true }, (s) => s.min(0)),
-            adminPerUnit: num(300, { label: 'Administrative', unit: 'usd_per_unit', star: true, elaborable: true }, (s) => s.min(0)),
-            marketingPerUnit: num(200, { label: 'Marketing', unit: 'usd_per_unit', star: true, elaborable: true }, (s) => s.min(0)),
-            reservesPerUnit: num(300, { label: 'Replacement reserves', unit: 'usd_per_unit', star: true, elaborable: true }, (s) => s.min(0)),
+            insurancePerUnit: num(
+              600,
+              { label: 'Insurance', unit: 'usd_per_unit', star: true, elaborable: true },
+              (s) => s.min(0),
+            ),
+            repairsPerUnit: num(
+              500,
+              {
+                label: 'Repairs and maintenance',
+                unit: 'usd_per_unit',
+                star: true,
+                elaborable: true,
+              },
+              (s) => s.min(0),
+            ),
+            payrollPerUnit: num(
+              1200,
+              { label: 'Payroll', unit: 'usd_per_unit', star: true, elaborable: true },
+              (s) => s.min(0),
+            ),
+            utilitiesPerUnit: num(
+              500,
+              { label: 'Utilities', unit: 'usd_per_unit', star: true, elaborable: true },
+              (s) => s.min(0),
+            ),
+            adminPerUnit: num(
+              300,
+              { label: 'Administrative', unit: 'usd_per_unit', star: true, elaborable: true },
+              (s) => s.min(0),
+            ),
+            marketingPerUnit: num(
+              200,
+              { label: 'Marketing', unit: 'usd_per_unit', star: true, elaborable: true },
+              (s) => s.min(0),
+            ),
+            reservesPerUnit: num(
+              300,
+              { label: 'Replacement reserves', unit: 'usd_per_unit', star: true, elaborable: true },
+              (s) => s.min(0),
+            ),
             managementPctEGI: pct(0.03, { label: 'Management (% of EGI)', star: true }),
           })
           .prefault({}),
@@ -403,9 +464,17 @@ export interface CatalogEntry {
   section: string;
 }
 
-type AnyZod = { _zod: { def: Record<string, unknown> }; meta?: () => Record<string, unknown> | undefined };
+type AnyZod = {
+  _zod: { def: Record<string, unknown> };
+  meta?: () => Record<string, unknown> | undefined;
+};
 
-function unwrap(schema: AnyZod): { inner: AnyZod; def: Record<string, unknown>; meta: Record<string, unknown>; defaultValue: unknown } {
+function unwrap(schema: AnyZod): {
+  inner: AnyZod;
+  def: Record<string, unknown>;
+  meta: Record<string, unknown>;
+  defaultValue: unknown;
+} {
   let current = schema;
   let meta: Record<string, unknown> = {};
   let defaultValue: unknown = undefined;

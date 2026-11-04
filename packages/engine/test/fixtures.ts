@@ -25,7 +25,16 @@ export function fixtureDeal(): DealInputsInput {
     },
     financing: {
       constructionLoan: { ltc: 0.65, ratePct: 0.08, feePct: 0.01 },
-      permanent: { enabled: true, maxLTV: 0.65, minDSCR: 1.25, ratePct: 0.06, amortYears: 30, ioMonths: 0, feePct: 0.01, refiCapRatePct: 0.055 },
+      permanent: {
+        enabled: true,
+        maxLTV: 0.65,
+        minDSCR: 1.25,
+        ratePct: 0.06,
+        amortYears: 30,
+        ioMonths: 0,
+        feePct: 0.01,
+        refiCapRatePct: 0.055,
+      },
     },
     operations: {
       stabilizedVacancyPct: 0.05,
@@ -50,7 +59,9 @@ export function fixtureDeal(): DealInputsInput {
   };
 }
 
-export function fixtureInputs(overrides: (d: DealInputsInput) => DealInputsInput = (d) => d): DealInputs {
+export function fixtureInputs(
+  overrides: (d: DealInputsInput) => DealInputsInput = (d) => d,
+): DealInputs {
   return parseInputs(overrides(fixtureDeal()));
 }
 

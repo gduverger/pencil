@@ -6,3 +6,4 @@ coverage
 pnpm-lock.yaml
 docs/SPEC.md
 *.md
+packages/db/src/migrations.generated.ts

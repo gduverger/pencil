@@ -1,7 +1,10 @@
 {
   "model": "bethany-home",
   "file": "915 E Bethany Home Rd BOE 20211116v03 PPM Version.xlsm",
-  "notes": ["Mark's own multifamily development model; first and tightest tolerance.", "Cell addresses are TBD until the workbook is available in reference/."],
+  "notes": [
+    "Mark's own multifamily development model; first and tightest tolerance.",
+    "Cell addresses are TBD until the workbook is available in reference/."
+  ],
   "inputs": {
     "totalUnits": "TBD",
     "landCost": "TBD",

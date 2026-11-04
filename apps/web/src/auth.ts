@@ -8,7 +8,11 @@ import { authConfig } from './auth.config';
 import { getDb } from './lib/db';
 
 /** True when the development sign-in (email only, no password) is enabled: local dev and e2e. */
-export const devAuthEnabled = process.env.PENCIL_DEV_AUTH === '1' || (process.env.NODE_ENV !== 'production' && !process.env.EMAIL_SERVER && !process.env.AUTH_GOOGLE_ID);
+export const devAuthEnabled =
+  process.env.PENCIL_DEV_AUTH === '1' ||
+  (process.env.NODE_ENV !== 'production' &&
+    !process.env.EMAIL_SERVER &&
+    !process.env.AUTH_GOOGLE_ID);
 
 export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
   const db = await getDb();
@@ -17,7 +21,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
     providers.push(Nodemailer({ server: process.env.EMAIL_SERVER, from: process.env.EMAIL_FROM }));
   }
   if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
-    providers.push(Google({ clientId: process.env.AUTH_GOOGLE_ID, clientSecret: process.env.AUTH_GOOGLE_SECRET }));
+    providers.push(
+      Google({
+        clientId: process.env.AUTH_GOOGLE_ID,
+        clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      }),
+    );
   }
   if (devAuthEnabled) {
     providers.push(
@@ -26,7 +35,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
         name: 'Development sign-in',
         credentials: { email: { label: 'Email', type: 'email' } },
         async authorize(credentials) {
-          const email = typeof credentials?.email === 'string' ? credentials.email.trim().toLowerCase() : '';
+          const email =
+            typeof credentials?.email === 'string' ? credentials.email.trim().toLowerCase() : '';
           if (!email || !email.includes('@')) return null;
           const user = await upsertUser(db, { email, name: email.split('@')[0] });
           return { id: user.id, email: user.email, name: user.name };
@@ -46,4 +56,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth(async () => {
   };
 });
 
-type NextAuthConfig = Parameters<typeof NextAuth>[0] extends infer C ? (C extends (...args: never[]) => unknown ? Awaited<ReturnType<C>> : C) : never;
+type NextAuthConfig = Parameters<typeof NextAuth>[0] extends infer C
+  ? C extends (...args: never[]) => unknown
+    ? Awaited<ReturnType<C>>
+    : C
+  : never;

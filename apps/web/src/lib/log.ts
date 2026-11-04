@@ -15,7 +15,10 @@ export const log = {
   info: (event: string, fields: Fields = {}) => emit('info', event, fields),
   warn: (event: string, fields: Fields = {}) => emit('warn', event, fields),
   error: (event: string, error: unknown, fields: Fields = {}) => {
-    emit('error', event, { ...fields, message: error instanceof Error ? error.message : String(error) });
+    emit('error', event, {
+      ...fields,
+      message: error instanceof Error ? error.message : String(error),
+    });
     if (process.env.SENTRY_DSN) {
       void import('@sentry/nextjs')
         .then((Sentry) => Sentry.captureException(error, { extra: { event, ...fields } }))

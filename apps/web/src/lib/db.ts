@@ -17,15 +17,40 @@ declare global {
 async function seed(db: Db) {
   await seedTowns(
     db,
-    towns().map((t) => ({ town: t.town, cluster: t.cluster, residentialTaxRate: t.residentialTaxRate, assessorUrl: t.assessorUrl, mbtaStatus: t.mbtaStatus })),
+    towns().map((t) => ({
+      town: t.town,
+      cluster: t.cluster,
+      residentialTaxRate: t.residentialTaxRate,
+      assessorUrl: t.assessorUrl,
+      mbtaStatus: t.mbtaStatus,
+    })),
   );
   try {
     const here = dirname(fileURLToPath(import.meta.url));
-    const candidates = [process.env.PENCIL_BENCHMARK_SEED, join(process.cwd(), '..', '..', 'packages', 'benchmarks', 'seed', 'benchmarks.csv'), join(here, '..', '..', '..', '..', 'packages', 'benchmarks', 'seed', 'benchmarks.csv')].filter((p): p is string => Boolean(p));
+    const candidates = [
+      process.env.PENCIL_BENCHMARK_SEED,
+      join(process.cwd(), '..', '..', 'packages', 'benchmarks', 'seed', 'benchmarks.csv'),
+      join(here, '..', '..', '..', '..', 'packages', 'benchmarks', 'seed', 'benchmarks.csv'),
+    ].filter((p): p is string => Boolean(p));
     for (const path of candidates) {
       try {
         const rows = loadBenchmarksCsv(readFileSync(path, 'utf8'));
-        await seedBenchmarks(db, rows.map((b) => ({ id: b.id, metric: b.metric, segment: b.segment, low: b.low, mid: b.mid, high: b.high, unit: b.unit, asOf: b.asOf, source: b.source, contributorOrgId: null, sampleSize: b.sampleSize })));
+        await seedBenchmarks(
+          db,
+          rows.map((b) => ({
+            id: b.id,
+            metric: b.metric,
+            segment: b.segment,
+            low: b.low,
+            mid: b.mid,
+            high: b.high,
+            unit: b.unit,
+            asOf: b.asOf,
+            source: b.source,
+            contributorOrgId: null,
+            sampleSize: b.sampleSize,
+          })),
+        );
         break;
       } catch {
         /* try the next candidate */
@@ -34,7 +59,22 @@ async function seed(db: Db) {
     // An extra CSV of filled rows (local demos, end-to-end tests): PENCIL_SEED_BENCHMARKS=<path>.
     if (process.env.PENCIL_SEED_BENCHMARKS) {
       const rows = loadBenchmarksCsv(readFileSync(process.env.PENCIL_SEED_BENCHMARKS, 'utf8'));
-      await seedBenchmarks(db, rows.map((b) => ({ id: `extra-${b.id}`, metric: b.metric, segment: b.segment, low: b.low, mid: b.mid, high: b.high, unit: b.unit, asOf: b.asOf, source: b.source, contributorOrgId: null, sampleSize: b.sampleSize })));
+      await seedBenchmarks(
+        db,
+        rows.map((b) => ({
+          id: `extra-${b.id}`,
+          metric: b.metric,
+          segment: b.segment,
+          low: b.low,
+          mid: b.mid,
+          high: b.high,
+          unit: b.unit,
+          asOf: b.asOf,
+          source: b.source,
+          contributorOrgId: null,
+          sampleSize: b.sampleSize,
+        })),
+      );
     }
   } catch {
     /* seed is optional */

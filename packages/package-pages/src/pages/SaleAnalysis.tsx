@@ -71,10 +71,22 @@ export function SaleAnalysisPage({ props }: { props: PackageProps }) {
                   </tr>
                   <tr>
                     <td className="label">Fee and payoff of construction debt</td>
-                    <td className="num">{formatUsd(-(o.refinance.fee + o.refinance.constructionPayoff + o.refinance.mezzPayoff))}</td>
+                    <td className="num">
+                      {formatUsd(
+                        -(
+                          o.refinance.fee +
+                          o.refinance.constructionPayoff +
+                          o.refinance.mezzPayoff
+                        ),
+                      )}
+                    </td>
                   </tr>
                   <tr className="total">
-                    <td>{o.refinance.net >= 0 ? 'Net proceeds to equity' : 'Shortfall funded by equity'}</td>
+                    <td>
+                      {o.refinance.net >= 0
+                        ? 'Net proceeds to equity'
+                        : 'Shortfall funded by equity'}
+                    </td>
                     <td className="num">{formatUsd(o.refinance.net)}</td>
                   </tr>
                 </tbody>

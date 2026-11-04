@@ -15,7 +15,9 @@ async function signIn(page: Page, email: string) {
 }
 
 test.describe('walkthrough steps 1–6', () => {
-  test('from a Needham address to elaborated inputs with history and switches', async ({ page }) => {
+  test('from a Needham address to elaborated inputs with history and switches', async ({
+    page,
+  }) => {
     await signIn(page, 'alice@example.com');
 
     // Step 1: new from address. The town resolves; parcel facts are unknown in this environment.
@@ -39,7 +41,9 @@ test.describe('walkthrough steps 1–6', () => {
     await expect(page.getByTestId('value-costs.hard.perGrossSF')).toHaveValue('320'); // the seeded benchmark mid (e2e fixture); schema default 350 otherwise
     await expect(page.getByTestId('value-site.landCost')).toHaveValue('3000000');
     await expect(page.getByTestId('row-operations.opex.taxesStabilizedAnnual')).toBeVisible();
-    await expect(page.getByTestId('source-operations.opex.taxesStabilizedAnnual')).toHaveValue('parcel-data');
+    await expect(page.getByTestId('source-operations.opex.taxesStabilizedAnnual')).toHaveValue(
+      'parcel-data',
+    );
 
     // Change two inputs with notes.
     await page.getByTestId('value-costs.hard.perGrossSF').fill('330');
@@ -115,7 +119,9 @@ test.describe('walkthrough steps 1–6', () => {
     await expect(page.getByTestId('event-row')).toHaveCount(1);
   });
 
-  test('a concurrent edit returns a rev conflict instead of a silent overwrite', async ({ browser }) => {
+  test('a concurrent edit returns a rev conflict instead of a silent overwrite', async ({
+    browser,
+  }) => {
     const a = await browser.newContext();
     const b = await browser.newContext();
     const pageA = await a.newPage();

@@ -9,7 +9,8 @@ const baseURL = process.env.PENCIL_BASE_URL ?? `http://127.0.0.1:${port}`;
 const freePort = Number(process.env.PENCIL_E2E_FREE_PORT ?? 3101);
 const freeBaseURL = process.env.PENCIL_FREE_BASE_URL ?? `http://127.0.0.1:${freePort}`;
 
-const common = 'PENCIL_DEV_AUTH=1 PENCIL_SEED_BENCHMARKS=e2e/fixtures/benchmarks-e2e.csv PENCIL_ASSISTANT_FAKE=1 AUTH_SECRET=e2e-secret';
+const common =
+  'PENCIL_DEV_AUTH=1 PENCIL_SEED_BENCHMARKS=e2e/fixtures/benchmarks-e2e.csv PENCIL_ASSISTANT_FAKE=1 AUTH_SECRET=e2e-secret';
 
 export default defineConfig({
   testDir: './e2e',
@@ -26,7 +27,11 @@ export default defineConfig({
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /billing\.spec\.ts/ },
-    { name: 'billing', use: { ...devices['Desktop Chrome'], baseURL: freeBaseURL }, testMatch: /billing\.spec\.ts/ },
+    {
+      name: 'billing',
+      use: { ...devices['Desktop Chrome'], baseURL: freeBaseURL },
+      testMatch: /billing\.spec\.ts/,
+    },
   ],
   webServer: process.env.PENCIL_BASE_URL
     ? undefined

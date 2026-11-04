@@ -5,7 +5,15 @@
  * version change on Stripe's side cannot break entitlement.
  */
 import Stripe from 'stripe';
-import { addEntitlement, billingEventSeen, findEntitlementByRef, findOrganizationByStripeCustomer, recordBillingEvent, updateOrganization, type Db } from '@pencil/db';
+import {
+  addEntitlement,
+  billingEventSeen,
+  findEntitlementByRef,
+  findOrganizationByStripeCustomer,
+  recordBillingEvent,
+  updateOrganization,
+  type Db,
+} from '@pencil/db';
 import type { PurchaseKind } from './prices';
 
 export interface BillingConfig {
@@ -20,7 +28,11 @@ export function billingConfig(): BillingConfig | null {
   const perDeal = process.env.STRIPE_PRICE_PER_DEAL;
   const pro = process.env.STRIPE_PRICE_PRO;
   if (!secretKey || !perDeal || !pro) return null;
-  return { secretKey, prices: { 'per-deal': perDeal, pro }, webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? null };
+  return {
+    secretKey,
+    prices: { 'per-deal': perDeal, pro },
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? null,
+  };
 }
 
 let client: Stripe | null = null;
@@ -43,7 +55,9 @@ export interface CheckoutArgs {
 export async function createCheckout(args: CheckoutArgs): Promise<string | null> {
   const cfg = billingConfig();
   if (!cfg) return null;
-  const back = args.dealId ? `${args.baseUrl}/deals/${args.dealId}/package` : `${args.baseUrl}/settings`;
+  const back = args.dealId
+    ? `${args.baseUrl}/deals/${args.dealId}/package`
+    : `${args.baseUrl}/settings`;
   const metadata = { orgId: args.orgId, kind: args.kind, dealId: args.dealId ?? '' };
   const session = await stripeClient().checkout.sessions.create({
     mode: args.kind === 'pro' ? 'subscription' : 'payment',
@@ -53,7 +67,11 @@ export async function createCheckout(args: CheckoutArgs): Promise<string | null>
     client_reference_id: args.orgId,
     metadata,
     ...(args.customerId ? { customer: args.customerId } : { customer_email: args.email }),
-    ...(args.kind === 'pro' ? { subscription_data: { metadata } } : args.customerId ? {} : { customer_creation: 'always' as const }),
+    ...(args.kind === 'pro'
+      ? { subscription_data: { metadata } }
+      : args.customerId
+        ? {}
+        : { customer_creation: 'always' as const }),
   });
   return session.url;
 }
@@ -61,11 +79,18 @@ export async function createCheckout(args: CheckoutArgs): Promise<string | null>
 /** A Stripe customer-portal URL (invoices, cancel the subscription), or null when billing is not configured. */
 export async function createPortal(customerId: string, returnUrl: string): Promise<string | null> {
   if (!billingConfig()) return null;
-  const session = await stripeClient().billingPortal.sessions.create({ customer: customerId, return_url: returnUrl });
+  const session = await stripeClient().billingPortal.sessions.create({
+    customer: customerId,
+    return_url: returnUrl,
+  });
   return session.url;
 }
 
-export function verifyWebhook(payload: string, signature: string | null, secret: string): Stripe.Event {
+export function verifyWebhook(
+  payload: string,
+  signature: string | null,
+  secret: string,
+): Stripe.Event {
   if (!signature) throw new Error('missing stripe-signature header');
   return stripeClient().webhooks.constructEvent(payload, signature, secret);
 }
@@ -82,7 +107,8 @@ const str = (o: Obj | undefined, k: string): string | null => {
   const id = obj(o, k)?.id;
   return typeof id === 'string' ? id : null;
 };
-const num = (o: Obj | undefined, k: string): number | null => (typeof o?.[k] === 'number' ? (o[k] as number) : null);
+const num = (o: Obj | undefined, k: string): number | null =>
+  typeof o?.[k] === 'number' ? (o[k] as number) : null;
 
 export function addMonths(from: Date, months: number): Date {
   const d = new Date(from.getTime());
@@ -119,7 +145,11 @@ export interface AppliedEvent {
  * one deal for 12 months; Pro sets the organization tier and is extended on every paid renewal;
  * a cancelled subscription stops renewing but access runs to the paid-through date.
  */
-export async function applyBillingEvent(db: Db, event: BillingEvent, deps: { periodEnd?: (subscriptionId: string) => Promise<Date | null>; now?: Date } = {}): Promise<AppliedEvent> {
+export async function applyBillingEvent(
+  db: Db,
+  event: BillingEvent,
+  deps: { periodEnd?: (subscriptionId: string) => Promise<Date | null>; now?: Date } = {},
+): Promise<AppliedEvent> {
   if (await billingEventSeen(db, event.id)) return { applied: false, duplicate: true };
   const now = deps.now ?? new Date();
   const o = (event.data.object ?? {}) as Obj;
@@ -127,17 +157,21 @@ export async function applyBillingEvent(db: Db, event: BillingEvent, deps: { per
     switch (event.type) {
       case 'checkout.session.completed':
       case 'checkout.session.async_payment_succeeded': {
-        if (str(o, 'payment_status') !== 'paid') return { applied: false, note: 'payment not complete' };
+        if (str(o, 'payment_status') !== 'paid')
+          return { applied: false, note: 'payment not complete' };
         const meta = obj(o, 'metadata');
         const orgId = str(meta, 'orgId') ?? str(o, 'client_reference_id');
         const kind = str(meta, 'kind');
         const dealId = str(meta, 'dealId') || null;
         const sessionId = str(o, 'id');
-        if (!orgId || !sessionId || (kind !== 'per-deal' && kind !== 'pro')) return { applied: false, note: 'missing metadata' };
-        if (kind === 'per-deal' && !dealId) return { applied: false, note: 'per-deal purchase without a deal' };
+        if (!orgId || !sessionId || (kind !== 'per-deal' && kind !== 'pro'))
+          return { applied: false, note: 'missing metadata' };
+        if (kind === 'per-deal' && !dealId)
+          return { applied: false, note: 'per-deal purchase without a deal' };
         const subscriptionId = str(o, 'subscription');
         const ref = kind === 'pro' ? (subscriptionId ?? sessionId) : sessionId;
-        if (await findEntitlementByRef(db, ref)) return { applied: false, duplicate: true, orgId, kind };
+        if (await findEntitlementByRef(db, ref))
+          return { applied: false, duplicate: true, orgId, kind };
         let validUntil = addMonths(now, 12);
         if (kind === 'pro' && subscriptionId && deps.periodEnd) {
           try {
@@ -146,24 +180,43 @@ export async function applyBillingEvent(db: Db, event: BillingEvent, deps: { per
             /* keep the 12-month default; the renewal invoice corrects it */
           }
         }
-        await addEntitlement(db, { orgId, dealId: kind === 'per-deal' ? dealId : null, kind, validUntil: validUntil.toISOString(), stripeRef: ref });
+        await addEntitlement(db, {
+          orgId,
+          dealId: kind === 'per-deal' ? dealId : null,
+          kind,
+          validUntil: validUntil.toISOString(),
+          stripeRef: ref,
+        });
         const customer = str(o, 'customer');
-        await updateOrganization(db, orgId, { ...(customer ? { stripeCustomerId: customer } : {}), ...(kind === 'pro' ? { tier: 'pro' } : {}) });
+        await updateOrganization(db, orgId, {
+          ...(customer ? { stripeCustomerId: customer } : {}),
+          ...(kind === 'pro' ? { tier: 'pro' } : {}),
+        });
         return { applied: true, orgId, kind };
       }
       case 'invoice.paid': {
-        if (str(o, 'billing_reason') !== 'subscription_cycle') return { applied: false, note: 'not a renewal' };
+        if (str(o, 'billing_reason') !== 'subscription_cycle')
+          return { applied: false, note: 'not a renewal' };
         const customer = str(o, 'customer');
         const org = customer ? await findOrganizationByStripeCustomer(db, customer) : null;
         if (!org) return { applied: false, note: 'unknown customer' };
         const invoiceId = str(o, 'id');
         if (!invoiceId) return { applied: false, note: 'invoice without id' };
-        if (await findEntitlementByRef(db, invoiceId)) return { applied: false, duplicate: true, orgId: org.id, kind: 'pro' };
+        if (await findEntitlementByRef(db, invoiceId))
+          return { applied: false, duplicate: true, orgId: org.id, kind: 'pro' };
         const lines = obj(o, 'lines');
         const data = Array.isArray(lines?.data) ? (lines.data as Obj[]) : [];
-        const end = data.map((l) => num(obj(l, 'period'), 'end')).find((n): n is number => n !== null);
+        const end = data
+          .map((l) => num(obj(l, 'period'), 'end'))
+          .find((n): n is number => n !== null);
         const validUntil = end ? new Date(end * 1000) : addMonths(now, 12);
-        await addEntitlement(db, { orgId: org.id, dealId: null, kind: 'pro', validUntil: validUntil.toISOString(), stripeRef: invoiceId });
+        await addEntitlement(db, {
+          orgId: org.id,
+          dealId: null,
+          kind: 'pro',
+          validUntil: validUntil.toISOString(),
+          stripeRef: invoiceId,
+        });
         await updateOrganization(db, org.id, { tier: 'pro' });
         return { applied: true, orgId: org.id, kind: 'pro' };
       }
@@ -172,7 +225,12 @@ export async function applyBillingEvent(db: Db, event: BillingEvent, deps: { per
         const org = customer ? await findOrganizationByStripeCustomer(db, customer) : null;
         if (!org) return { applied: false, note: 'unknown customer' };
         await updateOrganization(db, org.id, { tier: 'free' });
-        return { applied: true, orgId: org.id, kind: 'pro', note: 'subscription ended; access runs to the paid-through date' };
+        return {
+          applied: true,
+          orgId: org.id,
+          kind: 'pro',
+          note: 'subscription ended; access runs to the paid-through date',
+        };
       }
       default:
         return { applied: false, note: `ignored ${event.type}` };

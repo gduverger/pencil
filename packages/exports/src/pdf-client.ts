@@ -20,7 +20,10 @@ export async function renderPdf(req: RenderRequest, opts: RenderClientOptions): 
   try {
     const res = await fetch(`${opts.url.replace(/\/$/, '')}/render`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', ...(opts.token ? { 'x-render-token': opts.token } : {}) },
+      headers: {
+        'content-type': 'application/json',
+        ...(opts.token ? { 'x-render-token': opts.token } : {}),
+      },
       body: JSON.stringify(req),
       signal: controller.signal,
     });

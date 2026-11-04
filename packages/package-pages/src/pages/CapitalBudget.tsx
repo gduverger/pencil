@@ -27,7 +27,10 @@ export function CapitalBudgetPage({ props }: { props: PackageProps }) {
           </tr>
         </tbody>
       </table>
-      <p className="footnote">Figures rounded; totals may not foot. Children are shown at the depth the deal was elaborated to.</p>
+      <p className="footnote">
+        Figures rounded; totals may not foot. Children are shown at the depth the deal was
+        elaborated to.
+      </p>
     </>
   );
 }

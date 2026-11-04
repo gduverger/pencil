@@ -43,7 +43,9 @@ export function computeProgram(inputs: DealInputs): ProgramSummary {
  */
 export function gprAt(inputs: DealInputs, program: ProgramSummary, t: number): number {
   const g = growth(inputs.operations.rentGrowthPct, t);
-  const discount = inputs.program.affordable.enabled ? inputs.program.affordable.rentDiscountPct : 0;
+  const discount = inputs.program.affordable.enabled
+    ? inputs.program.affordable.rentDiscountPct
+    : 0;
   let total = 0;
   for (const u of program.unitTypes) {
     const market = u.units - u.affordableUnits;

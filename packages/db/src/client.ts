@@ -31,8 +31,14 @@ export function rowsOf<T>(result: unknown): T[] {
 
 /** Apply embedded migrations that have not been applied yet, tracked in `pencil_migrations`. */
 export async function migrate(db: Db): Promise<string[]> {
-  await db.execute(sql`CREATE TABLE IF NOT EXISTS pencil_migrations (tag text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())`);
-  const applied = new Set(rowsOf<{ tag: string }>(await db.execute(sql`SELECT tag FROM pencil_migrations`)).map((r) => r.tag));
+  await db.execute(
+    sql`CREATE TABLE IF NOT EXISTS pencil_migrations (tag text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())`,
+  );
+  const applied = new Set(
+    rowsOf<{ tag: string }>(await db.execute(sql`SELECT tag FROM pencil_migrations`)).map(
+      (r) => r.tag,
+    ),
+  );
   const done: string[] = [];
   for (const m of MIGRATIONS) {
     if (applied.has(m.tag)) continue;

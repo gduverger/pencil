@@ -18,15 +18,24 @@ export interface PageFrameProps {
   children: ReactNode;
 }
 
-export const SCENARIO_LABEL: Record<ScenarioKey | 'all', string> = { likely: 'Likely', best: 'Best', worst: 'Worst', all: 'Likely · Best · Worst' };
+export const SCENARIO_LABEL: Record<ScenarioKey | 'all', string> = {
+  likely: 'Likely',
+  best: 'Best',
+  worst: 'Worst',
+  all: 'Likely · Best · Worst',
+};
 
 export function PageFrame(p: PageFrameProps) {
-  const cls = ['page', p.landscape ? 'landscape' : '', p.fixed === false ? '' : 'fixed'].filter(Boolean).join(' ');
+  const cls = ['page', p.landscape ? 'landscape' : '', p.fixed === false ? '' : 'fixed']
+    .filter(Boolean)
+    .join(' ');
   return (
     <section className={cls} data-page={p.pageKey} aria-label={p.title}>
       <header className="page-header">
         <div className="brand">
-          {p.letterhead?.imageUrl ? <img src={p.letterhead.imageUrl} alt={p.letterhead.orgName} /> : null}
+          {p.letterhead?.imageUrl ? (
+            <img src={p.letterhead.imageUrl} alt={p.letterhead.orgName} />
+          ) : null}
           <div>
             <div className="org">{p.letterhead?.orgName ?? 'Pencil'}</div>
             {p.letterhead?.address ? <div className="addr">{p.letterhead.address}</div> : null}

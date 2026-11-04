@@ -4,14 +4,33 @@
  */
 import { inputCatalog, getPath, type DealOutputs, type Line, type Group } from '@pencil/engine';
 import type { ScenarioKey } from '@pencil/engine';
-import { ROUNDING_FOOTNOTE, formatByUnit, formatIrr, formatMultiple, formatPct, formatUsd, formatUsdPerSF, formatUsdWhole } from '@pencil/package-pages/format';
+import {
+  ROUNDING_FOOTNOTE,
+  formatByUnit,
+  formatIrr,
+  formatMultiple,
+  formatPct,
+  formatUsd,
+  formatUsdPerSF,
+  formatUsdWhole,
+} from '@pencil/package-pages/format';
 
-const esc = (s: unknown) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const esc = (s: unknown) =>
+  String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-function table(headers: string[], rows: string[][], opts: { numeric?: boolean[]; footnote?: boolean } = {}): string {
-  const th = headers.map((h, i) => `<th class="${opts.numeric?.[i] ? 'num' : ''}">${esc(h)}</th>`).join('');
+function table(
+  headers: string[],
+  rows: string[][],
+  opts: { numeric?: boolean[]; footnote?: boolean } = {},
+): string {
+  const th = headers
+    .map((h, i) => `<th class="${opts.numeric?.[i] ? 'num' : ''}">${esc(h)}</th>`)
+    .join('');
   const body = rows
-    .map((r) => `<tr>${r.map((c, i) => `<td class="${opts.numeric?.[i] ? 'num' : ''}">${c}</td>`).join('')}</tr>`)
+    .map(
+      (r) =>
+        `<tr>${r.map((c, i) => `<td class="${opts.numeric?.[i] ? 'num' : ''}">${c}</td>`).join('')}</tr>`,
+    )
     .join('\n');
   const foot = opts.footnote === false ? '' : `<p class="footnote">${ROUNDING_FOOTNOTE}</p>`;
   return `<table><thead><tr>${th}</tr></thead><tbody>${body}</tbody></table>${foot}`;
@@ -20,7 +39,12 @@ function table(headers: string[], rows: string[][], opts: { numeric?: boolean[];
 function lineRows(lines: Line[], depth = 0): string[][] {
   const rows: string[][] = [];
   for (const l of lines) {
-    rows.push([`${'&nbsp;'.repeat(depth * 4)}${esc(l.label)}`, formatUsd(l.amount), formatUsdWhole(l.perUnit), formatUsdPerSF(l.perGSF)]);
+    rows.push([
+      `${'&nbsp;'.repeat(depth * 4)}${esc(l.label)}`,
+      formatUsd(l.amount),
+      formatUsdWhole(l.perUnit),
+      formatUsdPerSF(l.perGSF),
+    ]);
     if (l.children) rows.push(...lineRows(l.children, depth + 1));
   }
   return rows;
@@ -31,15 +55,26 @@ function groupRows(groups: Group[]): string[][] {
   for (const g of groups) {
     rows.push([`<strong>${esc(g.label)}</strong>`, '', '', '']);
     rows.push(...lineRows(g.lines, 1));
-    rows.push([`<em>Subtotal ${esc(g.label)}</em>`, `<em>${formatUsd(g.subtotal)}</em>`, `<em>${formatUsdWhole(g.perUnit)}</em>`, `<em>${formatUsdPerSF(g.perGSF)}</em>`]);
+    rows.push([
+      `<em>Subtotal ${esc(g.label)}</em>`,
+      `<em>${formatUsd(g.subtotal)}</em>`,
+      `<em>${formatUsdWhole(g.perUnit)}</em>`,
+      `<em>${formatUsdPerSF(g.perGSF)}</em>`,
+    ]);
   }
   return rows;
 }
 
-export function renderPlainPackage(outputs: Record<ScenarioKey, DealOutputs>, meta: { generatedAt: string; engineVersion: string }): string {
+export function renderPlainPackage(
+  outputs: Record<ScenarioKey, DealOutputs>,
+  meta: { generatedAt: string; engineVersion: string },
+): string {
   const likely = outputs.likely;
   const keys: ScenarioKey[] = ['likely', 'best', 'worst'];
-  const metricRow = (label: string, f: (o: DealOutputs) => string) => [label, ...keys.map((k) => f(outputs[k]))];
+  const metricRow = (label: string, f: (o: DealOutputs) => string) => [
+    label,
+    ...keys.map((k) => f(outputs[k])),
+  ];
   const headline = table(
     ['Metric', 'Likely', 'Best', 'Worst'],
     [
@@ -62,12 +97,41 @@ export function renderPlainPackage(outputs: Record<ScenarioKey, DealOutputs>, me
   );
 
   const su = likely.sourcesUses;
-  const sources = table(['Source', 'Amount', 'Per unit', 'Per GSF'], [...lineRows(su.sources), ['<strong>Total sources</strong>', `<strong>${formatUsd(su.totalSources)}</strong>`, '', '']], { numeric: [false, true, true, true] });
-  const uses = table(['Use', 'Amount', 'Per unit', 'Per GSF'], [...lineRows(su.uses), ['<strong>Total uses</strong>', `<strong>${formatUsd(su.totalUses)}</strong>`, '', '']], { numeric: [false, true, true, true] });
-  const budget = table(['Line', 'Amount', 'Per unit', 'Per GSF'], [...groupRows(likely.capitalBudget), ['<strong>Total project cost</strong>', `<strong>${formatUsd(likely.totals.tpc)}</strong>`, `<strong>${formatUsdWhole(likely.metrics.costPerUnit)}</strong>`, `<strong>${formatUsdPerSF(likely.metrics.costPerGSF)}</strong>`]], { numeric: [false, true, true, true] });
+  const sources = table(
+    ['Source', 'Amount', 'Per unit', 'Per GSF'],
+    [
+      ...lineRows(su.sources),
+      ['<strong>Total sources</strong>', `<strong>${formatUsd(su.totalSources)}</strong>`, '', ''],
+    ],
+    { numeric: [false, true, true, true] },
+  );
+  const uses = table(
+    ['Use', 'Amount', 'Per unit', 'Per GSF'],
+    [
+      ...lineRows(su.uses),
+      ['<strong>Total uses</strong>', `<strong>${formatUsd(su.totalUses)}</strong>`, '', ''],
+    ],
+    { numeric: [false, true, true, true] },
+  );
+  const budget = table(
+    ['Line', 'Amount', 'Per unit', 'Per GSF'],
+    [
+      ...groupRows(likely.capitalBudget),
+      [
+        '<strong>Total project cost</strong>',
+        `<strong>${formatUsd(likely.totals.tpc)}</strong>`,
+        `<strong>${formatUsdWhole(likely.metrics.costPerUnit)}</strong>`,
+        `<strong>${formatUsdPerSF(likely.metrics.costPerGSF)}</strong>`,
+      ],
+    ],
+    { numeric: [false, true, true, true] },
+  );
 
   const years = likely.annual;
-  const annualRow = (label: string, f: (y: (typeof years)[number]) => string) => [label, ...years.map(f)];
+  const annualRow = (label: string, f: (y: (typeof years)[number]) => string) => [
+    label,
+    ...years.map(f),
+  ];
   const annual = table(
     ['', ...years.map((y) => `Year ${y.year}${y.partial ? ' (sale)' : ''}`)],
     [
@@ -109,13 +173,27 @@ export function renderPlainPackage(outputs: Record<ScenarioKey, DealOutputs>, me
       if (v === undefined) return null;
       const best = getPath(outputs.best.inputs, e.path);
       const worst = getPath(outputs.worst.inputs, e.path);
-      const overrides = [best !== v ? `Best: ${formatByUnit(best, e.unit)}` : '', worst !== v ? `Worst: ${formatByUnit(worst, e.unit)}` : ''].filter(Boolean).join('; ');
+      const overrides = [
+        best !== v ? `Best: ${formatByUnit(best, e.unit)}` : '',
+        worst !== v ? `Worst: ${formatByUnit(worst, e.unit)}` : '',
+      ]
+        .filter(Boolean)
+        .join('; ');
       return [esc(e.section), esc(e.label), formatByUnit(v, e.unit), esc(e.path), overrides];
     })
     .filter((r): r is string[] => r !== null);
-  const register = table(['Section', 'Input', 'Likely value', 'Path', 'Scenario overrides'], registerRows, { footnote: false });
+  const register = table(
+    ['Section', 'Input', 'Likely value', 'Path', 'Scenario overrides'],
+    registerRows,
+    { footnote: false },
+  );
 
-  const flags = keys.flatMap((k) => outputs[k].flags.map((f) => `<li><strong>${k}</strong>: ${esc(f.message)}${f.path ? ` <code>${esc(f.path)}</code>` : ''}</li>`));
+  const flags = keys.flatMap((k) =>
+    outputs[k].flags.map(
+      (f) =>
+        `<li><strong>${k}</strong>: ${esc(f.message)}${f.path ? ` <code>${esc(f.path)}</code>` : ''}</li>`,
+    ),
+  );
 
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>${esc(likely.inputs.meta.name)} — Pencil package</title>

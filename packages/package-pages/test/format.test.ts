@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { formatByUnit, formatIrr, formatMultiple, formatPct, formatUsd, formatUsdPerSF, formatUsdWhole, monthLabel, roundUsd } from '../src/format';
+import {
+  formatByUnit,
+  formatIrr,
+  formatMultiple,
+  formatPct,
+  formatUsd,
+  formatUsdPerSF,
+  formatUsdWhole,
+  monthLabel,
+  roundUsd,
+} from '../src/format';
 
 describe('7.13 rounding (presentation layer)', () => {
   it('rounds usd ≥ 100,000 to the nearest $1,000 and smaller amounts to the nearest $100', () => {

@@ -7,7 +7,10 @@ import { exportFile } from '@/server/package';
 export const dynamic = 'force-dynamic';
 
 /** Readers download both files from a share link; files are generated on first request (FR-7.2). */
-export async function GET(req: Request, { params }: { params: Promise<{ token: string; kind: string }> }) {
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ token: string; kind: string }> },
+) {
   const { token, kind } = await params;
   if (kind !== 'pdf' && kind !== 'xlsx') return new NextResponse('Not found', { status: 404 });
   const db = await getDb();
@@ -20,5 +23,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ token: s
   const row = files.find((f) => f.id === file.fileId);
   const bytes = row ? await storage().get(row.storageKey) : null;
   if (!bytes) return new NextResponse('Not found', { status: 404 });
-  return new NextResponse(new Uint8Array(bytes), { headers: { 'content-type': CONTENT_TYPES[kind], 'content-disposition': `attachment; filename="${file.name}"`, 'cache-control': 'private, no-store' } });
+  return new NextResponse(new Uint8Array(bytes), {
+    headers: {
+      'content-type': CONTENT_TYPES[kind],
+      'content-disposition': `attachment; filename="${file.name}"`,
+      'cache-control': 'private, no-store',
+    },
+  });
 }

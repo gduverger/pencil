@@ -5,7 +5,13 @@ import { getDb } from '@/lib/db';
 import { requireUser } from '@/lib/session';
 import { DealTabs } from '@/components/deal-tabs';
 
-export default async function DealLayout({ children, params }: { children: ReactNode; params: Promise<{ id: string }> }) {
+export default async function DealLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const user = await requireUser();
   const db = await getDb();

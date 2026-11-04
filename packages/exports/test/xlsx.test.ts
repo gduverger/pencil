@@ -14,7 +14,12 @@ async function workbook() {
   const buf = await buildWorkbookBuffer({
     outputs,
     scenario: 'likely',
-    version: { dealName: 'Needham 60', versionNumber: 1, versionDate: '2026-11-04', engineVersion: ENGINE_VERSION },
+    version: {
+      dealName: 'Needham 60',
+      versionNumber: 1,
+      versionDate: '2026-11-04',
+      engineVersion: ENGINE_VERSION,
+    },
     register: registerFromInputs(outputs),
   });
   const wb = new ExcelJS.Workbook();
@@ -22,12 +27,23 @@ async function workbook() {
   return { wb, outputs };
 }
 
-const formulaOf = (cell: ExcelJS.Cell) => (cell.value && typeof cell.value === 'object' && 'formula' in cell.value ? (cell.value as { formula: string }).formula : null);
+const formulaOf = (cell: ExcelJS.Cell) =>
+  cell.value && typeof cell.value === 'object' && 'formula' in cell.value
+    ? (cell.value as { formula: string }).formula
+    : null;
 
 describe('8.11 Excel export', () => {
   it('has the seven sheets with frozen headers and the cover note naming the Version', async () => {
     const { wb } = await workbook();
-    expect(wb.worksheets.map((w) => w.name)).toEqual(['Assumptions', 'Annual', 'Monthly', 'Capital budget', 'Sources & uses', 'Amortization', 'Returns']);
+    expect(wb.worksheets.map((w) => w.name)).toEqual([
+      'Assumptions',
+      'Annual',
+      'Monthly',
+      'Capital budget',
+      'Sources & uses',
+      'Amortization',
+      'Returns',
+    ]);
     expect(wb.getWorksheet('Annual')!.views[0]).toMatchObject({ state: 'frozen', ySplit: 1 });
     const assumptions = wb.getWorksheet('Assumptions')!;
     let note = '';
@@ -66,7 +82,8 @@ describe('8.11 Excel export', () => {
     let totalFormula: string | null = null;
     budget.eachRow((row) => {
       const label = row.getCell(1).value;
-      if (typeof label === 'string' && label.startsWith('Subtotal')) subtotals.push(formulaOf(row.getCell(2)) ?? '');
+      if (typeof label === 'string' && label.startsWith('Subtotal'))
+        subtotals.push(formulaOf(row.getCell(2)) ?? '');
       if (label === 'Total project cost') totalFormula = formulaOf(row.getCell(2));
     });
     expect(subtotals.length).toBeGreaterThanOrEqual(5);
@@ -77,7 +94,8 @@ describe('8.11 Excel export', () => {
     const totals: string[] = [];
     su.eachRow((row) => {
       const label = row.getCell(1).value;
-      if (label === 'Total sources' || label === 'Total uses') totals.push(formulaOf(row.getCell(2)) ?? '');
+      if (label === 'Total sources' || label === 'Total uses')
+        totals.push(formulaOf(row.getCell(2)) ?? '');
     });
     expect(totals).toHaveLength(2);
     for (const f of totals) expect(f).toMatch(/^(SUM\(B\d+:B\d+\)|B\d+(\+B\d+)*)$/);
@@ -129,7 +147,11 @@ describe('8.11 Excel export', () => {
       if (row.getCell(1).value === 'Net operating income') noiRowM = n;
     });
     let total = 0;
-    for (let j = 0; j < outputs.likely.months.length; j++) total += Number(monthly.getCell(noiRowM, 3 + j).value);
-    expect(total).toBeCloseTo(outputs.likely.months.reduce((s, m) => s + m.noi, 0), 6);
+    for (let j = 0; j < outputs.likely.months.length; j++)
+      total += Number(monthly.getCell(noiRowM, 3 + j).value);
+    expect(total).toBeCloseTo(
+      outputs.likely.months.reduce((s, m) => s + m.noi, 0),
+      6,
+    );
   });
 });

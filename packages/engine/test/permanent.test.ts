@@ -15,7 +15,8 @@ describe('7.8 amortize', () => {
     expect(rows[0]!.endingBalance).toBeCloseTo(999004.49, 2);
     expect(Math.abs(rows[359]!.endingBalance)).toBeLessThan(0.01);
     // balance roll-forward
-    for (let k = 1; k < rows.length; k++) expect(rows[k]!.beginningBalance).toBeCloseTo(rows[k - 1]!.endingBalance, 6);
+    for (let k = 1; k < rows.length; k++)
+      expect(rows[k]!.beginningBalance).toBeCloseTo(rows[k - 1]!.endingBalance, 6);
   });
 
   it('with 24 IO months the first 24 rows are interest only, then level payments to zero', () => {
@@ -41,7 +42,14 @@ describe('7.8 amortize', () => {
 });
 
 describe('7.8 permanent loan sizing', () => {
-  const p = { refiCapRatePct: 0.055, maxLTV: 0.65, minDSCR: 1.25, ratePct: 0.06, amortYears: 30, feePct: 0.01 };
+  const p = {
+    refiCapRatePct: 0.055,
+    maxLTV: 0.65,
+    minDSCR: 1.25,
+    ratePct: 0.06,
+    amortYears: 30,
+    feePct: 0.01,
+  };
 
   it('L_LTV = maxLTV × NOI12 / cap and L_DSCR = NOI12 / (DSCR × 12) × annuity factor', () => {
     // NOI12 = 1,650,000: V = 30,000,000; L_LTV = 19,500,000
@@ -67,7 +75,9 @@ describe('7.8 permanent loan sizing', () => {
     expect(r.loan).toBeCloseTo(r.loanDSCR, 6);
     // NOI(R..R+11) over the first twelve payments (R+1..R+12)
     const noi12 = out.months.slice(42, 54).reduce((s, m) => s + m.noi, 0);
-    const ds12 = out.months.slice(43, 55).reduce((s, m) => s + m.debtService.interest + m.debtService.principal, 0);
+    const ds12 = out.months
+      .slice(43, 55)
+      .reduce((s, m) => s + m.debtService.interest + m.debtService.principal, 0);
     expect(noi12 / ds12).toBeCloseTo(1.25, 6);
     expect(out.totals.permanentLoan).toBeCloseTo(r.loan, 6);
     expect(out.metrics.permanentLoan).toBeCloseTo(r.loan, 6);
@@ -75,7 +85,10 @@ describe('7.8 permanent loan sizing', () => {
 
   it('the reverse case gives maxLTV × value', () => {
     const d = fixtureDeal();
-    const out = run({ ...d, financing: { ...d.financing, permanent: { ...d.financing!.permanent, minDSCR: 1.0 } } });
+    const out = run({
+      ...d,
+      financing: { ...d.financing, permanent: { ...d.financing!.permanent, minDSCR: 1.0 } },
+    });
     const r = out.refinance!;
     expect(r.loanLTV).toBeLessThan(r.loanDSCR);
     expect(r.loan).toBeCloseTo(0.65 * r.value, 6);
@@ -84,7 +97,11 @@ describe('7.8 permanent loan sizing', () => {
   it('net proceeds: positive is a distribution at R, negative is a pro rata contribution at R', () => {
     const d = fixtureDeal();
     // A costlier version of the fixture ($350/GSF, $4M land) refinances short.
-    const shortfall = run({ ...d, site: { ...d.site, landCost: 4_000_000 }, costs: { ...d.costs, hard: { perGrossSF: 350 } } });
+    const shortfall = run({
+      ...d,
+      site: { ...d.site, landCost: 4_000_000 },
+      costs: { ...d.costs, hard: { perGrossSF: 350 } },
+    });
     const r = shortfall.refinance!;
     expect(r.net).toBeLessThan(0);
     const mR = shortfall.months[42]!;
@@ -93,7 +110,10 @@ describe('7.8 permanent loan sizing', () => {
     // contributions at R = equity calls at R + shortfall split 10/90 (NOI at R nets against it)
     const flow = mR.noi + mR.refinance;
     expect(mR.cashFlowAfterDebt).toBeCloseTo(flow, 6);
-    expect(mR.contributions.gp).toBeCloseTo(mR.equityIn.gp + mR.equityIn.inKind + Math.max(0, -flow) * 0.1, 6);
+    expect(mR.contributions.gp).toBeCloseTo(
+      mR.equityIn.gp + mR.equityIn.inKind + Math.max(0, -flow) * 0.1,
+      6,
+    );
     expect(mR.contributions.lp).toBeCloseTo(mR.equityIn.lp + Math.max(0, -flow) * 0.9, 6);
     expect(shortfall.flags.some((f) => f.code === 'refinance-shortfall')).toBe(true);
 
@@ -101,7 +121,10 @@ describe('7.8 permanent loan sizing', () => {
     const proceeds = run(d);
     expect(proceeds.refinance!.net).toBeGreaterThan(0);
     const mR2 = proceeds.months[42]!;
-    expect(mR2.distributions.gp + mR2.distributions.lp).toBeCloseTo(mR2.noi + proceeds.refinance!.net + proceeds.totals.surplusDistributed, 6);
+    expect(mR2.distributions.gp + mR2.distributions.lp).toBeCloseTo(
+      mR2.noi + proceeds.refinance!.net + proceeds.totals.surplusDistributed,
+      6,
+    );
     expect(proceeds.flags.some((f) => f.code === 'refinance-shortfall')).toBe(false);
   });
 
@@ -123,14 +146,20 @@ describe('7.8 permanent loan sizing', () => {
 
   it('interest-only months on the permanent loan pay no principal', () => {
     const d = fixtureDeal();
-    const out = run({ ...d, financing: { ...d.financing, permanent: { ...d.financing!.permanent, ioMonths: 24 } } });
+    const out = run({
+      ...d,
+      financing: { ...d.financing, permanent: { ...d.financing!.permanent, ioMonths: 24 } },
+    });
     for (let t = 43; t < 43 + 24; t++) expect(out.months[t]!.debtService.principal).toBe(0);
     expect(out.months[43 + 24]!.debtService.principal).toBeGreaterThan(0);
   });
 
   it('with the permanent loan off, the construction loan stays outstanding interest-only until the sale', () => {
     const d = fixtureDeal();
-    const out = run({ ...d, financing: { ...d.financing, permanent: { ...d.financing!.permanent, enabled: false } } } as DealInputsInput);
+    const out = run({
+      ...d,
+      financing: { ...d.financing, permanent: { ...d.financing!.permanent, enabled: false } },
+    } as DealInputsInput);
     expect(out.refinance).toBeNull();
     expect(out.amortization).toEqual([]);
     const B = out.totals.constructionLoan;

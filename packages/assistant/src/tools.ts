@@ -18,8 +18,16 @@ export function setInputTool(): ToolDefinition {
       type: 'object',
       properties: {
         path: { type: 'string', description: 'The dotted input path, exactly as listed.' },
-        value: { description: 'The value in the input unit (number, text or boolean).', anyOf: [{ type: 'number' }, { type: 'string' }, { type: 'boolean' }] },
-        source: { type: 'string', enum: SOURCES.filter((s) => s !== 'calculated'), description: "Where the number comes from: my-number, quote, comp, benchmark, parcel-data or unknown. Never 'calculated'." },
+        value: {
+          description: 'The value in the input unit (number, text or boolean).',
+          anyOf: [{ type: 'number' }, { type: 'string' }, { type: 'boolean' }],
+        },
+        source: {
+          type: 'string',
+          enum: SOURCES.filter((s) => s !== 'calculated'),
+          description:
+            "Where the number comes from: my-number, quote, comp, benchmark, parcel-data or unknown. Never 'calculated'.",
+        },
         note: { type: 'string', description: 'Why this value, from where, one sentence.' },
       },
       required: ['path', 'value', 'source', 'note'],
@@ -34,7 +42,9 @@ export interface ValidatedCalls {
 }
 
 /** Validate tool calls against the schema: known path, value type per unit, allowed source. */
-export function validateSetInputCalls(calls: Array<{ name: string; input: unknown }>): ValidatedCalls {
+export function validateSetInputCalls(
+  calls: Array<{ name: string; input: unknown }>,
+): ValidatedCalls {
   const accepted: SetInputCall[] = [];
   const rejected: ValidatedCalls['rejected'] = [];
   for (const call of calls) {
@@ -73,8 +83,16 @@ export function validateSetInputCalls(calls: Array<{ name: string; input: unknow
       if ((entry.unit === 'pct' || entry.unit === 'rate_pct') && value > 1.5) value = value / 100; // "8" meant 8%
     }
     const candidate: string = typeof input.source === 'string' ? (input.source as string) : '';
-    const source: SetInputCall['source'] = candidate !== 'calculated' && (SOURCES as readonly string[]).includes(candidate) ? (candidate as SetInputCall['source']) : 'my-number';
-    accepted.push({ path: input.path, value: value as number | string | boolean, source, note: typeof input.note === 'string' ? input.note : '' });
+    const source: SetInputCall['source'] =
+      candidate !== 'calculated' && (SOURCES as readonly string[]).includes(candidate)
+        ? (candidate as SetInputCall['source'])
+        : 'my-number';
+    accepted.push({
+      path: input.path,
+      value: value as number | string | boolean,
+      source,
+      note: typeof input.note === 'string' ? input.note : '',
+    });
   }
   return { accepted, rejected };
 }

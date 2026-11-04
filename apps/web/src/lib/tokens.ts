@@ -8,13 +8,22 @@ function secret(): string {
   return s;
 }
 
-export function signToken(payload: Record<string, string | number>, ttlSeconds: number, now = Date.now()): string {
-  const body = Buffer.from(JSON.stringify({ ...payload, exp: Math.floor(now / 1000) + ttlSeconds })).toString('base64url');
+export function signToken(
+  payload: Record<string, string | number>,
+  ttlSeconds: number,
+  now = Date.now(),
+): string {
+  const body = Buffer.from(
+    JSON.stringify({ ...payload, exp: Math.floor(now / 1000) + ttlSeconds }),
+  ).toString('base64url');
   const sig = createHmac('sha256', secret()).update(body).digest('base64url');
   return `${body}.${sig}`;
 }
 
-export function verifyToken<T extends Record<string, unknown>>(token: string | null | undefined, now = Date.now()): (T & { exp: number }) | null {
+export function verifyToken<T extends Record<string, unknown>>(
+  token: string | null | undefined,
+  now = Date.now(),
+): (T & { exp: number }) | null {
   if (!token) return null;
   const [body, sig] = token.split('.');
   if (!body || !sig) return null;
@@ -23,7 +32,9 @@ export function verifyToken<T extends Record<string, unknown>>(token: string | n
   const b = Buffer.from(expected);
   if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
   try {
-    const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8')) as T & { exp: number };
+    const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8')) as T & {
+      exp: number;
+    };
     if (typeof payload.exp !== 'number' || payload.exp * 1000 < now) return null;
     return payload;
   } catch {
