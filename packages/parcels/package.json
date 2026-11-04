@@ -1,0 +1,23 @@
+{
+  "name": "@pencil/parcels",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Massachusetts town table, residential tax rates, MBTA Communities status and parcel lookup (stub where the statewide dataset is unavailable).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  }
+}

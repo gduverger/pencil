@@ -1,0 +1,25 @@
+{
+  "name": "@pencil/exports",
+  "version": "0.1.0",
+  "private": true,
+  "description": "XLSX workbook builder (exceljs, real SUM formulas) and the PDF client for apps/render.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@pencil/engine": "workspace:*",
+    "@pencil/package-pages": "workspace:*",
+    "exceljs": "4.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  }
+}

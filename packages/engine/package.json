@@ -1,0 +1,26 @@
+{
+  "name": "@pencil/engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pencil calculation engine: a pure, deterministic function from DealInputs to DealOutputs on a monthly timeline.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@vitest/coverage-v8": "5.1.0",
+    "fast-check": "4.10.2",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  }
+}

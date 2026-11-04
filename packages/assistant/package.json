@@ -1,0 +1,26 @@
+{
+  "name": "@pencil/assistant",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Server-side assistant layer: provider interface, Anthropic SDK adapter, tools, prompts and number post-checks.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.4.0",
+    "@pencil/benchmarks": "workspace:*",
+    "@pencil/engine": "workspace:*",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  }
+}
