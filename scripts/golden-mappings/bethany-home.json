@@ -1,0 +1,37 @@
+{
+  "model": "bethany-home",
+  "file": "915 E Bethany Home Rd BOE 20211116v03 PPM Version.xlsm",
+  "notes": ["Mark's own multifamily development model; first and tightest tolerance.", "Cell addresses are TBD until the workbook is available in reference/."],
+  "inputs": {
+    "totalUnits": "TBD",
+    "landCost": "TBD",
+    "hardCost": "TBD",
+    "softCost": "TBD",
+    "constructionMonths": "TBD",
+    "leaseUpMonths": "TBD",
+    "holdMonths": "TBD",
+    "ltc": "TBD",
+    "constructionRate": "TBD",
+    "permanentRate": "TBD",
+    "amortYears": "TBD",
+    "exitCapRate": "TBD",
+    "vacancy": "TBD",
+    "rentGrowth": "TBD",
+    "expenseGrowth": "TBD"
+  },
+  "expected": {
+    "tpc": "TBD",
+    "equity": "TBD",
+    "loanAmount": "TBD",
+    "capitalizedInterest": "TBD",
+    "stabilizedNOI": "TBD",
+    "saleValue": "TBD",
+    "unleveredIRR": "TBD",
+    "leveredIRR": "TBD",
+    "lpIRR": "TBD",
+    "gpIRR": "TBD",
+    "equityMultiple": "TBD",
+    "annualNOI": ["TBD"],
+    "annualDebtService": ["TBD"]
+  }
+}

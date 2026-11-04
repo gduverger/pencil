@@ -143,3 +143,25 @@ Per 14.3, year 1 is months 0–11. A 120-month hold therefore has ten full years
 one-month period holding the sale; it is marked `partial` and labeled as the sale period on the
 cash-flow page. Rejected: calendar years, and shifting year 1 to months 1–12 so the sale lands at
 the end of year 10 (which would leave month 0 as its own stub instead).
+
+## 2026-11-04 — A sensitivity cell that fails validation is recorded, not thrown
+
+A grid can sweep a value that makes a cell invalid (for example a hold shorter than
+stabilization). The cell then carries `error` and null metrics and the grid counts it in
+`errors`; the rest of the grid still computes. Rejected: failing the whole grid, which would hide
+80 valid cells behind one bad corner.
+
+## 2026-11-04 — Residual land value brackets
+
+7.12 bisects on `[0, 5 × landCost]`. When the deal has no land cost the bracket top is the total
+project cost; when even free land misses the target the answer is 0 and is marked `atBound:
+'low'`; when the top of the bracket still beats the target the answer is the bound marked
+`atBound: 'high'`. Rejected: extending the bracket until the target is met, which can run away on
+deals whose yield on cost never reaches the target.
+
+## 2026-11-04 — The CLI's M3 package is a plain HTML renderer that M4 replaces
+
+`apps/cli/src/html.ts` writes the package as dependency-free HTML from the engine outputs using
+the shared formatting module. Milestone M4 switches the CLI to the React package pages; the plain
+renderer stays as a fallback. Rejected: starting the React pages in M3, which the spec allows but
+would have delayed the CLI acceptance criteria.

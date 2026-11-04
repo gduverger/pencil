@@ -36,6 +36,18 @@ export type {
 } from './schema';
 export * from './types';
 export { run } from './run';
+export {
+  runScenario,
+  runScenarios,
+  sensitivity,
+  sensitivityPresets,
+  scenarioOverridesFromDeltas,
+  DEFAULT_SCENARIO_DELTAS,
+  SCENARIO_KEYS,
+} from './scenarios';
+export type { ScenarioKey, ScenarioSet, Overrides, Axis, Grid, GridCell, SensitivityPreset, ScenarioDeltas } from './scenarios';
+export { residualLandValue } from './residual';
+export type { ResidualLandValue } from './residual';
 export { explain, explainableCells } from './explain';
 export type { ExplainTrace, Operand } from './explain';
 export { amortize, sizePermanentLoan } from './permanent';

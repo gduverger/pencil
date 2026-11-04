@@ -8,7 +8,7 @@ verified, how it was verified, and what is left.
 | M0 Scaffold | done (2026-11-04) |
 | M1 Engine core | done (2026-11-04) |
 | M2 Engine operations and capital | done (2026-11-04) |
-| M3 Engine analysis and CLI | not started |
+| M3 Engine analysis and CLI | done (2026-11-04), golden tests pending workbooks |
 | M4 Package pages and exports | not started |
 | M5 Web app: deals and inputs | not started |
 | M6 Web app: results, scenarios, sensitivities | not started |
@@ -74,6 +74,29 @@ defect (a fixed-point oscillation on the mezzanine fee), fixed and recorded in
 `docs/decisions.md` and `test/regressions/`.
 
 **Left.** Scenarios, sensitivities, residual land value and the CLI are M3.
+
+## M3 Engine analysis and CLI — done 2026-11-04 (golden tests pending the workbooks)
+
+**Built.** `runScenario` / `runScenarios` with Best and Worst override maps and default deltas
+(FR-5), `sensitivity` grids with per-cell full runs, base-cell detection and the three presets of
+FR-6.3, `residualLandValue` by bisection with bracket handling (7.12); the shared presentation
+formatting module (`@pencil/package-pages/format`, 7.13 rounding rules); `apps/cli`: `pencil run
+deal.json` writes `outputs.json`, `summary.json` and a plain HTML package with the headline range,
+sources and uses, capital budget, annual cash flow, sale analysis, flags and the assumptions
+register; an example deal in `apps/cli/examples/`; the golden harness: `scripts/extract-golden.py`
+(openpyxl / pyxlsb, cell addresses recorded in the JSON), one mapping template per workbook,
+`test/golden/` with adapter types, a template adapter and a test that replays any extracted model.
+
+**Verified.** Engine: 148 tests (invariant 6 — Likely equals a plain run byte for byte and the
+base sensitivity cell equals the scenario run; a 9 × 9 preset grid runs in well under 2 s; RLV
+returns the land cost within $100 when the target equals the current yield). Format: 5 tests of
+the 7.13 rules. CLI: 3 tests and a real run on the example deal; the HTML was rendered in
+Chromium and reviewed (screenshot during the session). `pnpm lint`, `pnpm typecheck` and
+`pnpm test` pass for all 10 workspaces.
+
+**Left.** Golden tolerances cannot be met or measured until the workbooks are placed in
+`reference/`; the harness reports them as skipped rather than silently passing. The CLI's PDF and
+XLSX outputs arrive with M4.
 
 ## Blockers and gaps
 

@@ -1,0 +1,50 @@
+{
+  "meta": { "name": "Needham 60 — example deal", "analysisMonth": "2026-01", "holdMonths": 120 },
+  "site": { "lotSF": 60000, "landCost": 3000000, "landOwned": false, "closingCostPct": 0.02 },
+  "program": {
+    "totalUnits": 60,
+    "unitTypes": [
+      { "key": "studio", "mixPct": 0.1, "avgSF": 450, "rentPerMonth": 2200 },
+      { "key": "1BR", "mixPct": 0.4, "avgSF": 650, "rentPerMonth": 2700 },
+      { "key": "2BR", "mixPct": 0.4, "avgSF": 950, "rentPerMonth": 3300 },
+      { "key": "3BR", "mixPct": 0.1, "avgSF": 1200, "rentPerMonth": 3900 }
+    ],
+    "efficiency": 0.85,
+    "otherIncomePerUnitMonth": 75
+  },
+  "timeline": { "predevMonths": 12, "constructionMonths": 18, "leaseUpMonths": 12 },
+  "costs": {
+    "hard": { "perGrossSF": 300, "contingencyPct": 0.05 },
+    "soft": { "pctOfHard": 0.25, "contingencyPct": 0.05, "predevShare": 0.6 },
+    "carry": { "taxesDuringConstructionAnnual": 60000, "insuranceDuringConstructionAnnual": 40000 },
+    "developerFeePct": 0.03
+  },
+  "events": [
+    { "id": "relocate-house", "label": "Relocate historic house", "month": 14, "amount": 150000, "kind": "cost", "category": "hard" },
+    { "id": "sell-house", "label": "Sell relocated house", "month": 24, "amount": 400000, "kind": "inflow", "category": "inflow" }
+  ],
+  "financing": {
+    "constructionLoan": { "ltc": 0.65, "ratePct": 0.08, "feePct": 0.01 },
+    "permanent": { "enabled": true, "maxLTV": 0.65, "minDSCR": 1.25, "ratePct": 0.06, "amortYears": 30, "ioMonths": 0, "feePct": 0.01, "refiCapRatePct": 0.055 }
+  },
+  "operations": {
+    "stabilizedVacancyPct": 0.05,
+    "creditLossPct": 0.005,
+    "rentGrowthPct": 0.03,
+    "expenseGrowthPct": 0.03,
+    "otherIncomeGrowthPct": 0.03,
+    "opex": {
+      "taxesStabilizedAnnual": 250000,
+      "insurancePerUnit": 600,
+      "repairsPerUnit": 500,
+      "payrollPerUnit": 1200,
+      "utilitiesPerUnit": 500,
+      "adminPerUnit": 300,
+      "marketingPerUnit": 200,
+      "reservesPerUnit": 300,
+      "managementPctEGI": 0.03
+    }
+  },
+  "exit": { "exitCapRatePct": 0.055, "brokerFeePct": 0.02, "closingCostPct": 0.01 },
+  "equity": { "gpPct": 0.1, "lpPct": 0.9 }
+}
