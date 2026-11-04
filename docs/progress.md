@@ -11,7 +11,7 @@ verified, how it was verified, and what is left.
 | M3 Engine analysis and CLI | done (2026-11-04), golden tests pending workbooks |
 | M4 Package pages and exports | done (2026-11-04) |
 | M5 Web app: deals and inputs | done (2026-11-04) |
-| M6 Web app: results, scenarios, sensitivities | not started |
+| M6 Web app: results, scenarios, sensitivities | done (2026-11-04) |
 | M7 Web app: package, versions, sharing | not started |
 | M8 Benchmarks and parcels | not started |
 | M9 Assistant | not started |
@@ -160,6 +160,28 @@ recorded in `docs/decisions.md` with a regression fixture.
 **Left.** Benchmarks are empty until Mark's seed arrives, so every default shows source `unknown`
 and no flags fire; Google and email sign-in are configured but untested without credentials;
 inviting members is not yet on the settings screen.
+
+## M6 Web app: results, scenarios, sensitivities — done 2026-11-04
+
+**Built.** The Results screen: the engine runs in the browser on every change for all three
+scenarios; headline tiles with Likely plus Best and Worst; sections for Returns, Sources & uses,
+Capital budget, Annual cash flow and Sale analysis rendered by the same page components as the
+PDF; a scenario selector and a *Compare all three* toggle that lays the three scenarios side by
+side; a quick-inputs panel of the twelve tonight inputs with autosave through the same patches as
+the Inputs screen (overrides when Best or Worst is selected); flags; the sensitivities panel with
+the three presets, a custom two-input grid builder, server-side runs saved with the deal,
+heat-shaded grids with the likely case outlined, stale marking on any input change and re-run;
+an explain panel showing the engine's derivation trace for any headline number.
+
+**Verified.** End-to-end (`e2e/results.spec.ts`): an input change updates the results tile in
+under 200 ms (asserted from the keypress to the DOM change); a Worst override shows beside Likely
+and reads lower; compare shows three columns; the exit-cap × rent-growth preset produces a 9 × 5
+grid with the likely cell outlined, goes stale on an input change, is fresh again after re-run and
+survives a reload; the explain panel shows the yield-on-cost formula. Steps 1–6 still pass.
+Lint, typecheck and the unit suites are clean.
+
+**Left.** Sensitivities and explain traces appear in the package with M7; the assistant's
+sentences for explain and flags arrive with M9.
 
 ## Blockers and gaps
 

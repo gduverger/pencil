@@ -16,6 +16,7 @@ import {
   deleteDeal as deleteDealQuery,
   deleteEvent as deleteEventState,
   deleteSensitivity as deleteSensitivityState,
+  getDeal,
   listBenchmarks,
   listHistory as listHistoryQuery,
   markTemplate as markTemplateQuery,
@@ -158,6 +159,18 @@ export async function runSensitivity(dealId: string, rev: number, spec: { key: s
 
 export async function deleteSensitivity(dealId: string, rev: number, id: string) {
   return mutate(dealId, rev, (state) => ({ state: deleteSensitivityState(state, id), history: [] }), [`/deals/${dealId}/results`]);
+}
+
+/** The current state and rev for a client that needs to resync (after a server-side sensitivity run). */
+export async function getDealStateForResults(dealId: string): Promise<{ state: DealState; rev: number } | null> {
+  const user = await requireUser();
+  const db = await getDb();
+  try {
+    const { deal, state } = await getDeal(db, user.orgId, dealId);
+    return { state, rev: deal.rev };
+  } catch {
+    return null;
+  }
 }
 
 export async function listHistory(dealId: string, path?: string) {

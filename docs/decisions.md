@@ -247,3 +247,25 @@ the pass with the smaller residual, reports `diagnostics.residual` and `converge
 Genuine divergence still throws `non-convergent`. Rejected: throwing, which would fail legitimate
 deals over an immaterial amount; and charging the mezzanine fee at a fixed month, which would
 contradict 7.6's "fee at first draw" in the common case.
+
+## 2026-11-04 — Results run in the browser; sensitivities run on the server
+
+The Results screen computes the three scenarios in the browser on every change (spec 5 step 3,
+11.4: "in the browser for instant results") with the same engine package the server uses for
+Versions. Sensitivity grids run on the server through a server action because they are saved
+with the deal and can be 81 engine runs; the client resyncs its state afterwards. Rejected:
+running grids in the browser and posting the result, which would let a client write numbers the
+server did not compute.
+
+## 2026-11-04 — Quick inputs on the Results screen
+
+The twelve tonight inputs are editable beside the results so a "what if the land is $1M more"
+answer takes seconds (job story 4). They write through the same patches as the Inputs screen
+(value only; source and note stay on the Inputs screen). Rejected: results as a read-only view,
+which forces a round trip to the Inputs tab for every what-if.
+
+## 2026-11-04 — Compare renders three package columns
+
+"Side by side" for pages other than Returns is three package-width columns in a horizontally
+scrolling row, each rendered by the same page component as the PDF. Rejected: a merged
+three-column table per page, which would be a second implementation of every page.
