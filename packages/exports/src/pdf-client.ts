@@ -10,6 +10,8 @@ export interface RenderRequest {
   url?: string;
   footerText?: string;
   headers?: Record<string, string>;
+  /** For the service's structured logs only. */
+  versionId?: string;
 }
 
 export async function renderPdf(req: RenderRequest, opts: RenderClientOptions): Promise<Buffer> {

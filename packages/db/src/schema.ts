@@ -14,6 +14,8 @@ export const organizations = pgTable('organizations', {
   letterheadKey: text('letterhead_key'),
   settings: jsonb('settings').notNull().default({}),
   tier: text('tier').notNull().default('free'),
+  /** Stripe customer id once the organization has checked out (billing portal, renewals). */
+  stripeCustomerId: text('stripe_customer_id'),
   createdAt: createdAt(),
 });
 
@@ -247,4 +249,11 @@ export const assistantUsage = pgTable('assistant_usage', {
   requests: integer('requests').notNull().default(0),
   tokens: integer('tokens').notNull().default(0),
   createdAt: createdAt(),
+});
+
+/** Stripe webhook events already applied, so a redelivered event is a no-op (M10). */
+export const billingEvents = pgTable('billing_events', {
+  id: text('id').primaryKey(),
+  type: text('type').notNull(),
+  receivedAt: createdAt(),
 });

@@ -5,11 +5,11 @@ import { getDb } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 /**
- * The nightly benchmark job (spec 9.6), run by a scheduler (Vercel cron) with the shared secret
- * in the Authorization header or `?token=`. Locally: `pnpm --filter @pencil/web nightly`.
+ * The nightly benchmark job (spec 9.6), run by a scheduler (Vercel cron: `vercel.json`, which sends
+ * CRON_SECRET as a bearer token) with the shared secret in the Authorization header or `?token=`. Locally: `pnpm --filter @pencil/web nightly`.
  */
 export async function POST(req: Request) {
-  const secret = process.env.JOBS_SECRET ?? process.env.AUTH_SECRET;
+  const secret = process.env.JOBS_SECRET ?? process.env.CRON_SECRET ?? process.env.AUTH_SECRET;
   const url = new URL(req.url);
   const provided = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? url.searchParams.get('token');
   if (!secret || provided !== secret) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });

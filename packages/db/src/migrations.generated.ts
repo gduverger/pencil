@@ -48,5 +48,13 @@ export const MIGRATIONS: EmbeddedMigration[] = [
       "CREATE UNIQUE INDEX \"memberships_user_org\" ON \"memberships\" USING btree (\"user_id\",\"org_id\");",
       "CREATE UNIQUE INDEX \"versions_deal_number\" ON \"versions\" USING btree (\"deal_id\",\"number\");"
     ]
+  },
+  {
+    "tag": "0001_cooing_spencer_smythe",
+    "when": 1793778214025,
+    "statements": [
+      "CREATE TABLE \"billing_events\" (\n\t\"id\" text PRIMARY KEY NOT NULL,\n\t\"type\" text NOT NULL,\n\t\"created_at\" timestamp with time zone DEFAULT now() NOT NULL\n);",
+      "ALTER TABLE \"organizations\" ADD COLUMN \"stripe_customer_id\" text;"
+    ]
   }
 ];

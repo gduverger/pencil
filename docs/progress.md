@@ -15,7 +15,7 @@ verified, how it was verified, and what is left.
 | M7 Web app: package, versions, sharing | done (2026-11-04) |
 | M8 Benchmarks and parcels | done (2026-11-04), seed values pending Mark |
 | M9 Assistant | done (2026-11-04) |
-| M10 Billing and launch | not started |
+| M10 Billing and launch | done (2026-11-04); production deploy pending credentials |
 
 ## M0 Scaffold — done 2026-11-04
 
@@ -265,6 +265,45 @@ edit removes the label and reaches the package preview. All eight e2e tests pass
 
 **Left.** Live model output has not been exercised in this environment (no API key); the
 scripted provider stands in. Prompt wording may need tuning against real transcripts.
+
+## M10 Billing and launch — done 2026-11-04 (production deploy pending credentials)
+
+**Built.** Stripe Checkout for the Per-deal purchase ($199, one deal for 12 months) and the Pro
+subscription ($2,400/year), started from the upgrade prompt on the Package screen and from
+Settings (owners only); the webhook `/api/billing/webhook` (signature-verified raw body) turning
+`checkout.session.completed`, `invoice.paid` renewals and `customer.subscription.deleted` into
+`entitlements` rows with per-event and per-object idempotency (`billing_events`, `stripe_ref`);
+Free-tier gating at export and share with the prompt; the Settings billing card (tier, active
+entitlements, purchase buttons, Stripe customer portal, organization id); Sentry on the web app
+and the render service when a DSN is set; structured JSON logs with organization, deal and version
+ids and timings for exports, renders, billing events and assistant failures; the render service
+Dockerfile (Playwright Chromium image plus the Inter font) and Fly.io config; Vercel cron for the
+nightly benchmark job; nightly `pg_dump` backup workflow, `scripts/backup.sh`, `scripts/restore.sh`
+and the restore drill `scripts/restore-drill.sh`; `docs/deploy.md` with the launch checklist;
+`apps/web/.env.example`.
+
+**Verified.** Unit: web 4 billing tests (a paid per-deal session unlocks one deal for 12 months,
+once per session and once per event; unpaid or metadata-less sessions are ignored; Pro uses the
+subscription's period end, a renewal invoice extends it, a non-renewal invoice is ignored,
+cancellation flips the tier and keeps access to the paid-through date; unrelated events are
+acknowledged), db 20 (billing events recorded once, entitlements found by Stripe reference,
+organization by customer). End-to-end (`e2e/billing.spec.ts`, against a second server started
+with `PENCIL_DEFAULT_TIER=free` and a webhook secret): a Free organization sees the upgrade prompt
+with the export buttons disabled and the purchase button explaining billing is not configured; a
+wrong signature is rejected with 400; a signed `checkout.session.completed` for the deal returns
+`applied: true`, its redelivery `duplicate: true`; after a reload the prompt is gone and *Export
+Excel* produces Version 1; a second deal stays gated; a Pro event unlocks it and shows tier `pro`;
+`customer.subscription.deleted` shows `free` with the deal still exportable. All nine e2e tests
+pass; `pnpm lint`, `pnpm typecheck`, `pnpm test` pass across the ten workspace tasks; the web app
+builds with the Sentry instrumentation. Restore drill: PASS against a scratch PostgreSQL 16
+cluster (record in `docs/deploy.md`); its first run exposed that `migrate()` only read
+PGlite-shaped results, fixed with `rowsOf` and re-run.
+
+**Left.** The production deploy itself (Vercel, Neon, R2, Fly, Stripe products, Sentry projects)
+needs the accounts and credentials; the checklist in `docs/deploy.md` covers it. A test-mode Stripe
+purchase through real Checkout has not been exercised here (no key): the webhook path is covered
+by signed fabricated events of the shape Stripe sends. The render image has not been built here
+(no Docker daemon in this environment).
 
 ## Blockers and gaps
 

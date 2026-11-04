@@ -1,0 +1,35 @@
+name: Nightly backup
+
+# Daily database backup (spec 14.1) to the files bucket under backups/. Secrets: DATABASE_URL,
+# S3_BUCKET, S3_ENDPOINT, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY. Restore with scripts/restore.sh;
+# the drill is scripts/restore-drill.sh.
+on:
+  schedule:
+    - cron: '17 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the PostgreSQL 17 client (pg_dump must be at least the server's version)
+        run: |
+          sudo apt-get install -y postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y postgresql-client-17
+      - name: Dump and upload
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: scripts/backup.sh "backups/pencil-$(date -u +%Y-%m-%d).dump"
+      - name: Keep the dump as a workflow artifact for 14 days as well
+        uses: actions/upload-artifact@v4
+        with:
+          name: pencil-backup
+          path: backups/
+          retention-days: 14

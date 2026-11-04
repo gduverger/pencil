@@ -5,6 +5,7 @@
  */
 import { createShare as createShareQuery, createVersion as createVersionQuery, getOrganization, getVersion, listFiles, recordFile, type Db, type DealState } from '@pencil/db';
 import { scenarioOverrides, toDealInputs } from '@pencil/db/state';
+import { log } from '@/lib/log';
 import { ENGINE_VERSION, runScenarios, type DealOutputs, type ScenarioKey } from '@pencil/engine';
 import { packageFileName, type PackageProps } from '@pencil/package-pages';
 import { buildWorkbookBuffer } from '@pencil/exports';
@@ -45,11 +46,11 @@ export function renderUrl(baseUrl: string, versionId: string): string {
   return `${baseUrl.replace(/\/$/, '')}/packages/${versionId}?t=${encodeURIComponent(token)}`;
 }
 
-async function renderPdf(url: string, footerText: string): Promise<Buffer> {
+async function renderPdf(url: string, footerText: string, versionId: string): Promise<Buffer> {
   const service = process.env.PENCIL_RENDER_URL;
   if (service) {
     const { renderPdf: viaService } = await import('@pencil/exports');
-    return viaService({ url, footerText }, { url: service, token: process.env.RENDER_TOKEN });
+    return viaService({ url, footerText, versionId }, { url: service, token: process.env.RENDER_TOKEN });
   }
   // No render service configured (local development, tests): drive Chromium in this process.
   const { urlToPdf } = await import('@pencil/render');
@@ -65,14 +66,14 @@ export async function exportFile(db: Db, args: { versionId: string; kind: 'pdf' 
   const started = Date.now();
   let bytes: Buffer;
   if (args.kind === 'pdf') {
-    bytes = await renderPdf(renderUrl(args.baseUrl, args.versionId), `${dealName} · Version ${props.version.versionNumber} · ${versionDate}`);
+    bytes = await renderPdf(renderUrl(args.baseUrl, args.versionId), `${dealName} · Version ${props.version.versionNumber} · ${versionDate}`, args.versionId);
   } else {
     bytes = await buildWorkbookBuffer({ outputs: props.outputs, scenario, version: props.version, register: props.register });
   }
   const key = `versions/${args.versionId}/${name}`;
   await storage().put(key, bytes, CONTENT_TYPES[args.kind]);
   const file = await recordFile(db, { versionId: args.versionId, kind: args.kind, storageKey: key, bytes: bytes.length });
-  console.log(JSON.stringify({ level: 'info', event: 'export', versionId: args.versionId, kind: args.kind, bytes: bytes.length, ms: Date.now() - started }));
+  log.info('export.file', { versionId: args.versionId, kind: args.kind, bytes: bytes.length, ms: Date.now() - started });
   return { fileId: file.id, name, bytes: bytes.length, reused: false };
 }
 

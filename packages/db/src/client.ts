@@ -22,11 +22,17 @@ export interface CreateDbOptions {
   migrate?: boolean;
 }
 
+/** Rows of a raw `db.execute`: PGlite returns `{ rows }`, postgres.js returns the array itself. */
+export function rowsOf<T>(result: unknown): T[] {
+  if (Array.isArray(result)) return result as T[];
+  const rows = (result as { rows?: unknown }).rows;
+  return Array.isArray(rows) ? (rows as T[]) : [];
+}
+
 /** Apply embedded migrations that have not been applied yet, tracked in `pencil_migrations`. */
 export async function migrate(db: Db): Promise<string[]> {
   await db.execute(sql`CREATE TABLE IF NOT EXISTS pencil_migrations (tag text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())`);
-  const result = (await db.execute(sql`SELECT tag FROM pencil_migrations`)) as unknown as { rows: Array<{ tag: string }> };
-  const applied = new Set(result.rows.map((r) => r.tag));
+  const applied = new Set(rowsOf<{ tag: string }>(await db.execute(sql`SELECT tag FROM pencil_migrations`)).map((r) => r.tag));
   const done: string[] = [];
   for (const m of MIGRATIONS) {
     if (applied.has(m.tag)) continue;

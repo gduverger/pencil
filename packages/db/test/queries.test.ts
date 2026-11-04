@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { DbHandle } from '../src/client';
 import { applyPatches, upsertEvent } from '../src/state';
-import { cloneDeal, createDeal, createShare, createVersion, deleteDeal, getDeal, listDeals, listHistory, listMemberships, listShares, listVersions, markTemplate, requireMembership, resolveShare, revokeShare, RevConflictError, updateDealState, NotFoundError, ForbiddenError, seedTowns, listTowns, seedBenchmarks, listBenchmarks } from '../src/queries';
+import { addEntitlement, billingEventSeen, findEntitlementByRef, findOrganizationByStripeCustomer, recordBillingEvent, updateOrganization, cloneDeal, createDeal, createShare, createVersion, deleteDeal, getDeal, listDeals, listHistory, listMemberships, listShares, listVersions, markTemplate, requireMembership, resolveShare, revokeShare, RevConflictError, updateDealState, NotFoundError, ForbiddenError, seedTowns, listTowns, seedBenchmarks, listBenchmarks } from '../src/queries';
 import { freshState, memoryDb, NOW, userAndOrg } from './helpers';
 import { schema } from '../src/index';
 import { count, eq } from 'drizzle-orm';
@@ -136,5 +136,21 @@ describe('assistant usage budget rows', () => {
     await recordAssistantUsage(handle.db, org.orgId, '2026-11', 800);
     expect(await assistantUsage(handle.db, org.orgId, '2026-11')).toEqual({ requests: 2, tokens: 2000 });
     expect(await assistantUsage(handle.db, org.orgId, '2026-12')).toEqual({ requests: 0, tokens: 0 });
+  });
+});
+
+describe('billing (M10)', () => {
+  it('records each Stripe event once and finds entitlements by their Stripe reference', async () => {
+    const { org } = await userAndOrg(handle.db, 'billing@example.com');
+    expect(await billingEventSeen(handle.db, 'evt_1')).toBe(false);
+    expect(await recordBillingEvent(handle.db, 'evt_1', 'checkout.session.completed')).toBe(true);
+    expect(await recordBillingEvent(handle.db, 'evt_1', 'checkout.session.completed')).toBe(false);
+    expect(await billingEventSeen(handle.db, 'evt_1')).toBe(true);
+    expect(await findEntitlementByRef(handle.db, 'cs_1')).toBeNull();
+    await addEntitlement(handle.db, { orgId: org.orgId, dealId: null, kind: 'pro', validUntil: '2027-01-01T00:00:00.000Z', stripeRef: 'cs_1' });
+    expect((await findEntitlementByRef(handle.db, 'cs_1'))?.kind).toBe('pro');
+    await updateOrganization(handle.db, org.orgId, { stripeCustomerId: 'cus_1', tier: 'pro' });
+    expect((await findOrganizationByStripeCustomer(handle.db, 'cus_1'))?.id).toBe(org.orgId);
+    expect(await findOrganizationByStripeCustomer(handle.db, 'cus_none')).toBeNull();
   });
 });

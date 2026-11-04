@@ -13,6 +13,7 @@ import { runScenarios, type ScenarioKey } from '@pencil/engine';
 import { PAGE_KEYS, PAGE_TITLES, PackageDocument, type PackageProps, type PackageSettings } from '@pencil/package-pages';
 import { Badge, Button, Card, Select, Textarea, cn } from '@/components/ui';
 import { PackageStyles } from '@/components/package-styles';
+import { UpgradeButtons } from '@/components/billing/upgrade-buttons';
 import * as actions from '@/server/actions';
 import { draftNarrative } from '@/server/assistant-actions';
 import type { DiffRow } from '@/server/package-props';
@@ -185,7 +186,8 @@ export function PackageScreen(props: { dealId: string; dealName: string; rev: nu
         <Card title="Export and share">
           {!props.canExport ? (
             <div className="mb-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900" data-testid="upgrade-prompt">
-              Exports and share links need a Per-deal purchase ($199, 12 months) or a Pro subscription ($2,400/year). Results stay available on screen.
+              <p className="mb-2">Exports and share links need a Per-deal purchase ($199, 12 months of exports and shares of this deal) or a Pro subscription ($2,400/year for the organization). Results stay available on screen.</p>
+              <UpgradeButtons dealId={props.dealId} />
             </div>
           ) : null}
           <div className="flex flex-wrap gap-2">

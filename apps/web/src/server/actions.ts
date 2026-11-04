@@ -43,12 +43,13 @@ import type { Distribution, Source } from '@pencil/engine';
 import { getDb } from '@/lib/db';
 import { requireUser } from '@/lib/session';
 import { buildNewDeal } from './deal-setup';
-import { headers } from 'next/headers';
 import { createShare as createShareHelper, createVersion as createVersionHelper, exportFile as exportFileHelper, fileDownloadUrl } from './package';
 import { diffStates, HEADLINE_METRICS } from './package-props';
 import { getVersion, listShares as listSharesQuery, listVersions as listVersionsQuery, markReviewed as markReviewedQuery, revokeShare as revokeShareQuery, listEntitlements, buildContributions, recordContributions } from '@pencil/db';
 import type { DealOutputs } from '@pencil/engine';
 import { hasEntitlement } from '@/lib/entitlements';
+import { baseUrl } from '@/lib/base-url';
+import { log } from '@/lib/log';
 import type { PackageSettings } from '@pencil/package-pages';
 
 export type ActionResult<T = undefined> = { ok: true; rev: number; data?: T } | { ok: false; code: string; message: string; rev?: number };
@@ -203,13 +204,6 @@ export async function updatePackageSettings(dealId: string, rev: number, setting
   return mutate(dealId, rev, (state) => ({ state: { ...state, packageSettings: { ...state.packageSettings, ...settings, pages: { ...state.packageSettings.pages, ...(settings.pages ?? {}) } } }, history: [] }), [`/deals/${dealId}/package`]);
 }
 
-async function baseUrl(): Promise<string> {
-  if (process.env.PENCIL_BASE_URL) return process.env.PENCIL_BASE_URL;
-  const h = await headers();
-  const proto = h.get('x-forwarded-proto') ?? 'http';
-  const host = h.get('x-forwarded-host') ?? h.get('host') ?? '127.0.0.1:3000';
-  return `${proto}://${host}`;
-}
 
 async function requireExportEntitlement(dealId: string) {
   const user = await requireUser();
@@ -228,10 +222,12 @@ export async function exportVersion(dealId: string, kind: 'pdf' | 'xlsx'): Promi
   const gate = await requireExportEntitlement(dealId);
   if (!gate.ok) return { ok: false, code: gate.code, message: gate.message };
   const { user, db } = gate;
+  const started = Date.now();
   try {
     const { state } = await getDeal(db, user.orgId, dealId);
     const version = await createVersionHelper(db, { orgId: user.orgId, dealId, userId: user.id, state });
     const file = await exportFileHelper(db, { versionId: version.id, kind, baseUrl: await baseUrl() });
+    log.info('export', { orgId: user.orgId, dealId, versionId: version.id, versionNumber: version.number, kind, bytes: file.bytes, ms: Date.now() - started });
     if (user.settings.contributeBenchmarks) {
       // Opt-in anonymized contribution (9.6): resolved seed-list values, segment keys and the export month only.
       await recordContributions(db, buildContributions(state, user.orgId, new Date().toISOString().slice(0, 7)));
@@ -239,6 +235,7 @@ export async function exportVersion(dealId: string, kind: 'pdf' | 'xlsx'): Promi
     revalidatePath(`/deals/${dealId}/package`);
     return { ok: true, versionId: version.id, versionNumber: version.number, fileId: file.fileId, name: file.name, url: fileDownloadUrl(file.fileId, file.name), bytes: file.bytes };
   } catch (e) {
+    log.error('export.failed', e, { orgId: user.orgId, dealId, kind, ms: Date.now() - started });
     return { ok: false, code: 'export-failed', message: e instanceof Error ? e.message : 'Export failed' };
   }
 }

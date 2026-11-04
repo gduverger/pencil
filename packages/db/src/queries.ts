@@ -101,7 +101,7 @@ export async function getOrganization(db: Db, orgId: string) {
   return { ...org, settings: (org.settings ?? {}) as OrgSettings };
 }
 
-export async function updateOrganization(db: Db, orgId: string, changes: { name?: string; settings?: OrgSettings; letterheadKey?: string | null; tier?: string }) {
+export async function updateOrganization(db: Db, orgId: string, changes: { name?: string; settings?: OrgSettings; letterheadKey?: string | null; tier?: string; stripeCustomerId?: string | null }) {
   const [row] = await db.update(t.organizations).set(changes).where(eq(t.organizations.id, orgId)).returning();
   if (!row) throw new NotFoundError('organization');
   return row;
@@ -403,6 +403,28 @@ export async function listEntitlements(db: Db, orgId: string) {
 export async function addEntitlement(db: Db, row: typeof t.entitlements.$inferInsert) {
   const [r] = await db.insert(t.entitlements).values(row).returning();
   return r!;
+}
+
+/** The entitlement a Stripe object (checkout session, subscription, invoice) already produced, if any. */
+export async function findEntitlementByRef(db: Db, stripeRef: string) {
+  return (await db.query.entitlements.findFirst({ where: eq(t.entitlements.stripeRef, stripeRef) })) ?? null;
+}
+
+// ---------- billing (M10) ----------
+
+export async function findOrganizationByStripeCustomer(db: Db, customerId: string) {
+  return (await db.query.organizations.findFirst({ where: eq(t.organizations.stripeCustomerId, customerId) })) ?? null;
+}
+
+/** True when a Stripe event id has already been applied (webhook redelivery). */
+export async function billingEventSeen(db: Db, id: string): Promise<boolean> {
+  return (await db.query.billingEvents.findFirst({ where: eq(t.billingEvents.id, id) })) !== undefined;
+}
+
+/** Records an applied Stripe event; false when another delivery recorded it first. */
+export async function recordBillingEvent(db: Db, id: string, type: string): Promise<boolean> {
+  const rows = await db.insert(t.billingEvents).values({ id, type }).onConflictDoNothing().returning({ id: t.billingEvents.id });
+  return rows.length > 0;
 }
 
 // ---------- assistant budgets (10.5) ----------
