@@ -31,6 +31,11 @@ async function seed(db: Db) {
         /* try the next candidate */
       }
     }
+    // An extra CSV of filled rows (local demos, end-to-end tests): PENCIL_SEED_BENCHMARKS=<path>.
+    if (process.env.PENCIL_SEED_BENCHMARKS) {
+      const rows = loadBenchmarksCsv(readFileSync(process.env.PENCIL_SEED_BENCHMARKS, 'utf8'));
+      await seedBenchmarks(db, rows.map((b) => ({ id: `extra-${b.id}`, metric: b.metric, segment: b.segment, low: b.low, mid: b.mid, high: b.high, unit: b.unit, asOf: b.asOf, source: b.source, contributorOrgId: null, sampleSize: b.sampleSize })));
+    }
   } catch {
     /* seed is optional */
   }

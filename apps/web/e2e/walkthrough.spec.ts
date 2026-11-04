@@ -36,13 +36,13 @@ test.describe('walkthrough steps 1–6', () => {
 
     // Step 2: the twelve inputs, pre-filled (schema defaults with source unknown until benchmarks are seeded).
     await expect(page.getByTestId('row-costs.hard.perGrossSF')).toBeVisible();
-    await expect(page.getByTestId('value-costs.hard.perGrossSF')).toHaveValue('350'); // schema default until a benchmark is seeded
+    await expect(page.getByTestId('value-costs.hard.perGrossSF')).toHaveValue('320'); // the seeded benchmark mid (e2e fixture); schema default 350 otherwise
     await expect(page.getByTestId('value-site.landCost')).toHaveValue('3000000');
     await expect(page.getByTestId('row-operations.opex.taxesStabilizedAnnual')).toBeVisible();
     await expect(page.getByTestId('source-operations.opex.taxesStabilizedAnnual')).toHaveValue('parcel-data');
 
     // Change two inputs with notes.
-    await page.getByTestId('value-costs.hard.perGrossSF').fill('320');
+    await page.getByTestId('value-costs.hard.perGrossSF').fill('330');
     await page.getByTestId('value-costs.hard.perGrossSF').press('Enter');
     await expect(page.getByTestId('save-status')).toHaveText(/Saved · rev 2/);
     await page.getByTestId('note-costs.hard.perGrossSF').fill('GC budget 2026-10-15');
@@ -79,7 +79,7 @@ test.describe('walkthrough steps 1–6', () => {
     await editor.getByTestId('child-add').click();
     await expect(editor.getByTestId('child-row')).toHaveCount(3);
     await expect(page.getByTestId('value-costs.hard.perGrossSF')).toBeDisabled();
-    await expect(page.getByTestId('value-costs.hard.perGrossSF')).toHaveValue('320'); // the parent still shows $320/SF: children sum to it
+    await expect(page.getByTestId('value-costs.hard.perGrossSF')).toHaveValue('330'); // the parent still shows $330/SF: children sum to it
     await expect(page.getByTestId('save-status')).toHaveText(/Saved · rev 8/);
 
     // Step 5: add one inflow event.

@@ -46,7 +46,7 @@ import { buildNewDeal } from './deal-setup';
 import { headers } from 'next/headers';
 import { createShare as createShareHelper, createVersion as createVersionHelper, exportFile as exportFileHelper, fileDownloadUrl } from './package';
 import { diffStates, HEADLINE_METRICS } from './package-props';
-import { getVersion, listShares as listSharesQuery, listVersions as listVersionsQuery, markReviewed as markReviewedQuery, revokeShare as revokeShareQuery, listEntitlements } from '@pencil/db';
+import { getVersion, listShares as listSharesQuery, listVersions as listVersionsQuery, markReviewed as markReviewedQuery, revokeShare as revokeShareQuery, listEntitlements, buildContributions, recordContributions } from '@pencil/db';
 import type { DealOutputs } from '@pencil/engine';
 import { hasEntitlement } from '@/lib/entitlements';
 import type { PackageSettings } from '@pencil/package-pages';
@@ -232,6 +232,10 @@ export async function exportVersion(dealId: string, kind: 'pdf' | 'xlsx'): Promi
     const { state } = await getDeal(db, user.orgId, dealId);
     const version = await createVersionHelper(db, { orgId: user.orgId, dealId, userId: user.id, state });
     const file = await exportFileHelper(db, { versionId: version.id, kind, baseUrl: await baseUrl() });
+    if (user.settings.contributeBenchmarks) {
+      // Opt-in anonymized contribution (9.6): resolved seed-list values, segment keys and the export month only.
+      await recordContributions(db, buildContributions(state, user.orgId, new Date().toISOString().slice(0, 7)));
+    }
     revalidatePath(`/deals/${dealId}/package`);
     return { ok: true, versionId: version.id, versionNumber: version.number, fileId: file.fileId, name: file.name, url: fileDownloadUrl(file.fileId, file.name), bytes: file.bytes };
   } catch (e) {

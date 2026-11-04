@@ -1,5 +1,5 @@
 /** Build PackageProps (spec 8) from a deal state: register with sources, benchmarks, flags, overrides; sensitivities; site facts. */
-import { projectSizeOf, resolveBenchmark, type Benchmark, type Segment } from '@pencil/benchmarks';
+import { checkAgainstBenchmark, projectSizeOf, resolveBenchmark, type Benchmark, type Segment } from '@pencil/benchmarks';
 import { SECTION_LABELS, type PackageProps, type RegisterEntry, type SensitivityEntry, type VersionMeta } from '@pencil/package-pages';
 import { catalogEntry, inputCatalog, type DealOutputs, type ScenarioKey } from '@pencil/engine';
 import { visibleInputPaths, type DealState } from '@pencil/db/state';
@@ -43,7 +43,7 @@ export function buildRegister(state: DealState, benchmarks: readonly Benchmark[]
       updatedAt: rec.updatedAt,
       updatedBy: rec.updatedBy,
       ...(b ? { benchmark: { low: b.low, mid: b.mid, high: b.high, asOf: b.asOf, source: b.source, ...(b.sampleSize ? { sampleSize: b.sampleSize } : {}) } } : {}),
-      ...(flagged && b ? { flag: `Outside the ${b.low}–${b.high} range for ${b.source}, ${b.asOf}` } : {}),
+      ...(flagged && b ? { flag: checkAgainstBenchmark(path, rec.value, b)?.flag?.message ?? `Outside the ${b.low}–${b.high} range (${b.source}, ${b.asOf})` } : {}),
       ...(Object.keys(overrides).length > 0 ? { overrides } : {}),
     });
     if (children && children.length > 0) {
@@ -65,11 +65,13 @@ export function sensitivityEntries(state: DealState): SensitivityEntry[] {
 export function buildPackageProps(args: { state: DealState; outputs: Record<ScenarioKey, DealOutputs>; version: VersionMeta; org: { name: string; settings: OrgSettings }; benchmarks: readonly Benchmark[] }): PackageProps {
   const { state, org } = args;
   const letterhead = org.settings.letterheadName || org.settings.letterheadImage ? { orgName: org.settings.letterheadName ?? org.name, ...(org.settings.letterheadAddress ? { address: org.settings.letterheadAddress } : {}), ...(org.settings.letterheadImage ? { imageUrl: org.settings.letterheadImage } : {}) } : { orgName: org.name };
+  const register = buildRegister(state, args.benchmarks);
   return {
     outputs: args.outputs,
     version: args.version,
     letterhead,
-    register: buildRegister(state, args.benchmarks),
+    register,
+    benchmarkFlags: register.filter((e) => e.flag).map((e) => ({ path: e.path, message: `${e.label}: ${e.flag}` })),
     sensitivities: sensitivityEntries(state),
     settings: state.packageSettings,
     site: {

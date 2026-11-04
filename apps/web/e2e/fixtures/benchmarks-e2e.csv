@@ -1,0 +1,3 @@
+metric,town_cluster,construction_type,unit_type,project_size,low,mid,high,unit,as_of,source,sample_size
+costs.hard.perGrossSF,inner-suburbs,wood-frame,,,280,320,360,usd_per_sf,2026-09,"E2E seed — Mark, 2025 bids, 4 projects",4
+program.unitTypes[2BR].rentPerMonth,inner-suburbs,,2BR,,2700,3000,3200,usd_per_unit_month,2026-09,E2E seed — inner suburbs comps,

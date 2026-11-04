@@ -22,7 +22,7 @@ export default defineConfig({
   webServer: process.env.PENCIL_BASE_URL
     ? undefined
     : {
-        command: `rm -rf .data/e2e .data/e2e-files && PORT=${port} PENCIL_DEV_AUTH=1 PENCIL_DEFAULT_TIER=pro PENCIL_FILES_DIR=.data/e2e-files AUTH_SECRET=e2e-secret DATABASE_URL=pglite://./.data/e2e AUTH_URL=${baseURL} PENCIL_BASE_URL=${baseURL} pnpm start -p ${port}`,
+        command: `rm -rf .data/e2e .data/e2e-files && PORT=${port} PENCIL_DEV_AUTH=1 PENCIL_DEFAULT_TIER=pro PENCIL_FILES_DIR=.data/e2e-files PENCIL_SEED_BENCHMARKS=e2e/fixtures/benchmarks-e2e.csv AUTH_SECRET=e2e-secret DATABASE_URL=pglite://./.data/e2e AUTH_URL=${baseURL} PENCIL_BASE_URL=${baseURL} pnpm start -p ${port}`,
         url: `${baseURL}/signin`,
         timeout: 120_000,
         reuseExistingServer: false,

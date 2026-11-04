@@ -5,3 +5,4 @@ export type { Db, DbHandle, CreateDbOptions } from './client';
 export * from './state';
 export * from './queries';
 export { MIGRATIONS } from './migrations.generated';
+export * from './contributions';

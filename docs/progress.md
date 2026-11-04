@@ -13,7 +13,7 @@ verified, how it was verified, and what is left.
 | M5 Web app: deals and inputs | done (2026-11-04) |
 | M6 Web app: results, scenarios, sensitivities | done (2026-11-04) |
 | M7 Web app: package, versions, sharing | done (2026-11-04) |
-| M8 Benchmarks and parcels | not started |
+| M8 Benchmarks and parcels | done (2026-11-04), seed values pending Mark |
 | M9 Assistant | not started |
 | M10 Billing and launch | not started |
 
@@ -207,6 +207,32 @@ unit suites are clean.
 
 **Left.** Letterhead image upload is a settings field (data URL) rather than object storage; the
 render service deployment and R2 bucket are M10 launch work.
+
+## M8 Benchmarks and parcels — done 2026-11-04 (seed values pending Mark)
+
+**Built.** Town table (46 Massachusetts towns with cluster, approximate FY2025 residential tax
+rate, assessor URL and MBTA Communities status) loaded into `towns` on first connection; the
+documented parcel-lookup stub (fields empty with source `unknown`, town facts and notes still
+supplied); benchmark resolution by segment with fallback and unit-type inference from the path;
+defaults at deal creation; out-of-range flags beside the field, in the header count, in the
+assumptions register (with the range sentence of 9.4) and counted on the Returns page; opt-in
+contribution on export (metric, segment keys, value, export month — no address, name or text);
+the nightly recompute (`POST /api/jobs/benchmarks` with the jobs secret, or `pnpm --filter
+@pencil/web nightly`) writing 25th/50th/75th percentile ranges once a segment has five
+contributions from three organizations; an extra seed CSV hook (`PENCIL_SEED_BENCHMARKS`) for
+demos and tests.
+
+**Verified.** Unit: db 18 tests (contribution rows contain only the four allowed fields and no
+address, name or note text; the recompute refuses 4 deals from 2 organizations, writes 310 / 340 /
+350 for five values from three, and is idempotent), benchmarks 9, parcels 6. End-to-end
+(`e2e/benchmarks.spec.ts`): a Needham address resolves inner-suburbs and the tax-rate default; the
+seeded range defaults hard cost to 320 with source `benchmark`; 500 shows the *outside range* flag,
+the count, the register sentence and the Returns-page count while results keep running; the job
+endpoint rejects a missing secret. All seven e2e tests pass.
+
+**Left.** The seed table has no values until Mark provides them (every default is a schema default
+with source `unknown`; flags are disabled for metrics with no seed); the statewide parcel dataset is
+not loaded, so lot area, zoning, assessed value and current tax come from the user.
 
 ## Blockers and gaps
 

@@ -297,3 +297,18 @@ default forced to `free`. Rejected: no gating until M10, which would leave the c
 A small PNG/SVG (≤ 300 KB) is kept as a data URL in `organizations.settings.letterheadImage` and
 embedded in every page; `letterhead_key` stays for a future object-storage upload. Rejected: an
 upload pipeline through object storage for a single small image.
+
+## 2026-11-04 — Contributed ranges carry a null contributor and a `contrib:` id
+
+9.1 says `contributorOrgId` is null for seed data and set for contributed ranges. A nightly range
+aggregates five or more deals from three or more organizations, so no single organization owns it;
+the row keeps `contributorOrgId` null, an id prefixed `contrib:`, a `source` naming the counts and
+`sampleSize`. Individual contributions keep their organization in the `contributions` table.
+Rejected: storing one organization's id on an aggregate, which would misattribute the range.
+
+## 2026-11-04 — Extra benchmark seeds through `PENCIL_SEED_BENCHMARKS`
+
+The shipped seed template is empty until Mark fills it, so local demos and the end-to-end tests
+load a second CSV of filled rows from `PENCIL_SEED_BENCHMARKS` (ids prefixed `extra-`). Rejected:
+committing invented Massachusetts ranges into the real seed, which the register would then cite
+as benchmarks.

@@ -25,6 +25,7 @@ export function ReturnsPage({ props }: { props: PackageProps }) {
   const likely = outputs.likely;
   const years = likely.annual.filter((a) => a.dscr !== null || a.cashOnCash !== null);
   const flags = KEYS.map((k) => outputs[k].flags.length);
+  const benchmarkFlags = props.benchmarkFlags ?? [];
   return (
     <>
       <div className="cols">
@@ -99,11 +100,16 @@ export function ReturnsPage({ props }: { props: PackageProps }) {
               ))}
             </tbody>
           </table>
-          <p className="footnote">{`* partial year (sale period). Flags: ${flags[0]} likely, ${flags[1]} best, ${flags[2]} worst.`}</p>
-          {likely.flags.length > 0 ? (
+          <p className="footnote">{`* partial year (sale period). Engine flags: ${flags[0]} likely, ${flags[1]} best, ${flags[2]} worst. Inputs outside their benchmark range: ${benchmarkFlags.length}.`}</p>
+          {likely.flags.length > 0 || benchmarkFlags.length > 0 ? (
             <ul className="small" style={{ paddingLeft: 16, margin: '6px 0' }}>
-              {likely.flags.slice(0, 6).map((f, i) => (
-                <li key={i} className="flag">
+              {likely.flags.slice(0, 4).map((f, i) => (
+                <li key={`e${i}`} className="flag">
+                  {f.message}
+                </li>
+              ))}
+              {benchmarkFlags.slice(0, 4).map((f, i) => (
+                <li key={`b${i}`} className="flag">
                   {f.message}
                 </li>
               ))}

@@ -115,6 +115,8 @@ export interface SiteFacts {
 
 export interface PackageProps {
   outputs: Record<ScenarioKey, DealOutputs>;
+  /** Benchmark flags (9.4) from the register, counted on the Returns page beside the engine's flags. */
+  benchmarkFlags?: Array<{ path: string; message: string }>;
   version: VersionMeta;
   letterhead?: Letterhead;
   register: RegisterEntry[];
