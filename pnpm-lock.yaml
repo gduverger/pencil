@@ -136,6 +136,9 @@ importers:
       '@pencil/parcels':
         specifier: workspace:*
         version: link:../../packages/parcels
+      '@pencil/render':
+        specifier: workspace:*
+        version: link:../render
       class-variance-authority:
         specifier: 0.7.1
         version: 0.7.1

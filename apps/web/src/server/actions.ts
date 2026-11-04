@@ -43,6 +43,13 @@ import type { Distribution, Source } from '@pencil/engine';
 import { getDb } from '@/lib/db';
 import { requireUser } from '@/lib/session';
 import { buildNewDeal } from './deal-setup';
+import { headers } from 'next/headers';
+import { createShare as createShareHelper, createVersion as createVersionHelper, exportFile as exportFileHelper, fileDownloadUrl } from './package';
+import { diffStates, HEADLINE_METRICS } from './package-props';
+import { getVersion, listShares as listSharesQuery, listVersions as listVersionsQuery, markReviewed as markReviewedQuery, revokeShare as revokeShareQuery, listEntitlements } from '@pencil/db';
+import type { DealOutputs } from '@pencil/engine';
+import { hasEntitlement } from '@/lib/entitlements';
+import type { PackageSettings } from '@pencil/package-pages';
 
 export type ActionResult<T = undefined> = { ok: true; rev: number; data?: T } | { ok: false; code: string; message: string; rev?: number };
 
@@ -187,4 +194,120 @@ export async function updateOrgSettings(changes: { name?: string; settings?: Org
   await updateOrganization(db, user.orgId, { ...(changes.name ? { name: changes.name } : {}), ...(changes.settings ? { settings: { ...user.settings, ...changes.settings } } : {}) });
   revalidatePath('/settings');
   revalidatePath('/', 'layout');
+}
+
+
+// ---------- package settings, versions, exports, shares, diff (FR-7) ----------
+
+export async function updatePackageSettings(dealId: string, rev: number, settings: Partial<PackageSettings>) {
+  return mutate(dealId, rev, (state) => ({ state: { ...state, packageSettings: { ...state.packageSettings, ...settings, pages: { ...state.packageSettings.pages, ...(settings.pages ?? {}) } } }, history: [] }), [`/deals/${dealId}/package`]);
+}
+
+async function baseUrl(): Promise<string> {
+  if (process.env.PENCIL_BASE_URL) return process.env.PENCIL_BASE_URL;
+  const h = await headers();
+  const proto = h.get('x-forwarded-proto') ?? 'http';
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? '127.0.0.1:3000';
+  return `${proto}://${host}`;
+}
+
+async function requireExportEntitlement(dealId: string) {
+  const user = await requireUser();
+  const db = await getDb();
+  const entitlements = await listEntitlements(db, user.orgId);
+  if (!hasEntitlement(user.tier, entitlements, dealId)) {
+    return { ok: false as const, code: 'entitlement', message: 'Exports and share links need a Per-deal purchase or a Pro subscription.', user, db };
+  }
+  return { ok: true as const, user, db };
+}
+
+export type ExportResult = { ok: true; versionId: string; versionNumber: number; fileId: string; name: string; url: string; bytes: number } | { ok: false; code: string; message: string };
+
+/** Export creates a Version (frozen inputs, outputs, settings) and the file (FR-7.1, FR-7.4). */
+export async function exportVersion(dealId: string, kind: 'pdf' | 'xlsx'): Promise<ExportResult> {
+  const gate = await requireExportEntitlement(dealId);
+  if (!gate.ok) return { ok: false, code: gate.code, message: gate.message };
+  const { user, db } = gate;
+  try {
+    const { state } = await getDeal(db, user.orgId, dealId);
+    const version = await createVersionHelper(db, { orgId: user.orgId, dealId, userId: user.id, state });
+    const file = await exportFileHelper(db, { versionId: version.id, kind, baseUrl: await baseUrl() });
+    revalidatePath(`/deals/${dealId}/package`);
+    return { ok: true, versionId: version.id, versionNumber: version.number, fileId: file.fileId, name: file.name, url: fileDownloadUrl(file.fileId, file.name), bytes: file.bytes };
+  } catch (e) {
+    return { ok: false, code: 'export-failed', message: e instanceof Error ? e.message : 'Export failed' };
+  }
+}
+
+/** Download an existing Version's file, generating it on first request. */
+export async function versionFile(versionId: string, kind: 'pdf' | 'xlsx'): Promise<ExportResult> {
+  const user = await requireUser();
+  const db = await getDb();
+  const { deal } = await getVersion(db, versionId);
+  if (deal.orgId !== user.orgId) return { ok: false, code: 'forbidden', message: 'Not your deal' };
+  const gate = await requireExportEntitlement(deal.id);
+  if (!gate.ok) return { ok: false, code: gate.code, message: gate.message };
+  try {
+    const file = await exportFileHelper(db, { versionId, kind, baseUrl: await baseUrl() });
+    const v = await getVersion(db, versionId);
+    return { ok: true, versionId, versionNumber: v.version.number, fileId: file.fileId, name: file.name, url: fileDownloadUrl(file.fileId, file.name), bytes: file.bytes };
+  } catch (e) {
+    return { ok: false, code: 'export-failed', message: e instanceof Error ? e.message : 'Export failed' };
+  }
+}
+
+export async function listVersions(dealId: string) {
+  const user = await requireUser();
+  const db = await getDb();
+  return listVersionsQuery(db, user.orgId, dealId);
+}
+
+export async function createShare(versionId: string, expiresAt?: string | null): Promise<{ ok: true; url: string; token: string; id: string } | { ok: false; code: string; message: string }> {
+  const user = await requireUser();
+  const db = await getDb();
+  const { deal } = await getVersion(db, versionId);
+  if (deal.orgId !== user.orgId) return { ok: false, code: 'forbidden', message: 'Not your deal' };
+  const gate = await requireExportEntitlement(deal.id);
+  if (!gate.ok) return { ok: false, code: gate.code, message: gate.message };
+  const share = await createShareHelper(db, { versionId, userId: user.id, expiresAt: expiresAt ?? null });
+  revalidatePath(`/deals/${deal.id}/package`);
+  return { ok: true, url: `${await baseUrl()}/share/${share.token}`, token: share.token, id: share.id };
+}
+
+export async function revokeShare(shareId: string, dealId: string) {
+  const user = await requireUser();
+  const db = await getDb();
+  await requireMembership(db, user.id, user.orgId);
+  await revokeShareQuery(db, shareId);
+  revalidatePath(`/deals/${dealId}/package`);
+}
+
+export async function listShares(dealId: string) {
+  const user = await requireUser();
+  const db = await getDb();
+  await getDeal(db, user.orgId, dealId);
+  return listSharesQuery(db, dealId);
+}
+
+export async function markVersionReviewed(versionId: string) {
+  const user = await requireUser();
+  const db = await getDb();
+  await requireMembership(db, user.id, user.orgId, ['reviewer']);
+  const { deal } = await getVersion(db, versionId);
+  if (deal.orgId !== user.orgId) throw new Error('Not your deal');
+  await markReviewedQuery(db, versionId, user.settings.letterheadName ?? user.orgName);
+  revalidatePath(`/deals/${deal.id}/package`);
+}
+
+export async function diffVersions(a: string, b: string) {
+  const user = await requireUser();
+  const db = await getDb();
+  const va = await getVersion(db, a);
+  const vb = await getVersion(db, b);
+  if (va.deal.orgId !== user.orgId || vb.deal.orgId !== user.orgId) throw new Error('Not your deal');
+  const rows = diffStates(va.version.snapshot, vb.version.snapshot);
+  const oa = va.version.outputs as Record<string, DealOutputs>;
+  const ob = vb.version.outputs as Record<string, DealOutputs>;
+  const metrics = HEADLINE_METRICS.map((k) => ({ key: k, old: oa.likely?.metrics[k] ?? null, new: ob.likely?.metrics[k] ?? null })).filter((m) => m.old !== m.new);
+  return { a: { number: va.version.number, createdAt: va.version.createdAt }, b: { number: vb.version.number, createdAt: vb.version.createdAt }, rows, metrics };
 }

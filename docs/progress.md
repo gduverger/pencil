@@ -12,7 +12,7 @@ verified, how it was verified, and what is left.
 | M4 Package pages and exports | done (2026-11-04) |
 | M5 Web app: deals and inputs | done (2026-11-04) |
 | M6 Web app: results, scenarios, sensitivities | done (2026-11-04) |
-| M7 Web app: package, versions, sharing | not started |
+| M7 Web app: package, versions, sharing | done (2026-11-04) |
 | M8 Benchmarks and parcels | not started |
 | M9 Assistant | not started |
 | M10 Billing and launch | not started |
@@ -182,6 +182,31 @@ Lint, typecheck and the unit suites are clean.
 
 **Left.** Sensitivities and explain traces appear in the package with M7; the assistant's
 sentences for explain and flags arrive with M9.
+
+## M7 Web app: package, versions, sharing — done 2026-11-04
+
+**Built.** The Package screen: page toggles, scenario for detail pages, monthly appendix toggle,
+cover note and narrative, letterhead from organization settings, a live preview rendered by the
+same components as the PDF; *Export PDF* and *Export Excel* create an immutable Version (inputs
+with metadata, switches, events, scenarios, engine outputs, sensitivities, package settings,
+engine version) and the file, served through short-lived signed URLs; the token-protected package
+route `/packages/<versionId>` that Chromium renders (through the render service when configured,
+in-process otherwise); file storage on S3-compatible buckets or the local filesystem; read-only
+share links (32 random bytes) with optional expiry and revocation, a share viewer with no sign-in
+and downloads of both files generated on demand from the Version; *Diff versions* listing changed
+inputs (path, old, new, note, who, when) and changed headline metrics; the reviewed flag for the
+reviewer role; entitlement checks at export and share time (Pro by default outside production
+until M10). Clone and templates were built in M5.
+
+**Verified.** End-to-end (`e2e/package.spec.ts`): two notes entered, Export PDF creates Version 1
+with a signed PDF download (checked to be a real PDF), Export Excel creates Version 2 with the
+workbook, Diff compares the two, a share link opens in a logged-out phone-width context (375 px,
+no horizontal scroll), its assumptions register shows both notes, both files download from the
+share, and after revocation the link returns 404. Steps 1–8 still pass; lint, typecheck and the
+unit suites are clean.
+
+**Left.** Letterhead image upload is a settings field (data URL) rather than object storage; the
+render service deployment and R2 bucket are M10 launch work.
 
 ## Blockers and gaps
 

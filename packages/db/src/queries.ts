@@ -45,6 +45,8 @@ export interface OrgSettings {
   contributeBenchmarks?: boolean;
   letterheadName?: string;
   letterheadAddress?: string;
+  /** A small PNG/SVG as a data URL (≤ 300 KB). */
+  letterheadImage?: string;
 }
 
 // ---------- users and organizations ----------

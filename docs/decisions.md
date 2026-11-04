@@ -269,3 +269,31 @@ which forces a round trip to the Inputs tab for every what-if.
 "Side by side" for pages other than Returns is three package-width columns in a horizontally
 scrolling row, each rendered by the same page component as the PDF. Rejected: a merged
 three-column table per page, which would be a second implementation of every page.
+
+## 2026-11-04 — The PDF renders the package route, in-process when no render service is set
+
+Spec 11.2 renders the package route in a Playwright container called with a Version id and a
+signed token. The web app exposes `/packages/<versionId>?t=<signed token>` (10-minute HMAC token,
+no session) and asks the render service for it when `PENCIL_RENDER_URL` is configured; without a
+service (local development, tests) it drives Chromium in its own process through `@pencil/render`.
+Rejected: rendering HTML with `react-dom/server` inside the web app, which Next.js forbids in
+server components and which would make the PDF diverge from the on-screen package route.
+
+## 2026-11-04 — Files are generated on demand for a Version and reused
+
+An export creates the Version and its file; a share link offers both files, and a file that was
+not generated yet is produced on first download from the frozen Version and stored. Rejected:
+generating both files at every export, which doubles the export time for readers who want one.
+
+## 2026-11-04 — Entitlements default to Pro outside production
+
+`hasEntitlement` implements FR-10.2 (Free: screen only; Per-deal: one deal for 12 months; Pro:
+everything). Outside production `PENCIL_DEFAULT_TIER` defaults to `pro` so local work and the
+end-to-end suite are not blocked; M10 adds Stripe and the Free-tier upgrade prompt test with the
+default forced to `free`. Rejected: no gating until M10, which would leave the code path untested.
+
+## 2026-11-04 — Letterhead image stored inline in organization settings
+
+A small PNG/SVG (≤ 300 KB) is kept as a data URL in `organizations.settings.letterheadImage` and
+embedded in every page; `letterhead_key` stays for a future object-storage upload. Rejected: an
+upload pipeline through object storage for a single small image.
