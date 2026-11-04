@@ -2,7 +2,7 @@
   "name": "@pencil/cli",
   "version": "0.1.0",
   "private": true,
-  "description": "pencil run deal.json → outputs JSON, package HTML, PDF and XLSX from the command line.",
+  "description": "pencil run deal.json \u2192 outputs JSON, package HTML, PDF and XLSX from the command line.",
   "type": "module",
   "bin": {
     "pencil": "./bin/pencil.js"
@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "pencil": "tsx src/cli.ts"
+    "pencil": "tsx --tsconfig tsconfig.tsx.json src/cli.ts"
   },
   "dependencies": {
     "@pencil/engine": "workspace:*",
@@ -19,7 +19,8 @@
     "@pencil/package-pages": "workspace:*",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "tsx": "4.23.15"
+    "tsx": "4.23.15",
+    "@pencil/render": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "22.20.5",

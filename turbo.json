@@ -32,5 +32,13 @@
       ],
       "cache": false
     }
-  }
+  },
+  "globalPassThroughEnv": [
+    "PLAYWRIGHT_BROWSERS_PATH",
+    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD",
+    "RENDER_TOKEN",
+    "PENCIL_RENDER_URL",
+    "DATABASE_URL",
+    "CI"
+  ]
 }

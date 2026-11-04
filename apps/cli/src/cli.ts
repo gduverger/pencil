@@ -1,8 +1,9 @@
 /**
- * pencil run <deal.json> [--out <dir>] [--scenarios <scenarios.json>] [--no-rlv]
+ * pencil run <deal.json> [--out <dir>] [--scenarios <scenarios.json>] [--no-rlv] [--pdf] [--xlsx] [--plain]
  *
- * Runs the engine on a deal file and writes outputs JSON, a summary and a package HTML file.
- * Every number is produced by @pencil/engine; this file only reads, writes and formats.
+ * Runs the engine on a deal file and writes outputs JSON, a summary and the package (HTML, and
+ * optionally PDF and XLSX). Every number is produced by @pencil/engine; this file only reads,
+ * writes and formats.
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -11,25 +12,32 @@ import {
   residualLandValue,
   runScenarios,
   scenarioOverridesFromDeltas,
+  sensitivity,
+  sensitivityPresets,
   validate,
   hasErrors,
   type ScenarioSet,
   type ScenarioKey,
   type DealOutputs,
 } from '@pencil/engine';
+import { DEFAULT_PACKAGE_SETTINGS, packageFileName, registerFromInputs, renderPackageHtml, type PackageProps } from '@pencil/package-pages';
+import { buildWorkbookBuffer } from '@pencil/exports';
 import { renderPlainPackage } from './html';
 
 export function usage(): string {
   return [
-    'Usage: pencil run <deal.json> [--out <dir>] [--scenarios <scenarios.json>] [--no-rlv]',
+    'Usage: pencil run <deal.json> [--out <dir>] [--scenarios <scenarios.json>] [--no-rlv] [--pdf] [--xlsx] [--plain]',
     '',
     '  Runs the Pencil engine on a deal and writes, into <dir> (default ./pencil-out):',
     '    outputs.json   full DealOutputs for likely, best and worst',
     '    summary.json   headline metrics per scenario and the residual land value',
-    '    package.html   the package pages as plain HTML',
+    '    package.html   the nine package pages (shared React components)',
+    '    <deal>-likely-<date>.pdf    with --pdf (headless Chromium)',
+    '    <deal>-likely-<date>.xlsx   with --xlsx (exceljs, real formulas)',
+    '    package-plain.html          with --plain (dependency-free fallback renderer)',
     '',
     '  scenarios.json is { "best": { "<path>": value }, "worst": { ... } }; without it the default',
-    '  deltas apply (rents ±5%, hard cost ∓10%).',
+    '  deltas apply (rents ±5%, hard cost ∓10%). The first two sensitivity presets are run and included.',
   ].join('\n');
 }
 
@@ -38,18 +46,24 @@ export interface RunOptions {
   outDir: string;
   scenariosPath?: string;
   rlv: boolean;
+  pdf: boolean;
+  xlsx: boolean;
+  plain: boolean;
   now?: string;
 }
 
 export function parseArgs(argv: string[]): RunOptions | { error: string } {
   const [command, dealPath, ...rest] = argv;
   if (command !== 'run' || !dealPath) return { error: usage() };
-  const opts: RunOptions = { dealPath, outDir: 'pencil-out', rlv: true };
+  const opts: RunOptions = { dealPath, outDir: 'pencil-out', rlv: true, pdf: false, xlsx: false, plain: false };
   for (let i = 0; i < rest.length; i++) {
     const arg = rest[i]!;
     if (arg === '--out') opts.outDir = rest[++i] ?? opts.outDir;
     else if (arg === '--scenarios') opts.scenariosPath = rest[++i];
     else if (arg === '--no-rlv') opts.rlv = false;
+    else if (arg === '--pdf') opts.pdf = true;
+    else if (arg === '--xlsx') opts.xlsx = true;
+    else if (arg === '--plain') opts.plain = true;
     else return { error: `Unknown argument ${arg}\n\n${usage()}` };
   }
   return opts;
@@ -62,6 +76,7 @@ export interface Summary {
   scenarios: Record<ScenarioKey, Record<string, number | string | null>>;
   residualLandValue: ReturnType<typeof residualLandValue> | null;
   flags: Record<ScenarioKey, Array<{ code: string; message: string; path?: string }>>;
+  files: string[];
 }
 
 function headline(o: DealOutputs): Record<string, number | string | null> {
@@ -84,7 +99,18 @@ function headline(o: DealOutputs): Record<string, number | string | null> {
   };
 }
 
-export function runCommand(opts: RunOptions): { outDir: string; summary: Summary; issues: ReturnType<typeof validate> } {
+export function buildProps(raw: unknown, outputs: Record<ScenarioKey, DealOutputs>, versionDate: string): PackageProps {
+  const presets = sensitivityPresets(raw).slice(0, 2);
+  return {
+    outputs,
+    version: { dealName: outputs.likely.inputs.meta.name, versionNumber: 1, versionDate, engineVersion: ENGINE_VERSION },
+    register: registerFromInputs(outputs, { source: 'my-number', updatedAt: versionDate }),
+    sensitivities: presets.map((p) => ({ key: p.key, label: p.label, scenario: 'likely' as const, stale: false, grid: sensitivity(raw, {}, p.axisA, p.axisB, ['projectIrr', 'yieldOnCost']) })),
+    settings: { ...DEFAULT_PACKAGE_SETTINGS },
+  };
+}
+
+export async function runCommand(opts: RunOptions): Promise<{ outDir: string; summary: Summary; issues: ReturnType<typeof validate> }> {
   const raw = JSON.parse(readFileSync(resolve(opts.dealPath), 'utf8')) as unknown;
   const issues = validate(raw);
   if (hasErrors(issues)) {
@@ -97,19 +123,43 @@ export function runCommand(opts: RunOptions): { outDir: string; summary: Summary
   const outputs = runScenarios(raw, scenarios);
   const rlv = opts.rlv ? residualLandValue(raw) : null;
   const generatedAt = opts.now ?? new Date().toISOString();
+  const versionDate = generatedAt.slice(0, 10);
+  const outDir = resolve(opts.outDir);
+  mkdirSync(outDir, { recursive: true });
+  const files: string[] = [];
+  const write = (name: string, data: string | Buffer) => {
+    writeFileSync(join(outDir, name), data);
+    files.push(name);
+  };
+  write('outputs.json', JSON.stringify({ engineVersion: ENGINE_VERSION, generatedAt, scenarios, outputs, residualLandValue: rlv }, null, 2));
+  const props = buildProps(raw, outputs, versionDate);
+  const html = renderPackageHtml(props);
+  write('package.html', html);
+  if (opts.plain) write('package-plain.html', renderPlainPackage(outputs, { generatedAt, engineVersion: ENGINE_VERSION }));
+  const dealName = outputs.likely.inputs.meta.name;
+  if (opts.pdf) {
+    const { htmlToPdf, closeSharedBrowser } = await import('@pencil/render');
+    try {
+      const pdf = await htmlToPdf(html, { footerText: `${dealName} · Version ${props.version.versionNumber} · ${versionDate}` });
+      write(packageFileName(dealName, 'likely', versionDate, 'pdf'), pdf);
+    } finally {
+      await closeSharedBrowser();
+    }
+  }
+  if (opts.xlsx) {
+    const xlsx = await buildWorkbookBuffer({ outputs, scenario: 'likely', version: props.version, register: props.register });
+    write(packageFileName(dealName, 'likely', versionDate, 'xlsx'), xlsx);
+  }
   const summary: Summary = {
-    deal: outputs.likely.inputs.meta.name,
+    deal: dealName,
     engineVersion: ENGINE_VERSION,
     generatedAt,
     scenarios: { likely: headline(outputs.likely), best: headline(outputs.best), worst: headline(outputs.worst) },
     residualLandValue: rlv,
     flags: { likely: outputs.likely.flags, best: outputs.best.flags, worst: outputs.worst.flags },
+    files,
   };
-  const outDir = resolve(opts.outDir);
-  mkdirSync(outDir, { recursive: true });
-  writeFileSync(join(outDir, 'outputs.json'), JSON.stringify({ engineVersion: ENGINE_VERSION, generatedAt, scenarios, outputs }, null, 2));
-  writeFileSync(join(outDir, 'summary.json'), JSON.stringify(summary, null, 2));
-  writeFileSync(join(outDir, 'package.html'), renderPlainPackage(outputs, { generatedAt, engineVersion: ENGINE_VERSION }));
+  write('summary.json', JSON.stringify(summary, null, 2));
   return { outDir, summary, issues };
 }
 
@@ -117,14 +167,14 @@ function pct(x: number | string | null | undefined): string {
   return typeof x === 'number' ? `${(x * 100).toFixed(1)}%` : 'n/a';
 }
 
-export function main(argv: string[]): number {
+export async function main(argv: string[]): Promise<number> {
   const parsed = parseArgs(argv);
   if ('error' in parsed) {
     console.error(parsed.error);
     return 2;
   }
   try {
-    const { outDir, summary, issues } = runCommand(parsed);
+    const { outDir, summary, issues } = await runCommand(parsed);
     for (const w of issues) console.warn(`warning: ${w.path ?? ''} ${w.message}`);
     const s = summary.scenarios;
     console.log(`${summary.deal} — engine ${summary.engineVersion}`);
@@ -138,7 +188,7 @@ export function main(argv: string[]): number {
       console.log(`  Residual land value at ${pct(r.targetYieldOnCost)} yield on cost: ${Math.round(r.landCost).toLocaleString('en-US')} (${Math.round(r.perUnit).toLocaleString('en-US')} per unit)${bound}`);
     }
     for (const k of ['likely', 'best', 'worst'] as const) for (const f of summary.flags[k]) console.log(`  flag [${k}] ${f.code}: ${f.message}`);
-    console.log(`  wrote ${outDir}/outputs.json, summary.json, package.html`);
+    console.log(`  wrote ${summary.files.map((f) => join(outDir, f)).join('\n        ')}`);
     return 0;
   } catch (e) {
     console.error(e instanceof Error ? e.message : String(e));
@@ -148,5 +198,5 @@ export function main(argv: string[]): number {
 
 const invokedDirectly = process.argv[1] !== undefined && import.meta.url === new URL(`file://${process.argv[1]}`).href;
 if (invokedDirectly) {
-  process.exit(main(process.argv.slice(2)));
+  main(process.argv.slice(2)).then((code) => process.exit(code));
 }

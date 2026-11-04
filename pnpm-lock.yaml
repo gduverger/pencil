@@ -44,6 +44,9 @@ importers:
       '@pencil/package-pages':
         specifier: workspace:*
         version: link:../../packages/package-pages
+      '@pencil/render':
+        specifier: workspace:*
+        version: link:../render
       react:
         specifier: 19.3.1
         version: 19.3.1
@@ -79,6 +82,15 @@ importers:
         specifier: 4.23.15
         version: 4.23.15
     devDependencies:
+      '@pencil/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+      '@pencil/package-pages':
+        specifier: workspace:*
+        version: link:../../packages/package-pages
+      '@playwright/test':
+        specifier: 1.63.0
+        version: 1.63.0
       '@types/node':
         specifier: 22.20.5
         version: 22.20.5
@@ -304,6 +316,9 @@ importers:
       '@types/node':
         specifier: 22.20.5
         version: 22.20.5
+      '@types/react':
+        specifier: 19.3.0
+        version: 19.3.0
       typescript:
         specifier: 5.9.3
         version: 5.9.3

@@ -9,7 +9,7 @@ verified, how it was verified, and what is left.
 | M1 Engine core | done (2026-11-04) |
 | M2 Engine operations and capital | done (2026-11-04) |
 | M3 Engine analysis and CLI | done (2026-11-04), golden tests pending workbooks |
-| M4 Package pages and exports | not started |
+| M4 Package pages and exports | done (2026-11-04) |
 | M5 Web app: deals and inputs | not started |
 | M6 Web app: results, scenarios, sensitivities | not started |
 | M7 Web app: package, versions, sharing | not started |
@@ -97,6 +97,35 @@ Chromium and reviewed (screenshot during the session). `pnpm lint`, `pnpm typech
 **Left.** Golden tolerances cannot be met or measured until the workbooks are placed in
 `reference/`; the harness reports them as skipped rather than silently passing. The CLI's PDF and
 XLSX outputs arrive with M4.
+
+## M4 Package pages and exports — done 2026-11-04
+
+**Built.** `@pencil/package-pages`: the nine pages as React components sharing one print
+stylesheet (Letter portrait, landscape cash-flow and appendix via a named `@page`), letterhead,
+version and scenario in every header, hero range tiles, the NOI/debt-service bar chart and the
+sources donut as inline SVG (palette validated with the data-viz checks), heat-shaded sensitivity
+grids with the likely case outlined and stale grids omitted with a note, the assumptions register
+with sources, notes, dates, benchmarks, flags and scenario overrides, the amortization appendix
+with an optional monthly schedule, `renderPackageHtml`, `planPages`, `registerFromInputs` and the
+7.13 formatting module. `@pencil/render`: `htmlToPdf` / `urlToPdf` with Chromium (page numbers in
+the PDF footer template), an HTTP service with a shared token, page-PNG capture, and Playwright
+snapshot tests. `@pencil/exports`: the seven-sheet workbook with `SUM` formulas for totals,
+subtotals and NOI, amortization roll-forward formulas, 7.13 number formats, frozen headers and
+the snapshot cover note; the PDF client for the render service. `apps/cli` now renders the React
+package and takes `--pdf` and `--xlsx`.
+
+**Verified.** 10 workspaces pass lint, typecheck and tests (`pnpm test`, 177 tests). The fixture
+package renders to an 11-page Letter PDF in about one second after browser start (asserted under
+10 s), with both 612×792 and 792×612 media boxes present. Every page was rasterized and reviewed by
+eye (`docs/demos/m4/page-*.png`, notes in `docs/demos/m4.md`); the review found and fixed a
+duplicated in-page footer, wrapping dates in the register and a 9 px overflow at phone width.
+Playwright snapshots for the nine pages plus the phone view are committed under
+`apps/render/test/__snapshots__/`. The workbook was reopened with exceljs: seven sheets, totals are
+`SUM` formulas, formats match 7.13, the Annual sheet's EGI and opex sums reproduce the engine's
+annual NOI to full precision. Sources & uses totals equal TPC after independent rounding.
+
+**Left.** The web app's package routes (M7) will render the same components; the render service
+needs Inter installed in its production image (a Dockerfile arrives with M10's deploy work).
 
 ## Blockers and gaps
 

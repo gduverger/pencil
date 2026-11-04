@@ -2,12 +2,16 @@
   "name": "@pencil/render",
   "version": "0.1.0",
   "private": true,
-  "description": "Playwright + Chromium service that renders package routes to PDF on request.",
+  "description": "Playwright + Chromium service that renders package HTML or routes to PDF on request.",
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:snapshots": "playwright test",
     "start": "tsx src/server.ts"
   },
   "dependencies": {
@@ -15,6 +19,9 @@
     "tsx": "4.23.15"
   },
   "devDependencies": {
+    "@pencil/engine": "workspace:*",
+    "@pencil/package-pages": "workspace:*",
+    "@playwright/test": "1.63.0",
     "@types/node": "22.20.5",
     "typescript": "5.9.3",
     "vitest": "5.1.0"

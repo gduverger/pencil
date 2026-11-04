@@ -165,3 +165,24 @@ deals whose yield on cost never reaches the target.
 the shared formatting module. Milestone M4 switches the CLI to the React package pages; the plain
 renderer stays as a fallback. Rejected: starting the React pages in M3, which the spec allows but
 would have delayed the CLI acceptance criteria.
+
+## 2026-11-04 — PDF page numbers come from Chromium's footer template
+
+Flowing pages (the assumptions register, an elaborated capital budget) paginate at print time, so
+a page number written into the HTML cannot be right for every printed page. The PDF renderer
+prints the deal, version, rounding footnote and "Page X of Y" in Chromium's footer template and
+the in-page footer is hidden under print media; on screen each section shows its own number.
+Rejected: fixed-height register pages with manual pagination, which would break on long notes.
+
+## 2026-11-04 — Fonts: Inter from the system, embedded by Chromium
+
+The package uses Inter (installed in the render image) with Helvetica/Arial fallbacks; Chromium
+embeds the glyphs it uses in the PDF. Rejected: base64 web fonts in the HTML, which add ~400 KB
+per package for no visual gain in the PDF.
+
+## 2026-11-04 — Snapshot tests render the fixture HTML in a separate process
+
+The Playwright test runner rewrites JSX in its own process for component testing, which breaks
+`react-dom/server`. The snapshot spec therefore renders the fixture package with `tsx` in a child
+process and loads the resulting HTML. Rejected: moving the snapshot tests to Vitest with a manual
+pixel comparison, which loses Playwright's threshold-based image diffing.
